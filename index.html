@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=8">
+    <link rel="manifest" href="manifest.json?v=9">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=8'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=9'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -202,7 +202,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.0</strong><br><br>
+            <strong>Edi Pro v1.1.1</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -254,7 +254,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.0</strong><br><br>
+            <strong>Edi Pro v1.1.1</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -353,7 +353,23 @@
                 <details><summary>📝 Resumo Profissional</summary><div class="input-group"><textarea id="resIn" placeholder="Descreva o seu perfil de forma impactante..." style="height: 120px;"></textarea><button id="btn-add-res" class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar Resumo</button></div></details>
                 <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:10px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="const e = document.getElementById('expFim'); if(e) e.disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
                 <details><summary>🎓 Formação Acadêmica</summary><div class="input-group"><input id="escC" placeholder="Curso/Nível"> <input id="escI" placeholder="Instituição"><div style="display:flex; gap:10px"><input id="escIni" placeholder="Início (Ano)" style="flex:1"><input id="escFim" placeholder="Fim (Ano)" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="escAtual" onchange="const e = document.getElementById('escFim'); if(e) e.disabled = this.checked"> Cursando Atualmente</label><button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button></div></details>
-                <details><summary>🌐 Idiomas</summary><div class="input-group"><input id="idiIn" placeholder="Ex: Inglês"><select id="idiNivel"><option value="B1 (Intermediario)">B1 (Intermediario)</option><option value="C1 (Avançado)">C1 (Avançado)</option><option value="Fluente/Nativo">Fluente/Nativo</option></select><button id="btn-add-idi" class="btn-base btn-primary btn-add-block" onclick="adicionarIdioma()">+ Adicionar Idioma</button></div></details>
+                <details><summary>🌐 Idiomas</summary><div class="input-group">
+                    <input id="idiIn" placeholder="Ex: Inglês">
+                    <select id="idiNivel">
+                        <option value="Básico">Básico</option>
+                        <option value="Intermediário">Intermediário</option>
+                        <option value="Avançado">Avançado</option>
+                        <option value="Fluente">Fluente</option>
+                        <option value="Nativo">Nativo</option>
+                        <option value="A1 (Iniciante)">A1 (Iniciante)</option>
+                        <option value="A2 (Básico)">A2 (Básico)</option>
+                        <option value="B1 (Intermediário)">B1 (Intermediário)</option>
+                        <option value="B2 (Intermediário Superior)">B2 (Intermediário Superior)</option>
+                        <option value="C1 (Avançado)">C1 (Avançado)</option>
+                        <option value="C2 (Proficiente/Nativo)">C2 (Proficiente/Nativo)</option>
+                    </select>
+                    <button id="btn-add-idi" class="btn-base btn-primary btn-add-block" onclick="adicionarIdioma()">+ Adicionar Idioma</button>
+                </div></details>
                 <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
             </div>
             <div id="curriculo-wrapper"><div id="curriculo"><h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line" id="contatoPreview">...</div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div></div></div>
