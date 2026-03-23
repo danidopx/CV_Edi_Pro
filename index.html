@@ -83,6 +83,10 @@
         @media (max-width: 768px) { .tela { padding: 15px; padding-top: 60px;} h1 { font-size: 26px; text-align: center; margin-top: 30px !important; } .hero-title { font-size: 36px; } .theme-toggle { right: 10px; width: 40px; height: 40px; font-size: 18px; } .btn-luz { top: 10px; } .btn-admin-config { top: 60px; } .btn-admin-users { top: 110px; } .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; } #status-nome { font-size: 14px; width: 100%; text-align: center; margin-bottom: 5px; } .botoes-topo-editor { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 10px; } .botoes-topo-editor .btn-full { grid-column: span 2; } .botoes-topo-editor button { padding: 12px !important; font-size: 12.5px; width: 100%; } #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } }
         .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
         table.tabela-admin { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; } table.tabela-admin th, table.tabela-admin td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-main); } table.tabela-admin th { background: var(--bg-body); font-weight: bold; }
+        
+        .footer-info { margin-top: 50px; text-align: center; font-size: 13px; color: var(--text-light); }
+        .footer-info a { color: var(--primary); font-weight: bold; text-decoration: none; }
+        .footer-info a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -182,6 +186,11 @@
             <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Match com a Vaga</div><div class="feature-desc">Cole a descrição da vaga de emprego que deseja. O Edi Pro reescreve e ajusta o seu currículo para destacar exatamente o que os recrutadores estão buscando.</div></div>
             <div class="feature-card"><div class="feature-icon">📄</div><div class="feature-title">Design Vencedor</div><div class="feature-desc">Um layout limpo, direto e profissional, otimizado para sistemas de recrutamento (ATS). Exporte um PDF perfeito e pronto para enviar em um clique.</div></div>
         </div>
+        
+        <div class="footer-info">
+            <strong>Edi Pro v1.0.5</strong><br><br>
+            Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
+        </div>
     </div>
 
     <div id="tela-login" class="tela">
@@ -228,6 +237,11 @@
             <button class="btn-base btn-primary" onclick="fluxoNovo()" style="padding: 30px 45px; font-size: 16px;">➕ NOVO CURRÍCULO</button>
             <button class="btn-base btn-accent" onclick="fluxoLista()" style="padding: 30px 45px; font-size: 16px;">📂 VER SALVOS</button>
             <button class="btn-base btn-ia" onclick="abrirTelaVaga()" style="padding: 30px 45px; font-size: 16px;">🎯 AJUSTAR À VAGA</button>
+        </div>
+        
+        <div class="footer-info">
+            <strong>Edi Pro v1.0.5</strong><br><br>
+            Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
 
@@ -298,7 +312,7 @@
                 </details>
 
                 <details style="border: 2px solid var(--ia); background: var(--primary-dim);"><summary style="color: var(--primary); font-weight: bold;">✨ IA - Extração Rápida de Texto</summary><div class="input-group"><textarea id="texto-ia" placeholder="Cole aqui o texto bruto de um currículo existente..." style="height: 100px; background: var(--bg-panel);"></textarea><button class="btn-base btn-ia" id="btn-ia" onclick="extrairDadosIA()" style="width: 100%;">🤖 Extrair Dados Pessoais</button></div></details>
-                <details open style="margin-top: 15px;"><summary>👤 Dados Pessoais</summary><div class="input-group"><input id="inNome" placeholder="Nome Completo" oninput="sync('inNome', 'nomePreview')"><input id="inEnd" placeholder="Cidade - UF" oninput="syncEndereco()"><input id="inEmail" placeholder="E-mail" oninput="sync('inEmail', 'emailPreview')"><input id="inWhats" placeholder="WhatsApp com DDD" oninput="mascaraWhats(this)"></div></details>
+                <details open style="margin-top: 15px;"><summary>👤 Dados Pessoais</summary><div class="input-group"><input id="inNome" placeholder="Nome Completo" oninput="sync('inNome', 'nomePreview')"><input id="inEnd" placeholder="Cidade - UF" oninput="syncEndereco()"><input id="inCep" placeholder="CEP" oninput="mascaraCep(this)"><input id="inEmail" placeholder="E-mail" oninput="sync('inEmail', 'emailPreview')"><input id="inWhats" placeholder="WhatsApp com DDD" oninput="mascaraWhats(this)"></div></details>
                 <details open><summary>📝 Resumo Profissional</summary><div class="input-group"><textarea id="resIn" placeholder="Descreva o seu perfil de forma impactante..." style="height: 120px;"></textarea><button id="btn-add-res" class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar Resumo</button></div></details>
                 <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:10px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="document.getElementById('expFim').disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
                 <details><summary>🎓 Formação Acadêmica</summary><div class="input-group"><input id="escC" placeholder="Curso/Nível"> <input id="escI" placeholder="Instituição"><div style="display:flex; gap:10px"><input id="escIni" placeholder="Início (Ano)" style="flex:1"><input id="escFim" placeholder="Fim (Ano)" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="escAtual" onchange="document.getElementById('escFim').disabled = this.checked"> Cursando Atualmente</label><button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button></div></details>
