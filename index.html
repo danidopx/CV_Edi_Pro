@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Edi Pro - Currículos com Inteligência Artificial</title>
     
-    <link rel="manifest" href="manifest.json?v=5">
-    <meta name="theme-color" content="#6c5ce7">
+    <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
+    
+    <link rel="manifest" href="manifest.json?v=6">
+    <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=5'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=6'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -188,7 +190,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.0.7</strong><br><br>
+            <strong>Edi Pro v1.0.8</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -201,22 +203,22 @@
             <h1 style="color: var(--primary); margin-top: 0; font-weight: 800; font-size: 32px;">Acessar Sistema</h1>
             <p style="color: var(--text-light); margin-bottom: 25px;">Entre ou crie sua conta para guardar seus currículos.</p>
             
-            <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px;">
-                <input type="email" id="login-email" placeholder="Seu e-mail" style="padding: 15px;">
-                <input type="password" id="login-senha" placeholder="Sua senha" style="padding: 15px;">
+            <form onsubmit="event.preventDefault(); processarFormularioLogin();" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px;">
+                <input type="email" id="login-email" placeholder="Seu e-mail" style="padding: 15px;" autocomplete="username">
+                <input type="password" id="login-senha" placeholder="Sua senha" style="padding: 15px;" autocomplete="current-password">
                 
                 <div id="box-confirma-senha" style="display: none; flex-direction: column; gap: 5px;">
-                    <input type="password" id="login-senha-conf" placeholder="Confirme sua senha" style="padding: 15px;">
+                    <input type="password" id="login-senha-conf" placeholder="Confirme sua senha" style="padding: 15px;" autocomplete="new-password">
                     <small style="color: var(--text-light); text-align: left; font-size: 11px;">Mínimo 8 caracteres, 1 número e 1 letra maiúscula.</small>
                 </div>
 
-                <button id="btn-acao-login" class="btn-base btn-primary" onclick="processarFormularioLogin()" style="width: 100%; padding: 15px; font-size: 16px;">Entrar no Sistema</button>
+                <button type="submit" id="btn-acao-login" class="btn-base btn-primary" style="width: 100%; padding: 15px; font-size: 16px;">Entrar no Sistema</button>
                 
                 <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 5px;">
                     <a href="#" onclick="recuperarSenha(); return false;" style="color: var(--text-light); text-decoration: none;">Esqueci a senha</a>
                     <span id="txt-troca-login">Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a></span>
                 </div>
-            </div>
+            </form>
 
             <div style="display: flex; align-items: center; margin: 25px 0; color: var(--text-light); font-size: 12px; font-weight: bold;"><hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);"><span style="padding: 0 10px;">OU</span><hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);"></div>
             
@@ -240,7 +242,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.0.7</strong><br><br>
+            <strong>Edi Pro v1.0.8</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -254,12 +256,13 @@
             
             <div style="margin-bottom: 35px;">
                 <label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar Senha:</label>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <input type="password" id="nova-senha" placeholder="Nova senha">
-                    <input type="password" id="nova-senha-conf" placeholder="Confirme a nova senha">
-                    <button class="btn-base btn-primary" onclick="atualizarSenhaConta()">Atualizar Senha</button>
+                <form onsubmit="event.preventDefault(); atualizarSenhaConta();" style="display: flex; flex-direction: column; gap: 10px;">
+                    <input type="text" autocomplete="username" style="display:none;" value="user">
+                    <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password">
+                    <input type="password" id="nova-senha-conf" placeholder="Confirme a nova senha" autocomplete="new-password">
+                    <button type="submit" class="btn-base btn-primary">Atualizar Senha</button>
                     <small style="color: var(--text-light);">Mínimo 8 caracteres, 1 número e 1 letra maiúscula.</small>
-                </div>
+                </form>
             </div>
             
             <hr style="border: none; border-top: 1px solid var(--border-color); margin-bottom: 25px;">
