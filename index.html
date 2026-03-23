@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=7">
+    <link rel="manifest" href="manifest.json?v=8">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=7'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=8'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -30,7 +30,6 @@
         .theme-toggle { position: fixed; right: 20px; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: var(--shadow); z-index: 1000; }
         .btn-luz { top: 20px; } .btn-admin-config { top: 75px; display: none; } .btn-admin-users { top: 130px; display: none; }
         
-        /* CORREÇÃO DO MENU SOBREPOSTO: padding-right de 80px para não bater nos botões flutuantes */
         .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 25px; background: var(--bg-panel); padding: 15px 80px 15px 25px; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color); flex-wrap: wrap; }
         #status-nome { font-weight: 800; color: var(--primary); font-size: 15px; flex-grow: 1; text-align: center; }
         .botoes-topo-editor { display: flex; gap: 10px; align-items: center; }
@@ -71,10 +70,11 @@
         input, textarea, select { padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; width: 100%; background: var(--bg-body); color: var(--text-main); }
         input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
         .btn-add-block { width: 100%; margin-top: 10px; padding: 12px; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary); }
+        .checkbox-inline { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; color: var(--text-main); white-space: nowrap; }
 
         /* TEXTOS CURRICULO */
         #nomePreview { font-size: 30px; margin: 0; color: #111; text-align: center; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
-        .contato-line { font-size: 11.5px; color: #555; text-align: center; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 18px; }
+        .contato-line { font-size: 11.5px; color: #555; text-align: center; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 18px; line-height: 1.5; }
         .secao-titulo { border-bottom: 2.5px solid #222; margin-top: 28px; margin-bottom: 12px; text-transform: uppercase; font-size: 14px; font-weight: 700; color: #222; letter-spacing: 1px; padding-bottom: 3px;}
         .texto-justificado { font-size: 13px; line-height: 1.6; text-align: justify; color: #333; margin-bottom: 8px; transition: all 0.2s; }
         .bloco-exp { transition: all 0.2s; }
@@ -101,36 +101,47 @@
     <button id="btn-admin-users" class="theme-toggle btn-admin-users" onclick="abrirGestaoUsuarios()" title="Gestão de Usuários (Admin)">👥</button>
 
     <div id="modal-onboarding" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
-        <div style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
-            <h2 style="color: var(--primary); margin-top: 0; font-size: 22px;">📊 Dados Iniciais do Currículo</h2>
-            <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">Para ajudarmos a criar o melhor perfil e entendermos o mercado, preencha as informações abaixo.</p>
+        <div style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
+            <h2 style="color: var(--primary); margin-top: 0; font-size: 24px;">👤 Configure o seu Perfil Base</h2>
+            <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">Preencha estas informações uma única vez. Elas servirão de base para todos os seus currículos e ajudarão a nossa IA a entender o seu momento de carreira.</p>
             
             <div class="input-group" style="margin-top: 0;">
-                <label style="font-size: 13px; font-weight: bold;">Data de Nascimento / Idade:</label>
+                <input type="text" id="onb-nome" placeholder="Nome Completo">
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="email" id="onb-email" placeholder="E-mail de Contacto" style="flex: 1;">
+                    <input type="text" id="onb-whats" placeholder="WhatsApp" oninput="mascaraWhats(this)" style="flex: 1;">
+                </div>
+
                 <div style="display: flex; gap: 10px;">
                     <input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;">
                     <input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly>
                 </div>
                 
-                <label style="font-size: 13px; font-weight: bold; margin-top: 5px;">CEP Atual:</label>
-                <input type="text" id="onb-cep" placeholder="00000-000" oninput="mascaraCep(this)">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;">
+                    <input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;">
+                </div>
+
+                <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn (Opcional)">
                 
-                <label style="font-size: 13px; font-weight: bold; margin-top: 5px;">Tipo de Vaga Almejada:</label>
+                <hr style="border: none; border-top: 1px solid var(--border-color); margin: 10px 0;">
+
+                <label style="font-size: 13px; font-weight: bold;">Informações de Mercado (Privado):</label>
                 <select id="onb-vaga">
-                    <option value="">Selecione o nível da vaga...</option>
+                    <option value="">Selecione o nível da vaga almejada...</option>
                     <option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
                 </select>
 
-                <label style="font-size: 13px; font-weight: bold; margin-top: 5px;">Situação Atual:</label>
-                <select id="onb-status">
-                    <option value="Ativo (Empregado)">Ativo (Empregado)</option>
-                    <option value="Inativo (Buscando Recolocação)">Inativo (Buscando Recolocação)</option>
-                </select>
-
-                <label style="font-size: 13px; font-weight: bold; margin-top: 5px;">Pretensão Salarial (R$):</label>
-                <input type="text" id="onb-pretensao" placeholder="Ex: 3.500,00">
+                <div style="display: flex; gap: 10px;">
+                    <select id="onb-status" style="flex: 1;">
+                        <option value="Ativo (Empregado)">Ativo (Empregado)</option>
+                        <option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option>
+                    </select>
+                    <input type="text" id="onb-pretensao" placeholder="Pretensão (R$)" style="flex: 1;">
+                </div>
                 
-                <button class="btn-base btn-primary" onclick="salvarOnboardingEContinuar()" style="width: 100%; margin-top: 15px; padding: 15px;">Salvar e Continuar ➔</button>
+                <button class="btn-base btn-primary" onclick="salvarOnboardingEContinuar()" style="width: 100%; margin-top: 15px; padding: 15px; font-size: 16px;">Salvar e Criar Currículo ➔</button>
             </div>
         </div>
     </div>
@@ -191,7 +202,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.0.9</strong><br><br>
+            <strong>Edi Pro v1.1.0</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -243,7 +254,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.0.9</strong><br><br>
+            <strong>Edi Pro v1.1.0</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -301,29 +312,51 @@
         <div id="container-editor">
             <div id="editor">
                 
-                <details style="border: 1px solid var(--accent); background: var(--accent-dim); margin-bottom: 15px;">
-                    <summary style="color: var(--accent); font-weight: bold;">📊 Dados de Mercado (Privado)</summary>
+                <details open style="border: 1px solid var(--accent); background: var(--bg-panel); margin-bottom: 15px;">
+                    <summary style="color: var(--text-main); font-weight: bold;">👤 Dados Pessoais & Perfil</summary>
                     <div class="input-group">
-                        <small style="color: var(--text-light); font-size: 11px; margin-bottom: 5px;">Estes dados ajudam a afinar o seu perfil e não saem no PDF.</small>
-                        <div style="display:flex; gap:10px"><input type="date" id="ed-data" style="flex:2"><input type="number" id="ed-idade" placeholder="Idade" style="flex:1"></div>
-                        <input type="text" id="ed-cep" placeholder="CEP" oninput="mascaraCep(this)">
-                        <select id="ed-vaga">
+                        <input id="inNome" placeholder="Nome Completo" oninput="syncNome()">
+                        
+                        <div style="display:flex; gap:10px">
+                            <input type="date" id="inData" onchange="calcularIdadeEditor()" style="flex:2">
+                            <input type="number" id="inIdade" placeholder="Idade" style="flex:1" readonly>
+                        </div>
+                        
+                        <div style="display:flex; gap:10px">
+                            <input id="inCep" placeholder="CEP" oninput="mascaraCep(this)" style="flex:1">
+                            <input id="inEnd" placeholder="Cidade - UF" oninput="syncContato()" style="flex:2">
+                        </div>
+                        
+                        <div style="display:flex; gap:10px">
+                            <input id="inEmail" placeholder="E-mail" oninput="syncContato()">
+                            <input id="inWhats" placeholder="WhatsApp" oninput="mascaraWhats(this)">
+                        </div>
+                        
+                        <input id="inLinkedin" placeholder="URL do LinkedIn (Opcional)" oninput="syncContato()">
+                        
+                        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 5px 0;">
+                        <small style="color: var(--text-light); font-size: 11px;">Dados para a Inteligência Artificial:</small>
+                        
+                        <select id="inVaga">
                             <option value="">Nível da vaga...</option><option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
                         </select>
-                        <select id="ed-status"><option value="Ativo (Empregado)">Ativo (Empregado)</option><option value="Inativo (Buscando Recolocação)">Inativo (Buscando Recolocação)</option></select>
-                        <input type="text" id="ed-pretensao" placeholder="Pretensão Salarial (R$)">
+                        <select id="inStatus"><option value="Ativo (Empregado)">Ativo (Empregado)</option><option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option></select>
+                        
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap;">
+                            <input id="inPretensao" placeholder="Pretensão (Ex: R$ 3.500,00)" oninput="syncContato()" style="flex:1; min-width: 150px;">
+                            <label class="checkbox-inline" title="Se marcado, o valor vai aparecer impresso no currículo."><input type="checkbox" id="chkPretensao" onchange="syncContato()"> Exibir no PDF</label>
+                        </div>
                     </div>
                 </details>
 
-                <details style="border: 2px solid var(--ia); background: var(--primary-dim);"><summary style="color: var(--primary); font-weight: bold;">✨ IA - Extração Rápida de Texto</summary><div class="input-group"><textarea id="texto-ia" placeholder="Cole aqui o texto bruto de um currículo existente..." style="height: 100px; background: var(--bg-panel);"></textarea><button class="btn-base btn-ia" id="btn-ia" onclick="extrairDadosIA()" style="width: 100%;">🤖 Extrair Dados Pessoais</button></div></details>
-                <details open style="margin-top: 15px;"><summary>👤 Dados Pessoais</summary><div class="input-group"><input id="inNome" placeholder="Nome Completo" oninput="sync('inNome', 'nomePreview')"><input id="inEnd" placeholder="Cidade - UF" oninput="syncEndereco()"><input id="inCep" placeholder="CEP" oninput="mascaraCep(this)"><input id="inEmail" placeholder="E-mail" oninput="sync('inEmail', 'emailPreview')"><input id="inWhats" placeholder="WhatsApp com DDD" oninput="mascaraWhats(this)"></div></details>
-                <details open><summary>📝 Resumo Profissional</summary><div class="input-group"><textarea id="resIn" placeholder="Descreva o seu perfil de forma impactante..." style="height: 120px;"></textarea><button id="btn-add-res" class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar Resumo</button></div></details>
+                <details style="border: 2px solid var(--ia); background: var(--primary-dim);"><summary style="color: var(--primary); font-weight: bold;">✨ IA - Extração Rápida de Texto</summary><div class="input-group"><textarea id="texto-ia" placeholder="Cole aqui o texto bruto de um currículo existente..." style="height: 100px; background: var(--bg-panel);"></textarea><button class="btn-base btn-ia" id="btn-ia" onclick="extrairDadosIA()" style="width: 100%;">🤖 Extrair Todos os Dados</button></div></details>
+                <details><summary>📝 Resumo Profissional</summary><div class="input-group"><textarea id="resIn" placeholder="Descreva o seu perfil de forma impactante..." style="height: 120px;"></textarea><button id="btn-add-res" class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar Resumo</button></div></details>
                 <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:10px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="const e = document.getElementById('expFim'); if(e) e.disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
                 <details><summary>🎓 Formação Acadêmica</summary><div class="input-group"><input id="escC" placeholder="Curso/Nível"> <input id="escI" placeholder="Instituição"><div style="display:flex; gap:10px"><input id="escIni" placeholder="Início (Ano)" style="flex:1"><input id="escFim" placeholder="Fim (Ano)" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="escAtual" onchange="const e = document.getElementById('escFim'); if(e) e.disabled = this.checked"> Cursando Atualmente</label><button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button></div></details>
                 <details><summary>🌐 Idiomas</summary><div class="input-group"><input id="idiIn" placeholder="Ex: Inglês"><select id="idiNivel"><option value="B1 (Intermediario)">B1 (Intermediario)</option><option value="C1 (Avançado)">C1 (Avançado)</option><option value="Fluente/Nativo">Fluente/Nativo</option></select><button id="btn-add-idi" class="btn-base btn-primary btn-add-block" onclick="adicionarIdioma()">+ Adicionar Idioma</button></div></details>
                 <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
             </div>
-            <div id="curriculo-wrapper"><div id="curriculo"><h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line"><span id="endPreview">...</span> | <span id="emailPreview">...</span> | <span id="whatsPreview">...</span></div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div></div></div>
+            <div id="curriculo-wrapper"><div id="curriculo"><h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line" id="contatoPreview">...</div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div></div></div>
         </div>
     </div>
 
@@ -342,10 +375,32 @@
     function setValSafe(id, val) { const el = document.getElementById(id); if(el) el.value = val; }
     function getValSafe(id) { const el = document.getElementById(id); return el ? el.value : ""; }
 
-    function sync(i, p) { const el = document.getElementById(i); const prev = document.getElementById(p); if(el && prev) prev.innerText = el.value || "..."; }
-    function syncEndereco() { const edIdade = getValSafe('ed-idade'); const inEnd = getValSafe('inEnd'); const inCep = getValSafe('inCep'); let texto = ""; if(edIdade) texto += edIdade + " anos | "; texto += inEnd ? inEnd : "..."; if(inCep && inCep !== "undefined") texto += " - CEP: " + inCep; const endPrev = document.getElementById('endPreview'); if(endPrev) endPrev.innerText = texto; }
-    function mascaraCep(i) { if(!i) return; i.value = i.value.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").substring(0, 9); syncEndereco(); }
-    function mascaraWhats(i) { if(!i) return; let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 15); const wp = document.getElementById("whatsPreview"); if(wp) wp.innerText = i.value || "..."; }
+    function syncNome() { const el = document.getElementById('inNome'); const prev = document.getElementById('nomePreview'); if(el && prev) prev.innerText = el.value || "NOME COMPLETO"; }
+    
+    // Nova função unificada para a linha de contactos (Endereço, Email, Whats, LinkedIn, Pretensão)
+    function syncContato() {
+        const idade = getValSafe('inIdade');
+        const end = getValSafe('inEnd');
+        const email = getValSafe('inEmail');
+        const whats = getValSafe('inWhats');
+        const linkedin = getValSafe('inLinkedin');
+        const pretensao = getValSafe('inPretensao');
+        const mostrarPretensao = document.getElementById('chkPretensao')?.checked;
+
+        let partes = [];
+        if(idade) partes.push(`${idade} anos`);
+        if(end) partes.push(end);
+        if(email) partes.push(email);
+        if(whats) partes.push(whats);
+        if(linkedin) partes.push(linkedin);
+        if(mostrarPretensao && pretensao) partes.push(`Pretensão: ${pretensao}`);
+
+        const prev = document.getElementById('contatoPreview');
+        if(prev) prev.innerText = partes.length > 0 ? partes.join(' | ') : "...";
+    }
+
+    function mascaraCep(i) { if(!i) return; i.value = i.value.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").substring(0, 9); syncContato(); }
+    function mascaraWhats(i) { if(!i) return; let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 15); syncContato(); }
     function showToast() { const t = document.getElementById('toast'); if(t) { t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); } }
 
     // === VALIDAÇÃO DE SENHA ===
@@ -353,8 +408,8 @@
     function validarSenha(senha) { return regexSenha.test(senha); }
 
     // === CONFIGURAÇÕES ADMIN ===
-    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
-    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
+    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
+    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
 
     function verificarAdmin() {
         if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'flex'; if(u) u.style.display = 'flex'; } 
@@ -443,10 +498,27 @@
 
     // === ONBOARDING E FLUXO DE CURRÍCULO ===
     function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
+    function calcularIdadeEditor() { const dateInput = getValSafe('inData'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970)); syncContato(); } }
+    
     function fluxoNovo() { idAtual = null; limparTudo(); const st = document.getElementById('status-nome'); if(st) st.innerText = "📄 Currículo: NOVO"; const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'flex'; }
     function salvarOnboardingEContinuar() {
-        setValSafe('ed-data', getValSafe('onb-data')); setValSafe('ed-idade', getValSafe('onb-idade')); setValSafe('ed-cep', getValSafe('onb-cep')); setValSafe('ed-vaga', getValSafe('onb-vaga')); setValSafe('ed-status', getValSafe('onb-status')); setValSafe('ed-pretensao', getValSafe('onb-pretensao')); setValSafe('inCep', getValSafe('onb-cep'));
-        const inCepEl = document.getElementById('inCep'); if(inCepEl) mascaraCep(inCepEl);
+        setValSafe('inNome', getValSafe('onb-nome'));
+        setValSafe('inEmail', getValSafe('onb-email'));
+        setValSafe('inWhats', getValSafe('onb-whats'));
+        setValSafe('inData', getValSafe('onb-data'));
+        setValSafe('inIdade', getValSafe('onb-idade'));
+        setValSafe('inCep', getValSafe('onb-cep'));
+        setValSafe('inEnd', getValSafe('onb-end'));
+        setValSafe('inLinkedin', getValSafe('onb-linkedin'));
+        
+        setValSafe('inVaga', getValSafe('onb-vaga'));
+        setValSafe('inStatus', getValSafe('onb-status'));
+        setValSafe('inPretensao', getValSafe('onb-pretensao'));
+        
+        const whatsEl = document.getElementById('inWhats'); if(whatsEl) mascaraWhats(whatsEl);
+        const cepEl = document.getElementById('inCep'); if(cepEl) mascaraCep(cepEl);
+        
+        syncNome(); syncContato();
         const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'none'; 
         irPara('tela-editor');
     }
@@ -495,8 +567,12 @@
         const payload = { 
             identificador: id, user_id: usuarioAtual.id, 
             conteudo: { 
-                dados_mercado: { data: getValSafe('ed-data'), idade: getValSafe('ed-idade'), cep: getValSafe('ed-cep'), vaga: getValSafe('ed-vaga'), status: getValSafe('ed-status'), pretensao: getValSafe('ed-pretensao') },
-                pessoais: { nome: getValSafe('inNome'), end: getValSafe('inEnd'), cep: getValSafe('inCep'), email: getValSafe('inEmail'), whats: getValSafe('inWhats') }, 
+                pessoais: { 
+                    nome: getValSafe('inNome'), data: getValSafe('inData'), idade: getValSafe('inIdade'), 
+                    cep: getValSafe('inCep'), end: getValSafe('inEnd'), email: getValSafe('inEmail'), whats: getValSafe('inWhats'), 
+                    linkedin: getValSafe('inLinkedin'), vaga: getValSafe('inVaga'), status: getValSafe('inStatus'), 
+                    pretensao: getValSafe('inPretensao'), mostrarPretensao: document.getElementById('chkPretensao')?.checked 
+                }, 
                 resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()), 
                 experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ cargo: el.querySelector('.exp-header span:first-child').innerText, data: el.querySelector('.exp-header span:last-child').innerText, empresa: el.querySelector('.exp-empresa').innerText, desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() })), 
                 escolaridade: Array.from(document.querySelectorAll('#preEsc .item-lista')).map(el => el.innerText.replace(regexClean, '').trim()), 
@@ -515,15 +591,29 @@
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; 
             const c = data.conteudo || {}; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g; 
 
+            // Compatibilidade com versões antigas do JSON guardado
             if(c.dados_mercado) { 
-                setValSafe('ed-data', c.dados_mercado.data || ""); setValSafe('ed-idade', c.dados_mercado.idade || ""); setValSafe('ed-cep', c.dados_mercado.cep || ""); setValSafe('ed-vaga', c.dados_mercado.vaga || ""); setValSafe('ed-status', c.dados_mercado.status || "Ativo (Empregado)"); setValSafe('ed-pretensao', c.dados_mercado.pretensao || ""); 
+                setValSafe('inData', c.dados_mercado.data || ""); setValSafe('inIdade', c.dados_mercado.idade || ""); 
+                setValSafe('inVaga', c.dados_mercado.vaga || ""); setValSafe('inStatus', c.dados_mercado.status || "Ativo (Empregado)"); 
+                setValSafe('inPretensao', c.dados_mercado.pretensao || ""); 
             }
             if(c.pessoais) {
-                setValSafe('inNome', c.pessoais.nome || ""); setValSafe('inEnd', c.pessoais.end || ""); setValSafe('inCep', c.pessoais.cep || ""); setValSafe('inEmail', c.pessoais.email || ""); 
+                setValSafe('inNome', c.pessoais.nome || ""); 
+                if(c.pessoais.data) setValSafe('inData', c.pessoais.data);
+                if(c.pessoais.idade) setValSafe('inIdade', c.pessoais.idade);
+                setValSafe('inEnd', c.pessoais.end || ""); setValSafe('inCep', c.pessoais.cep || ""); 
+                setValSafe('inEmail', c.pessoais.email || ""); setValSafe('inLinkedin', c.pessoais.linkedin || ""); 
+                setValSafe('inVaga', c.pessoais.vaga || c.dados_mercado?.vaga || "");
+                setValSafe('inStatus', c.pessoais.status || c.dados_mercado?.status || "Ativo (Empregado)");
+                setValSafe('inPretensao', c.pessoais.pretensao || c.dados_mercado?.pretensao || "");
+                
+                const chk = document.getElementById('chkPretensao');
+                if(chk) chk.checked = !!c.pessoais.mostrarPretensao;
+
                 const inputWhats = document.getElementById('inWhats'); if(inputWhats && c.pessoais.whats) { inputWhats.value = c.pessoais.whats; mascaraWhats(inputWhats); } 
             }
             
-            sync('inNome','nomePreview'); syncEndereco(); sync('inEmail','emailPreview'); 
+            syncNome(); syncContato(); 
             
             if(c.resumo) c.resumo.forEach(r => adicionarResumo(r.replace(regexLimpa,''))); 
             if(c.experiencias) c.experiencias.forEach(e => { const dates = e.data ? e.data.split(' — ') : ["",""]; adicionarExperiencia({ cargo: e.cargo||"", empresa: e.empresa||"", ini: dates[0]||"", fim: dates[1]||"", desc: (e.desc||"").replace(regexLimpa,'') }); }); 
@@ -558,7 +648,7 @@
         } finally { btnRef.disabled = false; btnRef.innerText = originalText; } 
     }
 
-    async function extrairDadosIA() { const txt = getValSafe('texto-ia'); if(!txt) return alert("Cole texto!"); const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; try { const extraido = await processarIA(prompt, document.getElementById('btn-ia'), "🤖 Extraindo...", ""); limparTudo(); idAtual = null; const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; preencherEditor(extraido); } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } }
+    async function extrairDadosIA() { const txt = getValSafe('texto-ia'); if(!txt) return alert("Cole texto!"); const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; try { const extraido = await processarIA(prompt, document.getElementById('btn-ia'), "🤖 Extraindo...", ""); limparTudo(); idAtual = null; const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; preencherEditor(extraido); } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } }
     
     async function ajustarCurriculoVaga() { 
         const idBase = getValSafe('select-curriculo-base'); const textoVaga = getValSafe('texto-vaga'); const nivelAjuste = getValSafe('nivel-ajuste'); 
@@ -566,7 +656,7 @@
         try { 
             const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single(); 
             if (!data) throw new Error("Erro ao ler currículo base."); const c = data.conteudo; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g; 
-            const dadosDoCandidato = { nome: c.pessoais.nome, endereco: c.pessoais.end, cep: c.pessoais.cep, email: c.pessoais.email, whatsapp: c.pessoais.whats, resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "", experiencias: c.experiencias ? c.experiencias.map(e => { const dates = e.data.split(' — '); return {cargo: e.cargo, empresa: e.empresa, ini: dates[0] || "", fim: dates[1] || "", desc: e.desc.replace(regexLimpa, '')}; }) : [], formacao: c.escolaridade ? c.escolaridade.map(esc => ({curso: esc.replace(regexLimpa, ''), inst: "", ini: "", fim: ""})) : [], idiomas: c.idiomas ? c.idiomas.map(i => { const p = i.replace(regexLimpa, '').split(':'); return {nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}; }) : [], habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : [] }; 
+            const dadosDoCandidato = { nome: c.pessoais.nome, endereco: c.pessoais.end, cep: c.pessoais.cep, email: c.pessoais.email, whatsapp: c.pessoais.whats, linkedin: c.pessoais.linkedin, resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "", experiencias: c.experiencias ? c.experiencias.map(e => { const dates = e.data.split(' — '); return {cargo: e.cargo, empresa: e.empresa, ini: dates[0] || "", fim: dates[1] || "", desc: e.desc.replace(regexLimpa, '')}; }) : [], formacao: c.escolaridade ? c.escolaridade.map(esc => ({curso: esc.replace(regexLimpa, ''), inst: "", ini: "", fim: ""})) : [], idiomas: c.idiomas ? c.idiomas.map(i => { const p = i.replace(regexLimpa, '').split(':'); return {nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}; }) : [], habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : [] }; 
             const basePrompt = nivelAjuste === 'agressivo' ? (localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO) : (localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); 
             const prompt = `${basePrompt} DADOS: ${JSON.stringify(dadosDoCandidato)} VAGA: ${textoVaga}`; 
             
@@ -576,8 +666,11 @@
             const primeiroNome = (extraido.nome || "Candidato").split(" ")[0]; const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada"; idAtual = `${primeiroNome} - ${tituloVagaFormatado}`; 
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + idAtual; 
             
-            if(c.dados_mercado) { 
-                setValSafe('ed-data', c.dados_mercado.data || ""); setValSafe('ed-idade', c.dados_mercado.idade || ""); setValSafe('ed-cep', c.dados_mercado.cep || ""); setValSafe('ed-vaga', c.dados_mercado.vaga || ""); setValSafe('ed-status', c.dados_mercado.status || "Ativo (Empregado)"); setValSafe('ed-pretensao', c.dados_mercado.pretensao || ""); 
+            if(c.pessoais) { 
+                setValSafe('inData', c.pessoais.data || ""); setValSafe('inIdade', c.pessoais.idade || ""); 
+                setValSafe('inVaga', c.pessoais.vaga || ""); setValSafe('inStatus', c.pessoais.status || "Ativo (Empregado)"); 
+                setValSafe('inPretensao', c.pessoais.pretensao || ""); 
+                const chk = document.getElementById('chkPretensao'); if(chk) chk.checked = !!c.pessoais.mostrarPretensao;
             }
             preencherEditor(extraido); irPara('tela-editor'); 
         } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } 
@@ -589,11 +682,22 @@
     function editarIdioma(btn) { const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
     function editarHabilidade(btn) { const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if(editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
     
-    function preencherEditor(extraido) { setValSafe('inNome', extraido.nome || ""); setValSafe('inEnd', extraido.endereco || ""); setValSafe('inCep', extraido.cep || ""); setValSafe('inEmail', extraido.email || ""); const inputWhats = document.getElementById('inWhats'); if(inputWhats && extraido.whatsapp) { inputWhats.value = extraido.whatsapp; mascaraWhats(inputWhats); } sync('inNome', 'nomePreview'); sync('inEmail', 'emailPreview'); syncEndereco(); if(extraido.resumo) { setValSafe('resIn', extraido.resumo); adicionarResumo(); } if(extraido.experiencias) extraido.experiencias.forEach(e => adicionarExperiencia(e)); if(extraido.formacao) extraido.formacao.forEach(f => adicionarEscolaridade(f)); if(extraido.idiomas) extraido.idiomas.forEach(i => adicionarIdioma(i)); if(extraido.habilidades) extraido.habilidades.forEach(h => adicionarHabilidade(h)); showToast(); setTimeout(ajustarZoomMobile, 100); }
+    function preencherEditor(extraido) { 
+        setValSafe('inNome', extraido.nome || ""); setValSafe('inEnd', extraido.endereco || ""); setValSafe('inCep', extraido.cep || ""); 
+        setValSafe('inEmail', extraido.email || ""); setValSafe('inLinkedin', extraido.linkedin || ""); 
+        const inputWhats = document.getElementById('inWhats'); if(inputWhats && extraido.whatsapp) { inputWhats.value = extraido.whatsapp; mascaraWhats(inputWhats); } 
+        syncNome(); syncContato(); 
+        if(extraido.resumo) { setValSafe('resIn', extraido.resumo); adicionarResumo(); } 
+        if(extraido.experiencias) extraido.experiencias.forEach(e => adicionarExperiencia(e)); 
+        if(extraido.formacao) extraido.formacao.forEach(f => adicionarEscolaridade(f)); 
+        if(extraido.idiomas) extraido.idiomas.forEach(i => adicionarIdioma(i)); 
+        if(extraido.habilidades) extraido.habilidades.forEach(h => adicionarHabilidade(h)); 
+        showToast(); setTimeout(ajustarZoomMobile, 100); 
+    }
     
-    function limparTudo() { editResumoNode = null; editExpNode = null; editEscNode = null; editIdiNode = null; editHabNode = null; ['preRes','preExp','preEsc','preIdi','preHab'].forEach(i => { const el = document.getElementById(i); if(el) el.innerHTML = ""; }); ['inNome','inEnd','inCep','inEmail','inWhats','texto-ia'].forEach(i => setValSafe(i,"")); const np = document.getElementById('nomePreview'); if(np) np.innerText = "NOME COMPLETO"; const ep = document.getElementById('endPreview'); if(ep) ep.innerText = "..."; const em = document.getElementById('emailPreview'); if(em) em.innerText = "..."; const wp = document.getElementById('whatsPreview'); if(wp) wp.innerText = "..."; document.querySelectorAll('.btn-add-block').forEach(btn => { btn.innerText = btn.innerText.replace('💾 Salvar Edição', '+ Adicionar').replace('💾 Salvar Experiência', '+ Adicionar Experiência').replace('💾 Salvar Formação', '+ Adicionar Formação').replace('💾 Salvar Idioma', '+ Adicionar Idioma'); btn.classList.remove('btn-accent'); btn.classList.add('btn-primary'); }); setTimeout(ajustarZoomMobile, 100); }
+    function limparTudo() { editResumoNode = null; editExpNode = null; editEscNode = null; editIdiNode = null; editHabNode = null; ['preRes','preExp','preEsc','preIdi','preHab'].forEach(i => { const el = document.getElementById(i); if(el) el.innerHTML = ""; }); ['inNome','inData','inIdade','inEnd','inCep','inEmail','inWhats','inLinkedin','inPretensao','texto-ia'].forEach(i => setValSafe(i,"")); const chk = document.getElementById('chkPretensao'); if(chk) chk.checked = false; const np = document.getElementById('nomePreview'); if(np) np.innerText = "NOME COMPLETO"; const prev = document.getElementById('contatoPreview'); if(prev) prev.innerText = "..."; document.querySelectorAll('.btn-add-block').forEach(btn => { btn.innerText = btn.innerText.replace('💾 Salvar Edição', '+ Adicionar').replace('💾 Salvar Experiência', '+ Adicionar Experiência').replace('💾 Salvar Formação', '+ Adicionar Formação').replace('💾 Salvar Idioma', '+ Adicionar Idioma'); btn.classList.remove('btn-accent'); btn.classList.add('btn-primary'); }); setTimeout(ajustarZoomMobile, 100); }
     
-    function gerarPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit: "mm", format: "a4" }); doc.setLineHeightFactor(1.4); const margin = 20; let y = 20; const regexClean = /\[editar\]|\[remover\]|\[x\]/g; function checarQuebra(espaco) { if (y + espaco > 280) { doc.addPage(); y = 20; } } const nome = getValSafe("inNome") || "Candidato"; const arquivo = `CV_${nome.replace(/\s+/g, '_')}.pdf`; doc.setFont("helvetica", "bold"); doc.setFontSize(26); doc.setTextColor(30, 30, 30); checarQuebra(15); const nomePrev = document.getElementById("nomePreview"); doc.text(nomePrev ? nomePrev.innerText : "", 105, y, { align: "center" }); y += 12; doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(100, 100, 100); checarQuebra(10); const endP = document.getElementById('endPreview'); const emP = document.getElementById('emailPreview'); doc.text((endP ? endP.innerText : "") + " | " + (emP ? emP.innerText : ""), 105, y, { align: "center" }); y += 6; doc.setDrawColor(200, 200, 200); doc.line(margin, y, 190, y); y += 10; const secoes = [ { t: "RESUMO PROFISSIONAL", id: "preRes", type: "text" }, { t: "EXPERIÊNCIA PROFISSIONAL", id: "preExp", type: "exp" }, { t: "FORMAÇÃO ACADÊMICA", id: "preEsc", type: "list" }, { t: "IDIOMAS", id: "preIdi", type: "list" }, { t: "HABILIDADES", id: "preHab", type: "grid" } ]; secoes.forEach(s => { const el = document.getElementById(s.id); if (!el || el.innerHTML.trim() === "") return; checarQuebra(18); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(30, 30, 30); doc.text(s.t, margin, y); y += 2.5; doc.setDrawColor(30, 30, 30); doc.setLineWidth(0.6); doc.line(margin, y, 190, y); y += 7; doc.setLineWidth(0.2); doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(50, 50, 50); if (s.type === "text") { Array.from(el.querySelectorAll('.texto-justificado')).forEach(it => { const txt = it.innerText.replace(regexClean, '').trim(); const dim = doc.getTextDimensions(txt, { maxWidth: 170 }); checarQuebra(dim.h + 5); doc.text(txt, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 4; }); } else if (s.type === "exp") { Array.from(el.querySelectorAll('.bloco-exp')).forEach(b => { const cargo = b.querySelector('.exp-header span:first-child').innerText; const periodo = b.querySelector('.exp-header span:last-child').innerText; const emp = b.querySelector('.exp-empresa').innerText; const desc = b.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim(); const dim = doc.getTextDimensions(desc, { maxWidth: 170 }); checarQuebra(dim.h + 16); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30); doc.text(cargo, margin, y); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100); doc.text(periodo, 190, y, { align: "right" }); y += 5.5; doc.setFont("helvetica", "italic"); doc.setTextColor(80, 80, 80); doc.text(emp, margin, y); y += 5.5; doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); doc.text(desc, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 7; }); } else if (s.type === "list") { Array.from(el.querySelectorAll('.item-lista')).forEach(it => { checarQuebra(8); doc.text(it.innerText.replace(regexClean, '').trim(), margin, y); y += 6; }); } else if (s.type === "grid") { const habs = Array.from(el.querySelectorAll('.item-lista')).map(el => el.querySelector('.hab-text') ? el.querySelector('.hab-text').innerText.replace(regexClean, '').trim() : ""); habs.forEach((h, i) => { if (i % 3 === 0) checarQuebra(8); doc.text(h, margin + ((i % 3) * 56), y); if (i % 3 === 2) y += 6; }); if (habs.length % 3 !== 0) y += 6; } y += 7; }); doc.save(arquivo); }
+    function gerarPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit: "mm", format: "a4" }); doc.setLineHeightFactor(1.4); const margin = 20; let y = 20; const regexClean = /\[editar\]|\[remover\]|\[x\]/g; function checarQuebra(espaco) { if (y + espaco > 280) { doc.addPage(); y = 20; } } const nome = getValSafe("inNome") || "Candidato"; const arquivo = `CV_${nome.replace(/\s+/g, '_')}.pdf`; doc.setFont("helvetica", "bold"); doc.setFontSize(26); doc.setTextColor(30, 30, 30); checarQuebra(15); const nomePrev = document.getElementById("nomePreview"); doc.text(nomePrev ? nomePrev.innerText : "", 105, y, { align: "center" }); y += 10; doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(100, 100, 100); checarQuebra(10); const contatoP = document.getElementById('contatoPreview'); const contatoTxt = contatoP ? contatoP.innerText : ""; const linhasContato = doc.splitTextToSize(contatoTxt, 170); doc.text(linhasContato, 105, y, { align: "center" }); y += (linhasContato.length * 5) + 3; doc.setDrawColor(200, 200, 200); doc.line(margin, y, 190, y); y += 10; const secoes = [ { t: "RESUMO PROFISSIONAL", id: "preRes", type: "text" }, { t: "EXPERIÊNCIA PROFISSIONAL", id: "preExp", type: "exp" }, { t: "FORMAÇÃO ACADÊMICA", id: "preEsc", type: "list" }, { t: "IDIOMAS", id: "preIdi", type: "list" }, { t: "HABILIDADES", id: "preHab", type: "grid" } ]; secoes.forEach(s => { const el = document.getElementById(s.id); if (!el || el.innerHTML.trim() === "") return; checarQuebra(18); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(30, 30, 30); doc.text(s.t, margin, y); y += 2.5; doc.setDrawColor(30, 30, 30); doc.setLineWidth(0.6); doc.line(margin, y, 190, y); y += 7; doc.setLineWidth(0.2); doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(50, 50, 50); if (s.type === "text") { Array.from(el.querySelectorAll('.texto-justificado')).forEach(it => { const txt = it.innerText.replace(regexClean, '').trim(); const dim = doc.getTextDimensions(txt, { maxWidth: 170 }); checarQuebra(dim.h + 5); doc.text(txt, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 4; }); } else if (s.type === "exp") { Array.from(el.querySelectorAll('.bloco-exp')).forEach(b => { const cargo = b.querySelector('.exp-header span:first-child').innerText; const periodo = b.querySelector('.exp-header span:last-child').innerText; const emp = b.querySelector('.exp-empresa').innerText; const desc = b.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim(); const dim = doc.getTextDimensions(desc, { maxWidth: 170 }); checarQuebra(dim.h + 16); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30); doc.text(cargo, margin, y); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100); doc.text(periodo, 190, y, { align: "right" }); y += 5.5; doc.setFont("helvetica", "italic"); doc.setTextColor(80, 80, 80); doc.text(emp, margin, y); y += 5.5; doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); doc.text(desc, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 7; }); } else if (s.type === "list") { Array.from(el.querySelectorAll('.item-lista')).forEach(it => { checarQuebra(8); doc.text(it.innerText.replace(regexClean, '').trim(), margin, y); y += 6; }); } else if (s.type === "grid") { const habs = Array.from(el.querySelectorAll('.item-lista')).map(el => el.querySelector('.hab-text') ? el.querySelector('.hab-text').innerText.replace(regexClean, '').trim() : ""); habs.forEach((h, i) => { if (i % 3 === 0) checarQuebra(8); doc.text(h, margin + ((i % 3) * 56), y); if (i % 3 === 2) y += 6; }); if (habs.length % 3 !== 0) y += 6; } y += 7; }); doc.save(arquivo); }
 </script>
 </body>
 </html>
