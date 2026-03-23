@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Edi Pro! - Currículos com Inteligência Artificial</title>
+    <title>Edi Pro - Currículos com Inteligência Artificial</title>
     
     <link rel="manifest" href="manifest.json?v=4">
     <meta name="theme-color" content="#6c5ce7">
@@ -81,7 +81,7 @@
 
         @media (max-width: 1024px) { #container-editor { flex-direction: column; align-items: center; } #editor { width: 100%; min-width: 100%; position: relative; top: 0; max-height: none; } .features-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .tela { padding: 15px; padding-top: 60px;} h1 { font-size: 26px; text-align: center; margin-top: 30px !important; } .hero-title { font-size: 36px; } .theme-toggle { right: 10px; width: 40px; height: 40px; font-size: 18px; } .btn-luz { top: 10px; } .btn-admin-config { top: 60px; } .btn-admin-users { top: 110px; } .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; } #status-nome { font-size: 14px; width: 100%; text-align: center; margin-bottom: 5px; } .botoes-topo-editor { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 10px; } .botoes-topo-editor .btn-full { grid-column: span 2; } .botoes-topo-editor button { padding: 12px !important; font-size: 12.5px; width: 100%; } #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } }
-        .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
+        .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
         table.tabela-admin { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; } table.tabela-admin th, table.tabela-admin td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-main); } table.tabela-admin th { background: var(--bg-body); font-weight: bold; }
     </style>
 </head>
@@ -131,7 +131,7 @@
     <div id="modal-erro-ia" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
         <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
             <h2 style="color: var(--danger); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">⚠️ Falha na Leitura da IA</h2>
-            <p style="font-size: 14px; color: var(--text-main);">A Inteligência Artificial perdeu-se no formato. Pedimos código e ela respondeu com texto! Feche isto e tente clicar em Gerar novamente.</p>
+            <p style="font-size: 14px; color: var(--text-main);">A Inteligência Artificial perdeu-se no formato. Feche isto e tente clicar em Gerar novamente.</p>
             <textarea id="texto-bruto-erro" style="width: 100%; height: 250px; background: #2c3e50; color: #ecf0f1; font-family: monospace; font-size: 13px; padding: 15px; border-radius: 8px; border: none; margin-bottom: 15px; resize: none;" readonly></textarea>
             <button class="btn-base btn-accent" onclick="document.getElementById('modal-erro-ia').style.display='none'" style="width: 100%;">FECHAR E TENTAR NOVAMENTE</button>
         </div>
@@ -156,14 +156,12 @@
         <div style="width: 100%; max-width: 1000px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
             <div class="top-bar"><button class="btn-base btn-neutral" onclick="irPara('tela-menu')">← Menu Inicial</button></div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">👥 Painel Administrativo de Usuários</h2>
-            <p style="font-size: 15px; margin-bottom: 25px; color: var(--text-light);">Acesso exclusivo para <b>dop.jr82@gmail.com</b>. Aqui você pode gerir as contas registradas no sistema.</p>
+            <p style="font-size: 15px; margin-bottom: 25px; color: var(--text-light);">Acesso exclusivo para <b>dop.jr82@gmail.com</b>.</p>
             
             <div style="overflow-x: auto;">
                 <table class="tabela-admin">
                     <thead><tr><th>E-mail do Usuário</th><th>Data de Cadastro</th><th>Ações</th></tr></thead>
-                    <tbody id="corpo-tabela-usuarios">
-                        <tr><td colspan="3" style="text-align: center;">Carregando usuários...</td></tr>
-                    </tbody>
+                    <tbody id="corpo-tabela-usuarios"><tr><td colspan="3" style="text-align: center;">Carregando usuários...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -275,7 +273,12 @@
     <div id="tela-editor" class="tela">
         <div class="top-bar">
             <div id="status-nome">📄 Currículo: NOVO</div>
-            <div class="botoes-topo-editor"><button class="btn-base btn-neutral btn-full" onclick="irPara('tela-menu')">← Menu Inicial</button><button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar Currículo</button><button class="btn-base btn-neutral" onclick="gerarPDF()">📄 Gerar PDF</button></div>
+            <div class="botoes-topo-editor">
+                <button class="btn-base btn-neutral btn-full" onclick="irPara('tela-menu')">← Menu Inicial</button>
+                <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑 Salvar Cópia</button>
+                <button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar</button>
+                <button class="btn-base btn-neutral" onclick="gerarPDF()">📄 PDF</button>
+            </div>
         </div>
         <div id="container-editor">
             <div id="editor">
@@ -322,18 +325,12 @@
     function validarSenha(senha) { return regexSenha.test(senha); }
 
     // === CONFIGURAÇÕES ADMIN ===
-    // PROMPTS MELHORADOS PARA FORÇAR EXCLUSIVAMENTE A SAÍDA DE JSON
     const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
     const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
 
     function verificarAdmin() {
-        if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { 
-            document.getElementById('btn-admin-config').style.display = 'flex'; 
-            document.getElementById('btn-admin-users').style.display = 'flex'; 
-        } else { 
-            document.getElementById('btn-admin-config').style.display = 'none'; 
-            document.getElementById('btn-admin-users').style.display = 'none'; 
-        }
+        if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { document.getElementById('btn-admin-config').style.display = 'flex'; document.getElementById('btn-admin-users').style.display = 'flex'; } 
+        else { document.getElementById('btn-admin-config').style.display = 'none'; document.getElementById('btn-admin-users').style.display = 'none'; }
     }
     function abrirConfigAdmin() { document.getElementById('admin-prompt-simples').value = localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES; document.getElementById('admin-prompt-agressivo').value = localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO; document.getElementById('modal-admin').style.display = 'flex'; }
     function salvarConfigAdmin() { const pS = document.getElementById('admin-prompt-simples').value.trim(); const pA = document.getElementById('admin-prompt-agressivo').value.trim(); if(pS && pA) { localStorage.setItem('adminPromptSimples', pS); localStorage.setItem('adminPromptAgressivo', pA); document.getElementById('modal-admin').style.display = 'none'; showToast(); } else { alert("Os prompts não podem ficar vazios."); } }
@@ -346,11 +343,7 @@
         tabela.innerHTML = ""; if (!data || data.length === 0) { tabela.innerHTML = `<tr><td colspan="3">Nenhum usuário.</td></tr>`; return; }
         data.forEach(u => {
             const ehAdmin = u.email === 'dop.jr82@gmail.com'; const inativo = u.email.includes('_inativo.local');
-            tabela.innerHTML += `<tr>
-                <td style="${inativo ? 'text-decoration: line-through; color: #999;' : ''}"><strong>${u.email}</strong> ${ehAdmin ? '(Você)' : ''} ${inativo ? '<span style="color:red; font-size:10px;">[Desativado]</span>' : ''}</td>
-                <td>${new Date(u.criado_em).toLocaleDateString('pt-BR')}</td>
-                <td>${(!ehAdmin && !inativo) ? `<button class="btn-base btn-danger" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>` : '-'}</td>
-            </tr>`;
+            tabela.innerHTML += `<tr><td style="${inativo ? 'text-decoration: line-through; color: #999;' : ''}"><strong>${u.email}</strong> ${ehAdmin ? '(Você)' : ''} ${inativo ? '<span style="color:red; font-size:10px;">[Desativado]</span>' : ''}</td><td>${new Date(u.criado_em).toLocaleDateString('pt-BR')}</td><td>${(!ehAdmin && !inativo) ? `<button class="btn-base btn-danger" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>` : '-'}</td></tr>`;
         });
     }
     async function deletarUsuarioAdmin(userId, userEmail) { if(confirm(`ATENÇÃO: Deseja desativar ${userEmail}?`)) { const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId }); if(error) alert("Erro: " + error.message); else { showToast(); abrirGestaoUsuarios(); } } }
@@ -372,8 +365,7 @@
             else if (event === 'PASSWORD_RECOVERY') { 
                 const novaSenha = prompt("Digite nova senha (mínimo 8 caracteres, 1 maiúscula, 1 número):"); 
                 if(!validarSenha(novaSenha)) { alert("Senha fraca. Tente novamente o fluxo de recuperação."); return; }
-                const conf = prompt("Confirme a nova senha:");
-                if(novaSenha !== conf) { alert("As senhas não coincidem."); return; }
+                const conf = prompt("Confirme a nova senha:"); if(novaSenha !== conf) { alert("As senhas não coincidem."); return; }
                 const { error } = await sb.auth.updateUser({ password: novaSenha }); if(!error) { alert("Senha atualizada!"); irPara('tela-menu'); } else { alert("Erro: " + error.message); } 
             }
         });
@@ -397,13 +389,11 @@
             const conf = document.getElementById('login-senha-conf').value;
             if(password !== conf) { alert("As senhas não coincidem."); document.getElementById('msg-login').style.display = 'none'; return; }
             if(!validarSenha(password)) { alert("A senha deve ter no mínimo 8 caracteres, contendo pelo menos 1 número e 1 letra maiúscula."); document.getElementById('msg-login').style.display = 'none'; return; }
-            
             const { data, error } = await sb.auth.signUp({ email, password });
             if (error) { alert("Erro: " + error.message); } 
             else { if (data.user && data.user.identities && data.user.identities.length === 0) { alert("E-mail já em uso."); } else { alert("✉️ Link de confirmação enviado! Verifique seu e-mail."); document.getElementById('login-email').value = ""; document.getElementById('login-senha').value = ""; document.getElementById('login-senha-conf').value = ""; alternarModoLogin(); } }
         } else {
-            const { error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) { alert("Erro: E-mail ou senha incorretos."); }
+            const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) { alert("Erro: E-mail ou senha incorretos."); }
         }
         document.getElementById('msg-login').style.display = 'none';
     }
@@ -412,17 +402,10 @@
     async function atualizarEmail() { const novoEmail = document.getElementById('novo-email').value; if (!novoEmail) return alert("Digite o novo e-mail."); const { error } = await sb.auth.updateUser({ email: novoEmail }); if (error) { alert("Erro: " + error.message); } else { alert("✉️ Links enviados para confirmar a troca."); document.getElementById('novo-email').value = ""; } }
     async function atualizarSenhaConta() { 
         const s1 = document.getElementById('nova-senha').value; const s2 = document.getElementById('nova-senha-conf').value;
-        if(s1 !== s2) return alert("As senhas não coincidem.");
-        if(!validarSenha(s1)) return alert("A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.");
+        if(s1 !== s2) return alert("As senhas não coincidem."); if(!validarSenha(s1)) return alert("A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.");
         const { error } = await sb.auth.updateUser({ password: s1 }); if (error) { alert("Erro: " + error.message); } else { alert("Senha atualizada!"); document.getElementById('nova-senha').value = ""; document.getElementById('nova-senha-conf').value = ""; } 
     }
-    async function solicitarExclusao() { 
-        if(confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) {
-            const { error } = await sb.rpc('desativar_minha_conta');
-            if(error) alert("Erro ao desativar: " + error.message);
-            else { await fazerLogout(); alert("Conta desativada com sucesso."); }
-        }
-    }
+    async function solicitarExclusao() { if(confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) { const { error } = await sb.rpc('desativar_minha_conta'); if(error) alert("Erro ao desativar: " + error.message); else { await fazerLogout(); alert("Conta desativada com sucesso."); } } }
     async function fazerLoginGoogle() { document.getElementById('msg-login').style.display = 'block'; const { error } = await sb.auth.signInWithOAuth({ provider: 'google' }); if (error) { alert("Erro: " + error.message); document.getElementById('msg-login').style.display = 'none'; } }
     async function fazerLogout() { await sb.auth.signOut(); localStorage.removeItem('ultima_atividade_app'); }
 
@@ -431,33 +414,54 @@
     function irPara(id) { document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); window.scrollTo(0,0); setTimeout(ajustarZoomMobile, 50); }
 
     // === ONBOARDING E FLUXO DE CURRÍCULO ===
-    function calcularIdadeOnboarding() {
-        const dateInput = document.getElementById('onb-data').value;
-        if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); document.getElementById('onb-idade').value = Math.abs(age.getUTCFullYear() - 1970); }
-    }
-    function fluxoNovo() {
-        idAtual = null; limparTudo(); document.getElementById('status-nome').innerText = "📄 Currículo: NOVO"; 
-        document.getElementById('modal-onboarding').style.display = 'flex';
-    }
+    function calcularIdadeOnboarding() { const dateInput = document.getElementById('onb-data').value; if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); document.getElementById('onb-idade').value = Math.abs(age.getUTCFullYear() - 1970); } }
+    function fluxoNovo() { idAtual = null; limparTudo(); document.getElementById('status-nome').innerText = "📄 Currículo: NOVO"; document.getElementById('modal-onboarding').style.display = 'flex'; }
     function salvarOnboardingEContinuar() {
-        document.getElementById('ed-data').value = document.getElementById('onb-data').value;
-        document.getElementById('ed-idade').value = document.getElementById('onb-idade').value;
-        document.getElementById('ed-cep').value = document.getElementById('onb-cep').value;
-        document.getElementById('ed-vaga').value = document.getElementById('onb-vaga').value;
-        document.getElementById('ed-status').value = document.getElementById('onb-status').value;
-        document.getElementById('ed-pretensao').value = document.getElementById('onb-pretensao').value;
-        
-        document.getElementById('inCep').value = document.getElementById('onb-cep').value;
-        mascaraCep(document.getElementById('inCep'));
-        
-        document.getElementById('modal-onboarding').style.display = 'none';
-        irPara('tela-editor');
+        document.getElementById('ed-data').value = document.getElementById('onb-data').value; document.getElementById('ed-idade').value = document.getElementById('onb-idade').value; document.getElementById('ed-cep').value = document.getElementById('onb-cep').value; document.getElementById('ed-vaga').value = document.getElementById('onb-vaga').value; document.getElementById('ed-status').value = document.getElementById('onb-status').value; document.getElementById('ed-pretensao').value = document.getElementById('onb-pretensao').value;
+        document.getElementById('inCep').value = document.getElementById('onb-cep').value; mascaraCep(document.getElementById('inCep'));
+        document.getElementById('modal-onboarding').style.display = 'none'; irPara('tela-editor');
     }
 
-    async function fluxoLista() { irPara('tela-lista'); const grid = document.getElementById('grid-salvos'); grid.innerHTML = "<p>Carregando...</p>"; const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id); grid.innerHTML = ""; if(!data || data.length === 0) { grid.innerHTML = "<p>Nenhum currículo salvo.</p>"; return; } data.forEach(item => { const card = document.createElement('div'); card.className = "card-salvo"; card.innerHTML = `<strong style="cursor:pointer; flex:1;" onclick="carregar('${item.identificador}')">${item.identificador}</strong><button class="btn-base btn-danger" onclick="deletar('${item.identificador}')">🗑️ Apagar</button>`; grid.appendChild(card); }); }
+    // === LISTA E VERSÕES (NOVO) ===
+    async function fluxoLista() { 
+        irPara('tela-lista'); const grid = document.getElementById('grid-salvos'); grid.innerHTML = "<p>Carregando...</p>"; 
+        const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id).order('identificador', { ascending: true }); 
+        grid.innerHTML = ""; if(!data || data.length === 0) { grid.innerHTML = "<p>Nenhum currículo salvo.</p>"; return; } 
+        data.forEach(item => { 
+            const card = document.createElement('div'); card.className = "card-salvo"; 
+            card.innerHTML = `
+                <strong style="cursor:pointer; flex:1; min-width: 150px;" onclick="carregar('${item.identificador}')">${item.identificador}</strong>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:12px;" onclick="duplicar('${item.identificador}')">📑 Duplicar</button>
+                    <button class="btn-base btn-danger" onclick="deletar('${item.identificador}')">🗑️ Apagar</button>
+                </div>
+            `; 
+            grid.appendChild(card); 
+        }); 
+    }
+
+    async function duplicar(idOriginal) {
+        const novoId = prompt("Nome para a cópia (ex: Versão 2):", idOriginal + " - Cópia");
+        if(!novoId) return;
+        const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idOriginal).eq('user_id', usuarioAtual.id).single();
+        if(data) {
+            const payload = { identificador: novoId, user_id: usuarioAtual.id, conteudo: data.conteudo };
+            const { error } = await sb.from('curriculos_saas').insert(payload);
+            if(error) alert("Erro ao duplicar: O nome já deve existir.");
+            else { showToast(); fluxoLista(); }
+        }
+    }
+
+    async function salvarComo() {
+        if(!idAtual) return alert("Por favor, guarde o currículo normalmente primeiro antes de criar uma cópia.");
+        const novoId = prompt("Guardar como nova versão. Escreva o novo nome:", idAtual + " - v2");
+        if(!novoId) return;
+        idAtual = novoId;
+        await salvar(); // Ao mudar o idAtual, a função salvar vai criar um novo registo
+    }
     
     async function salvar() { 
-        const id = idAtual || prompt("Nome do currículo:"); if(!id) return; const regexClean = /\[editar\]|\[remover\]|\[x\]/g; 
+        const id = idAtual || prompt("Nome do currículo (ex: TI Banco Itaú):"); if(!id) return; const regexClean = /\[editar\]|\[remover\]|\[x\]/g; 
         const payload = { 
             identificador: id, user_id: usuarioAtual.id, 
             conteudo: { 
@@ -475,7 +479,7 @@
     async function deletar(id) { if(confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id); fluxoLista(); } }
     async function abrirTelaVaga() { irPara('tela-vaga'); const select = document.getElementById('select-curriculo-base'); select.innerHTML = "<option>Carregando...</option>"; const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id); if (error || !data || data.length === 0) { select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>"; return; } select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>"; data.forEach(item => { select.innerHTML += `<option value="${item.identificador}">${item.identificador}</option>`; }); }
     
-    // === CÓDIGO DA IA (MUITO MAIS PROTEGIDO AGORA) ===
+    // === CÓDIGO DA IA ===
     async function processarIA(promptContent, btnRef, loadText, successText) { 
         btnRef.disabled = true; const originalText = btnRef.innerText; btnRef.innerText = loadText; let respostaBruta = ""; let sucessoIA = false; 
         try { 
@@ -489,32 +493,10 @@
                 } catch (e) { } 
             } 
             if (!sucessoIA) throw new Error("Falha IA."); 
-            
-            // Tenta forçar a leitura ignorando textos antes ou depois das chaves
-            const inicioJson = respostaBruta.indexOf('{'); 
-            const fimJson = respostaBruta.lastIndexOf('}'); 
-            if (inicioJson === -1 || fimJson === -1) { 
-                if(document.getElementById('texto-bruto-erro')) {
-                    document.getElementById('texto-bruto-erro').value = respostaBruta; 
-                    document.getElementById('modal-erro-ia').style.display = 'flex'; 
-                }
-                throw new Error("Erro JSON."); 
-            } 
-            
-            // Tenta analisar o JSON final
-            try {
-                return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); 
-            } catch(e) {
-                if(document.getElementById('texto-bruto-erro')) {
-                    document.getElementById('texto-bruto-erro').value = respostaBruta; 
-                    document.getElementById('modal-erro-ia').style.display = 'flex'; 
-                }
-                throw new Error("Erro JSON."); 
-            }
-
-        } finally { 
-            btnRef.disabled = false; btnRef.innerText = originalText; 
-        } 
+            const inicioJson = respostaBruta.indexOf('{'); const fimJson = respostaBruta.lastIndexOf('}'); 
+            if (inicioJson === -1 || fimJson === -1) { if(document.getElementById('texto-bruto-erro')) { document.getElementById('texto-bruto-erro').value = respostaBruta; document.getElementById('modal-erro-ia').style.display = 'flex'; } throw new Error("Erro JSON."); } 
+            try { return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); } catch(e) { if(document.getElementById('texto-bruto-erro')) { document.getElementById('texto-bruto-erro').value = respostaBruta; document.getElementById('modal-erro-ia').style.display = 'flex'; } throw new Error("Erro JSON."); }
+        } finally { btnRef.disabled = false; btnRef.innerText = originalText; } 
     }
 
     async function extrairDadosIA() { const texto = document.getElementById('texto-ia').value; if(!texto) return alert("Cole texto!"); const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${texto}`; try { const extraido = await processarIA(prompt, document.getElementById('btn-ia'), "🤖 Extraindo...", ""); limparTudo(); idAtual = null; document.getElementById('status-nome').innerText = "📄 Currículo: NOVO"; preencherEditor(extraido); } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } }
@@ -535,14 +517,9 @@
             const primeiroNome = (extraido.nome || "Candidato").split(" ")[0]; const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada"; idAtual = `${primeiroNome} - ${tituloVagaFormatado}`; 
             document.getElementById('status-nome').innerText = "📄 Currículo: " + idAtual; 
             
-            // Transferir dados de mercado para não os perder no novo currículo gerado
             if(c.dados_mercado) { document.getElementById('ed-data').value = c.dados_mercado.data || ""; document.getElementById('ed-idade').value = c.dados_mercado.idade || ""; document.getElementById('ed-cep').value = c.dados_mercado.cep || ""; document.getElementById('ed-vaga').value = c.dados_mercado.vaga || ""; document.getElementById('ed-status').value = c.dados_mercado.status || "Ativo (Empregado)"; document.getElementById('ed-pretensao').value = c.dados_mercado.pretensao || ""; }
-            
-            preencherEditor(extraido); 
-            irPara('tela-editor'); 
-        } catch (err) { 
-            if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
-        } 
+            preencherEditor(extraido); irPara('tela-editor'); 
+        } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } 
     }
     
     function sync(i, p) { document.getElementById(p).innerText = document.getElementById(i).value || "..."; } function syncEndereco() { const edIdade = document.getElementById('ed-idade').value; const end = document.getElementById('inEnd').value; const cep = document.getElementById('inCep').value; let texto = ""; if(edIdade) texto += edIdade + " anos | "; texto += end || "..."; if(cep && cep !== "undefined" && cep !== "") texto += " - CEP: " + cep; document.getElementById('endPreview').innerText = texto; } function mascaraCep(i) { i.value = i.value.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").substring(0, 9); syncEndereco(); } function mascaraWhats(i) { let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 15); document.getElementById("whatsPreview").innerText = i.value || "..."; } function showToast() { const t = document.getElementById('toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
