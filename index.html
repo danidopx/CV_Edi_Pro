@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=10">
+    <link rel="manifest" href="manifest.json?v=11">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=10'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=11'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -31,6 +31,10 @@
         .btn-luz { top: 20px; } .btn-admin-config { top: 75px; display: none; } .btn-admin-users { top: 130px; display: none; }
         
         .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 25px; background: var(--bg-panel); padding: 15px 80px 15px 25px; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color); flex-wrap: wrap; }
+        
+        /* NOVO: Menu Superior Fixo no Editor */
+        #tela-editor .top-bar { position: sticky; top: 15px; z-index: 995; box-shadow: var(--shadow-hover); }
+
         #status-nome { font-weight: 800; color: var(--primary); font-size: 15px; flex-grow: 1; text-align: center; }
         .botoes-topo-editor { display: flex; gap: 10px; align-items: center; }
         
@@ -58,7 +62,10 @@
 
         /* EDITOR */
         #container-editor { display: flex; gap: 30px; width: 100%; align-items: flex-start; margin-top: 10px; scroll-behavior: smooth; }
-        #editor { width: 460px; min-width: 460px; background: var(--bg-panel); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 20px; max-height: 92vh; overflow-y: auto; border: 1px solid var(--border-color); scroll-behavior: smooth; }
+        
+        /* NOVO: Ajuste do #editor para respeitar a barra fixa do topo */
+        #editor { width: 460px; min-width: 460px; background: var(--bg-panel); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 95px; max-height: calc(100vh - 110px); overflow-y: auto; border: 1px solid var(--border-color); scroll-behavior: smooth; }
+        
         #curriculo-wrapper { width: 100%; display: flex; justify-content: center; flex: 1; overflow: hidden; }
         #curriculo { background: var(--bg-paper); padding: 50px; width: 680px; min-width: 680px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-height: 950px; transform-origin: top center; color: var(--text-paper); border: 1px solid #d0d0d0; border-radius: 4px; margin: 0 auto; }
 
@@ -84,7 +91,7 @@
 
         @media (max-width: 1024px) { #container-editor { flex-direction: column; align-items: center; } #editor { width: 100%; min-width: 100%; position: relative; top: 0; max-height: none; } .features-grid { grid-template-columns: 1fr; } }
         
-        /* AJUSTE MOBILE - BOTÕES SIMÉTRICOS NA TELA DE EDIÇÃO */
+        /* AJUSTE MOBILE */
         @media (max-width: 768px) { 
             .tela { padding: 15px; padding-top: 60px;} 
             h1 { font-size: 26px; text-align: center; margin-top: 30px !important; } 
@@ -94,6 +101,9 @@
             .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } 
             .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } 
             .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; align-items: stretch; } 
+            
+            /* NOVO: Ajuste do Menu Fixo no Mobile */
+            #tela-editor .top-bar { top: 5px; z-index: 995; }
             #status-nome { font-size: 14px; width: 100%; text-align: center; margin-bottom: 5px; } 
             
             .botoes-topo-editor { display: flex; flex-wrap: wrap; width: 100%; gap: 6px; justify-content: space-between; } 
@@ -102,6 +112,9 @@
             
             #curriculo-wrapper { padding: 0 15px; } 
             #curriculo { margin: 0; } 
+            
+            /* Desativa a posição fixa do painel no mobile para não prender o layout */
+            #editor { position: relative; top: 0; max-height: none; }
         }
         
         .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
@@ -231,7 +244,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.2</strong><br><br>
+            <strong>Edi Pro v1.1.3</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -283,7 +296,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.2</strong><br><br>
+            <strong>Edi Pro v1.1.3</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -703,7 +716,6 @@
         const np = document.getElementById('nomePreview'); if(np) np.innerText = "NOME COMPLETO"; 
         const prev = document.getElementById('contatoPreview'); if(prev) prev.innerText = "..."; 
         
-        // Força todos os detalhes a fecharem ao abrir um novo
         document.querySelectorAll('#editor details').forEach(d => d.removeAttribute('open'));
 
         document.querySelectorAll('.btn-add-block').forEach(btn => { btn.innerText = btn.innerText.replace('💾 Salvar Edição', '+ Adicionar').replace('💾 Salvar Experiência', '+ Adicionar Experiência').replace('💾 Salvar Formação', '+ Adicionar Formação').replace('💾 Salvar Idioma', '+ Adicionar Idioma'); btn.classList.remove('btn-accent'); btn.classList.add('btn-primary'); }); 
@@ -750,7 +762,6 @@
             } else if (s.type === "list") { 
                 Array.from(el.querySelectorAll('.item-lista')).forEach(it => { checarQuebra(8); doc.text(it.innerText.replace(regexClean, '').trim(), margin, y); y += 6; }); 
             } else if (s.type === "grid") { 
-                // NOVO: As habilidades agora são agrupadas num único texto contínuo, separado por bolinhas, sem chance de encavalar!
                 const habs = Array.from(el.querySelectorAll('.item-lista')).map(el => el.querySelector('.hab-text') ? el.querySelector('.hab-text').innerText.replace(regexClean, '').trim() : "");
                 const habString = habs.filter(h => h).join("   •   ");
                 const dim = doc.getTextDimensions(habString, { maxWidth: 170 });
