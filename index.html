@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=11">
+    <link rel="manifest" href="manifest.json?v=12">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=11'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=12'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -31,8 +31,6 @@
         .btn-luz { top: 20px; } .btn-admin-config { top: 75px; display: none; } .btn-admin-users { top: 130px; display: none; }
         
         .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 25px; background: var(--bg-panel); padding: 15px 80px 15px 25px; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color); flex-wrap: wrap; }
-        
-        /* NOVO: Menu Superior Fixo no Editor */
         #tela-editor .top-bar { position: sticky; top: 15px; z-index: 995; box-shadow: var(--shadow-hover); }
 
         #status-nome { font-weight: 800; color: var(--primary); font-size: 15px; flex-grow: 1; text-align: center; }
@@ -62,10 +60,7 @@
 
         /* EDITOR */
         #container-editor { display: flex; gap: 30px; width: 100%; align-items: flex-start; margin-top: 10px; scroll-behavior: smooth; }
-        
-        /* NOVO: Ajuste do #editor para respeitar a barra fixa do topo */
         #editor { width: 460px; min-width: 460px; background: var(--bg-panel); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 95px; max-height: calc(100vh - 110px); overflow-y: auto; border: 1px solid var(--border-color); scroll-behavior: smooth; }
-        
         #curriculo-wrapper { width: 100%; display: flex; justify-content: center; flex: 1; overflow: hidden; }
         #curriculo { background: var(--bg-paper); padding: 50px; width: 680px; min-width: 680px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-height: 950px; transform-origin: top center; color: var(--text-paper); border: 1px solid #d0d0d0; border-radius: 4px; margin: 0 auto; }
 
@@ -101,19 +96,12 @@
             .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } 
             .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } 
             .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; align-items: stretch; } 
-            
-            /* NOVO: Ajuste do Menu Fixo no Mobile */
             #tela-editor .top-bar { top: 5px; z-index: 995; }
             #status-nome { font-size: 14px; width: 100%; text-align: center; margin-bottom: 5px; } 
-            
             .botoes-topo-editor { display: flex; flex-wrap: wrap; width: 100%; gap: 6px; justify-content: space-between; } 
             .botoes-topo-editor .btn-full { flex-basis: 100%; margin-bottom: 5px; } 
             .botoes-topo-editor button:not(.btn-full) { flex: 1; padding: 12px 2px !important; font-size: 11px; white-space: nowrap; } 
-            
-            #curriculo-wrapper { padding: 0 15px; } 
-            #curriculo { margin: 0; } 
-            
-            /* Desativa a posição fixa do painel no mobile para não prender o layout */
+            #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } 
             #editor { position: relative; top: 0; max-height: none; }
         }
         
@@ -244,7 +232,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.3</strong><br><br>
+            <strong>Edi Pro v1.1.4</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -296,7 +284,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.3</strong><br><br>
+            <strong>Edi Pro v1.1.4</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -463,7 +451,7 @@
 
     function mascaraCep(i) { if(!i) return; i.value = i.value.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").substring(0, 9); syncContato(); }
     function mascaraWhats(i) { if(!i) return; let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 15); syncContato(); }
-    function showToast() { const t = document.getElementById('toast'); if(t) { t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); } }
+    function showToast(msg) { const t = document.getElementById('toast'); if(t) { t.innerText = msg || "✔ Operação realizada com sucesso!"; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); } }
 
     const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
     function validarSenha(senha) { return regexSenha.test(senha); }
@@ -493,14 +481,59 @@
     function ajustarZoomMobile() { const wrapper = document.getElementById('curriculo-wrapper'); const curriculo = document.getElementById('curriculo'); if(wrapper && curriculo) { if (window.innerWidth <= 1024) { const larguraDisponivel = wrapper.clientWidth - 30; let escala = larguraDisponivel / 680; curriculo.style.transformOrigin = "top center"; curriculo.style.transform = `scale(${escala})`; wrapper.style.height = `${curriculo.offsetHeight * escala}px`; } else { curriculo.style.transform = "none"; wrapper.style.height = "auto"; } } }
     window.addEventListener('resize', ajustarZoomMobile);
 
+    // ==========================================
+    // INICIALIZAÇÃO E CAPTURA DE VAGA (EXTENSÃO)
+    // ==========================================
     window.addEventListener('load', async () => {
         applyTheme(localStorage.getItem('themePreference') || 'light');
+        
+        // 1. CAPTURAR VAGA EXTERNA DA URL (Extensão Chrome / Windows)
+        const urlParams = new URLSearchParams(window.location.search);
+        const vagaPendenteUrl = urlParams.get('vaga_id');
+        
+        // Se veio um ID na URL, guardamos no LocalStorage para processar depois do login
+        if (vagaPendenteUrl) {
+            localStorage.setItem('vaga_pendente_importacao', vagaPendenteUrl);
+            // Limpa a URL para não ficar feia e não reimportar acidentalmente
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         const ultimaAtividade = localStorage.getItem('ultima_atividade_app'); if (ultimaAtividade && (Date.now() - parseInt(ultimaAtividade) > 7200000)) { await sb.auth.signOut(); localStorage.removeItem('ultima_atividade_app'); irPara('tela-landing'); return; }
         const { data: { session } } = await sb.auth.getSession();
-        if (session) { usuarioAtual = session.user; localStorage.setItem('ultima_atividade_app', Date.now()); const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; verificarAdmin(); irPara('tela-menu'); } else { irPara('tela-landing'); }
+        
+        if (session) { 
+            usuarioAtual = session.user; 
+            localStorage.setItem('ultima_atividade_app', Date.now()); 
+            const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; 
+            verificarAdmin(); 
+            
+            // VERIFICA SE TEM VAGA PENDENTE PARA IMPORTAR AGORA QUE ESTÁ LOGADO
+            const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
+            if (idVagaPendente) {
+                receberVagaExterna(idVagaPendente);
+            } else {
+                irPara('tela-menu'); 
+            }
+        } else { 
+            irPara('tela-landing'); 
+        }
 
         sb.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session) { usuarioAtual = session.user; localStorage.setItem('ultima_atividade_app', Date.now()); const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; verificarAdmin(); const tl = document.getElementById('tela-login'); const tld = document.getElementById('tela-landing'); if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { irPara('tela-menu'); } } 
+            if (event === 'SIGNED_IN' && session) { 
+                usuarioAtual = session.user; 
+                localStorage.setItem('ultima_atividade_app', Date.now()); 
+                const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; 
+                verificarAdmin(); 
+                
+                // Trata a vaga logo após o login se houver
+                const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
+                if (idVagaPendente) {
+                    receberVagaExterna(idVagaPendente);
+                } else {
+                    const tl = document.getElementById('tela-login'); const tld = document.getElementById('tela-landing'); 
+                    if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { irPara('tela-menu'); } 
+                }
+            } 
             else if (event === 'SIGNED_OUT') { usuarioAtual = null; verificarAdmin(); irPara('tela-landing'); }
             else if (event === 'PASSWORD_RECOVERY') { 
                 const novaSenha = prompt("Digite nova senha (mínimo 8 caracteres, 1 maiúscula, 1 número):"); 
@@ -511,6 +544,33 @@
         });
         const cv = document.getElementById('curriculo'); if(cv) { const observer = new MutationObserver(ajustarZoomMobile); observer.observe(cv, { childList: true, subtree: true, characterData: true }); } setTimeout(ajustarZoomMobile, 100);
     });
+
+    // Função para puxar o texto mágico do Supabase
+    async function receberVagaExterna(idTransferencia) {
+        try {
+            const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
+            
+            if (data && data.texto) {
+                localStorage.removeItem('vaga_pendente_importacao');
+                await abrirTelaVaga(); 
+                
+                const txtEl = document.getElementById('texto-vaga');
+                if(txtEl) txtEl.value = data.texto;
+                
+                showToast("✨ Vaga capturada com sucesso! Selecione seu currículo base e clique em Gerar.");
+                
+                // Limpa o lixo
+                await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
+            } else {
+                localStorage.removeItem('vaga_pendente_importacao');
+                irPara('tela-menu');
+            }
+        } catch (e) {
+            console.error("Erro ao importar", e);
+            localStorage.removeItem('vaga_pendente_importacao');
+            irPara('tela-menu');
+        }
+    }
 
     function alternarModoLogin() {
         modoCriarConta = !modoCriarConta;
@@ -771,7 +831,9 @@
             } 
             y += 7; 
         }); 
-        doc.save(arquivo); 
+        doc.save(arquivo);
+        // showToast("PDF gerado!", 3000);
+        
     }
 </script>
 </body>
