@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=13">
+    <link rel="manifest" href="manifest.json?v=14">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=13'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=14'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -227,7 +227,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.6</strong><br><br>
+            <strong>Edi Pro v1.1.7</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -279,7 +279,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.6</strong><br><br>
+            <strong>Edi Pro v1.1.7</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -389,8 +389,11 @@
                 </details>
 
                 <details><summary>📝 Resumo Profissional</summary><div class="input-group"><textarea id="resIn" placeholder="Descreva o seu perfil de forma impactante..." style="height: 120px;"></textarea><button id="btn-add-res" class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar Resumo</button></div></details>
-                <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:10px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="const e = document.getElementById('expFim'); if(e) e.disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
-                <details><summary>🎓 Formação Acadêmica</summary><div class="input-group"><input id="escC" placeholder="Curso/Nível"> <input id="escI" placeholder="Instituição"><div style="display:flex; gap:10px"><input id="escIni" placeholder="Início (Ano)" style="flex:1"><input id="escFim" placeholder="Fim (Ano)" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="escAtual" onchange="const e = document.getElementById('escFim'); if(e) e.disabled = this.checked"> Cursando Atualmente</label><button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button></div></details>
+                
+                <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:10px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="document.getElementById('expFim').disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
+                
+                <details><summary>🎓 Formação Acadêmica</summary><div class="input-group"><input id="escC" placeholder="Curso/Nível"> <input id="escI" placeholder="Instituição"><div style="display:flex; gap:10px"><input id="escIni" placeholder="Início (Ano)" style="flex:1"><input id="escFim" placeholder="Fim (Ano)" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="escAtual" onchange="document.getElementById('escFim').disabled = this.checked"> Cursando Atualmente</label><button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button></div></details>
+                
                 <details><summary>🌐 Idiomas</summary><div class="input-group">
                     <input id="idiIn" placeholder="Ex: Inglês">
                     <select id="idiNivel">
@@ -408,6 +411,7 @@
                     </select>
                     <button id="btn-add-idi" class="btn-base btn-primary btn-add-block" onclick="adicionarIdioma()">+ Adicionar Idioma</button>
                 </div></details>
+                
                 <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
             </div>
             <div id="curriculo-wrapper"><div id="curriculo"><h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line" id="contatoPreview">...</div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div></div></div>
@@ -424,8 +428,8 @@
     let idAtual = null; let usuarioAtual = null;
     let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
     let modoCriarConta = false;
-    let ultimasAlteracoesIA = ""; // Guarda o texto explicativo da IA
-    let origemAtual = "Criado do zero"; // Controla de onde veio o CV
+    let ultimasAlteracoesIA = ""; 
+    let origemAtual = "Criado do zero"; 
 
     // === LÓGICA DO TOUR/TUTORIAL ===
     let passoTour = 0;
@@ -473,8 +477,8 @@
     const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
     function validarSenha(senha) { return regexSenha.test(senha); }
 
-    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou e melhorou neste currículo para o deixar aderente a esta vaga específica." }`;
-    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou, cortou ou adicionou neste currículo para o deixar 100% aderente a esta vaga específica." }`;
+    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou e melhorou neste currículo para o deixar aderente a esta vaga específica." }`;
+    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou, cortou ou adicionou neste currículo para o deixar 100% aderente a esta vaga específica." }`;
 
     function verificarAdmin() {
         if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'flex'; if(u) u.style.display = 'flex'; } 
@@ -499,29 +503,23 @@
     window.addEventListener('resize', ajustarZoomMobile);
 
     // ==========================================
-    // INICIALIZAÇÃO E CAPTURA DE VAGA (EXTENSÃO)
+    // INICIALIZAÇÃO E CAPTURA DE VAGAS
     // ==========================================
     window.addEventListener('load', async () => {
         applyTheme(localStorage.getItem('themePreference') || 'light');
         
         // 1. CAPTURAR VAGA EXTERNA DA URL (Extensão, Windows ou Celular)
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // Verifica se veio do Chrome/Windows (ID do Supabase)
         const vagaPendenteUrl = urlParams.get('vaga_id');
-        
-        // Verifica se veio do menu Compartilhar do Celular (Texto/Link direto)
         const tituloMobile = urlParams.get('titulo_vaga');
         const textoMobile = urlParams.get('texto_vaga');
         const linkMobile = urlParams.get('link_vaga');
 
         if (vagaPendenteUrl) {
-            // Fluxo da Extensão
             localStorage.setItem('vaga_pendente_importacao', vagaPendenteUrl);
             window.history.replaceState({}, document.title, window.location.pathname);
         } else if (tituloMobile || textoMobile || linkMobile) {
-            // Fluxo do Celular (Junta tudo o que o celular mandou)
-            const conteudoMontado = `[ORIGEM DA VAGA: Celular (Compartilhamento Nativo)]\n\n${tituloMobile || ''}\n${textoMobile || ''}\n${linkMobile || ''}`.trim();
+            const conteudoMontado = `[ORIGEM DA VAGA: Celular]\n\n${tituloMobile || ''}\n${textoMobile || ''}\n${linkMobile || ''}`.trim();
             localStorage.setItem('vaga_mobile_pendente', conteudoMontado);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -547,7 +545,8 @@
             }
         } else { 
             const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-            if (idVagaPendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
+            const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
+            if (idVagaPendente || textoMobilePendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
             irPara('tela-landing'); 
         }
 
@@ -559,7 +558,13 @@
                 verificarAdmin(); 
                 
                 const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-                if (idVagaPendente) { receberVagaExterna(idVagaPendente); } else { 
+                const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
+
+                if (idVagaPendente) { 
+                    receberVagaExterna(idVagaPendente); 
+                } else if (textoMobilePendente) {
+                    receberVagaMobile(textoMobilePendente);
+                } else { 
                     const tl = document.getElementById('tela-login'); const tld = document.getElementById('tela-landing'); 
                     if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { irPara('tela-menu'); } 
                 }
@@ -593,18 +598,11 @@
         }
     }
 
-    // Função mágica que lê a vaga do celular (sem precisar de banco de dados)
     async function receberVagaMobile(textoCompleto) {
         localStorage.removeItem('vaga_mobile_pendente');
-        
-        // Vai para a tela de Ajustar Vaga
         await abrirTelaVaga(); 
-        
-        // Cola o texto da vaga no campo
         const txtEl = document.getElementById('texto-vaga');
         if(txtEl) txtEl.value = textoCompleto;
-        
-        // Avisa o usuário
         showToast("📱 Vaga recebida do celular! Selecione o seu currículo base e clique em Gerar.");
     }
 
@@ -815,10 +813,9 @@
                 document.getElementById('btn-ver-alteracoes').style.display = 'inline-flex';
             }
 
-            // Define a origem com base na marcação da extensão
             let matchOrigem = textoVaga.match(/\[ORIGEM DA VAGA: (.*?)\]/);
             if (matchOrigem) {
-                origemAtual = `Extensão Chrome (${matchOrigem[1]})`;
+                origemAtual = `Extração Nativa (${matchOrigem[1]})`;
             } else {
                 origemAtual = `Adaptado da vaga (Texto colado)`;
             }
@@ -921,10 +918,10 @@
             } else if (s.type === "grid") { 
                 const habs = Array.from(el.querySelectorAll('.item-lista')).map(el => el.querySelector('.hab-text') ? el.querySelector('.hab-text').innerText.replace(regexClean, '').trim() : "");
                 const habString = habs.filter(h => h).join("   •   ");
-                const dim = doc.getTextDimensions(habString, { maxWidth: 170 });
-                checarQuebra(dim.h + 5);
-                doc.text(habString, margin, y, { maxWidth: 170, align: "left" });
-                y += dim.h + 4;
+                const linhasHab = doc.splitTextToSize(habString, 170); // Correção matemática do PDF aqui
+                checarQuebra((linhasHab.length * 5) + 5);
+                doc.text(linhasHab, margin, y, { align: "left" });
+                y += (linhasHab.length * 5) + 5;
             } 
             y += 7; 
         }); 
