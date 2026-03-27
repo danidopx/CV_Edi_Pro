@@ -40,7 +40,10 @@
         .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 25px; background: var(--bg-panel); padding: 15px 80px 15px 25px; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color); flex-wrap: wrap; }
         #tela-editor .top-bar { position: sticky; top: 15px; z-index: 995; box-shadow: var(--shadow-hover); }
 
-        #status-nome { font-weight: 800; color: var(--primary); font-size: 15px; flex-grow: 1; text-align: center; }
+        .status-container { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; justify-content: center; }
+        #status-nome { font-weight: 800; color: var(--primary); font-size: 15px; }
+        #status-origem { font-size: 11px; color: var(--text-light); font-weight: 600; margin-top: 3px; background: var(--bg-body); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-color); }
+
         .botoes-topo-editor { display: flex; gap: 10px; align-items: center; }
         
         .btn-base { border: none; padding: 12px 24px; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -98,7 +101,10 @@
             .theme-toggle { right: 10px; width: 40px; height: 40px; font-size: 18px; } .btn-luz { top: 10px; } .btn-admin-config { top: 60px; } .btn-admin-users { top: 110px; } 
             .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } 
             .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; align-items: stretch; } #tela-editor .top-bar { top: 5px; z-index: 995; }
-            #status-nome { font-size: 14px; width: 100%; text-align: center; margin-bottom: 5px; } 
+            
+            .status-container { align-items: center; margin-bottom: 5px; width: 100%; }
+            #status-nome { font-size: 14px; text-align: center; } 
+            
             .botoes-topo-editor { display: flex; flex-wrap: wrap; width: 100%; gap: 6px; justify-content: space-between; } 
             .botoes-topo-editor .btn-full { flex-basis: 100%; margin-bottom: 5px; } .botoes-topo-editor button:not(.btn-full) { flex: 1; padding: 12px 2px !important; font-size: 11px; white-space: nowrap; } 
             #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } #editor { position: relative; top: 0; max-height: none; }
@@ -117,7 +123,7 @@
     <div id="loading-overlay">
         <div class="spinner">⏳</div>
         <div id="loading-text">Processando Inteligência Artificial...</div>
-        <div class="loading-subtext">Isso pode levar alguns segundos. Estamos a ler, cruzar os dados e reescrever o seu currículo.</div>
+        <div class="loading-subtext">Isso pode levar alguns segundos. Estamos lendo, cruzando os dados e reescrevendo o seu currículo.</div>
     </div>
 
     <div id="toast">✔ Operação realizada com sucesso!</div>
@@ -150,7 +156,7 @@
             
             <div class="input-group" style="margin-top: 0;">
                 <input type="text" id="onb-nome" placeholder="Nome Completo">
-                <div style="display: flex; gap: 10px;"><input type="email" id="onb-email" placeholder="E-mail de Contacto" style="flex: 1;"><input type="text" id="onb-whats" placeholder="WhatsApp" oninput="mascaraWhats(this)" style="flex: 1;"></div>
+                <div style="display: flex; gap: 10px;"><input type="email" id="onb-email" placeholder="E-mail de Contato" style="flex: 1;"><input type="text" id="onb-whats" placeholder="WhatsApp" oninput="mascaraWhats(this)" style="flex: 1;"></div>
                 <div style="display: flex; gap: 10px;"><input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;"><input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly></div>
                 <div style="display: flex; gap: 10px;"><input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;"><input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;"></div>
                 <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn (Opcional)">
@@ -168,7 +174,7 @@
     <div id="modal-erro-ia" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
         <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
             <h2 style="color: var(--danger); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">⚠️ Falha na Leitura da IA</h2>
-            <p style="font-size: 14px; color: var(--text-main);">A Inteligência Artificial perdeu-se no formato. Feche isto e tente clicar em Gerar novamente.</p>
+            <p style="font-size: 14px; color: var(--text-main);">A Inteligência Artificial se perdeu no formato. Feche isto e tente clicar em Gerar novamente.</p>
             <textarea id="texto-bruto-erro" style="width: 100%; height: 250px; background: #2c3e50; color: #ecf0f1; font-family: monospace; font-size: 13px; padding: 15px; border-radius: 8px; border: none; margin-bottom: 15px; resize: none;" readonly></textarea>
             <button class="btn-base btn-accent" onclick="document.getElementById('modal-erro-ia').style.display='none'" style="width: 100%;">FECHAR E TENTAR NOVAMENTE</button>
         </div>
@@ -215,13 +221,13 @@
             <button class="btn-base btn-primary" style="padding: 20px 40px; font-size: 18px;" onclick="irPara('tela-login')">COMEÇAR A CRIAR GRÁTIS ✨</button>
         </div>
         <div class="features-grid">
-            <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">Extração Mágica</div><div class="feature-desc">Cole o texto bagunçado do seu LinkedIn ou currículo antigo. A nossa Inteligência Artificial lê, compreende e preenche todos os campos automaticamente para si.</div></div>
+            <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">Extração Mágica</div><div class="feature-desc">Cole o texto bagunçado do seu LinkedIn ou currículo antigo. A nossa Inteligência Artificial lê, compreende e preenche todos os campos automaticamente para você.</div></div>
             <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Match com a Vaga</div><div class="feature-desc">Cole a descrição da vaga de emprego que deseja. O Edi Pro reescreve e ajusta o seu currículo para destacar exatamente o que os recrutadores estão buscando.</div></div>
             <div class="feature-card"><div class="feature-icon">📄</div><div class="feature-title">Design Vencedor</div><div class="feature-desc">Um layout limpo, direto e profissional, otimizado para sistemas de recrutamento (ATS). Exporte um PDF perfeito e pronto para enviar num clique.</div></div>
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.5</strong><br><br>
+            <strong>Edi Pro v1.1.6</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -273,7 +279,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.5</strong><br><br>
+            <strong>Edi Pro v1.1.6</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -320,7 +326,12 @@
 
     <div id="tela-editor" class="tela">
         <div class="top-bar">
-            <div id="status-nome">📄 Currículo: NOVO</div>
+            
+            <div class="status-container">
+                <div id="status-nome">📄 Currículo: NOVO</div>
+                <div id="status-origem">Origem: Criado do zero</div>
+            </div>
+
             <div class="botoes-topo-editor">
                 <button class="btn-base btn-neutral btn-full" onclick="irPara('tela-menu')">← Menu Inicial</button>
                 <button id="btn-ver-alteracoes" class="btn-base" style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);" onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
@@ -414,13 +425,14 @@
     let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
     let modoCriarConta = false;
     let ultimasAlteracoesIA = ""; // Guarda o texto explicativo da IA
+    let origemAtual = "Criado do zero"; // Controla de onde veio o CV
 
     // === LÓGICA DO TOUR/TUTORIAL ===
     let passoTour = 0;
     const tourTextos = [
-        "<b>1. Extração Mágica (IA) ✨</b><br><br>Cole todo o texto do seu LinkedIn ou de um currículo antigo no primeiro menu. A nossa Inteligência Artificial vai ler tudo e preencher todos os campos do editor de forma automática para si!",
+        "<b>1. Extração Mágica (IA) ✨</b><br><br>Cole todo o texto do seu LinkedIn ou de um currículo antigo no primeiro menu. A nossa Inteligência Artificial vai ler tudo e preencher todos os campos do editor de forma automática para você!",
         "<b>2. Múltiplas Versões 📑</b><br><br>Para se candidatar a vagas diferentes, use o botão <b>Salvar Cópia</b> no topo da tela. Ele duplica o seu currículo atual, permitindo que você altere informações sem perder a versão original.",
-        "<b>3. Gerir e Exportar 📄</b><br><br>Na tela inicial do sistema, em <b>Ver Salvos</b>, você gerencia todas as suas versões. Quando o currículo estiver perfeito, é só clicar em <b>Gerar PDF</b> no menu superior!"
+        "<b>3. Gerenciar e Exportar 📄</b><br><br>Na tela inicial do sistema, em <b>Ver Salvos</b>, você gerencia todas as suas versões. Quando o currículo estiver perfeito, é só clicar em <b>Gerar PDF</b> no menu superior!"
     ];
     function iniciarTour() { if(!localStorage.getItem('tourV1')) { document.getElementById('tour-panel').style.display = 'block'; mostrarPassoTour(); } }
     function mostrarPassoTour() { document.getElementById('tour-text').innerHTML = tourTextos[passoTour]; }
@@ -433,6 +445,11 @@
 
     function syncNome() { const el = document.getElementById('inNome'); const prev = document.getElementById('nomePreview'); if(el && prev) prev.innerText = el.value || "NOME COMPLETO"; }
     
+    function atualizarStatusOrigem() {
+        const el = document.getElementById('status-origem');
+        if (el) el.innerText = "Origem: " + origemAtual;
+    }
+
     function syncContato() {
         const idade = getValSafe('inIdade'); const end = getValSafe('inEnd'); const email = getValSafe('inEmail'); const whats = getValSafe('inWhats'); const linkedin = getValSafe('inLinkedin'); const pretensao = getValSafe('inPretensao'); const mostrarPretensao = document.getElementById('chkPretensao')?.checked;
         let partes = [];
@@ -612,6 +629,10 @@
         syncNome(); syncContato();
         const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'none'; 
         document.getElementById('panel-ia-extracao').style.display = 'block';
+        
+        origemAtual = "Criado do zero";
+        atualizarStatusOrigem();
+
         irPara('tela-editor'); iniciarTour();
     }
 
@@ -649,6 +670,7 @@
         const payload = { 
             identificador: id, user_id: usuarioAtual.id, 
             conteudo: { 
+                origem: origemAtual,
                 pessoais: { nome: getValSafe('inNome'), data: getValSafe('inData'), idade: getValSafe('inIdade'), cep: getValSafe('inCep'), end: getValSafe('inEnd'), email: getValSafe('inEmail'), whats: getValSafe('inWhats'), linkedin: getValSafe('inLinkedin'), vaga: getValSafe('inVaga'), status: getValSafe('inStatus'), pretensao: getValSafe('inPretensao'), mostrarPretensao: document.getElementById('chkPretensao')?.checked }, 
                 resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()), 
                 experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ cargo: el.querySelector('.exp-header span:first-child').innerText, data: el.querySelector('.exp-header span:last-child').innerText, empresa: el.querySelector('.exp-empresa').innerText, desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() })), 
@@ -667,6 +689,9 @@
             limparTudo(); idAtual = id; 
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; 
             const c = data.conteudo || {}; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g; 
+
+            origemAtual = c.origem || "Não identificada";
+            atualizarStatusOrigem();
 
             if(c.dados_mercado) { setValSafe('inData', c.dados_mercado.data || ""); setValSafe('inIdade', c.dados_mercado.idade || ""); setValSafe('inVaga', c.dados_mercado.vaga || ""); setValSafe('inStatus', c.dados_mercado.status || "Ativo (Empregado)"); setValSafe('inPretensao', c.dados_mercado.pretensao || ""); }
             if(c.pessoais) {
@@ -713,7 +738,26 @@
         } finally { ocultarCarregamento(); } 
     }
 
-    async function extrairDadosIA() { const txt = getValSafe('texto-ia'); if(!txt) return alert("Cole texto!"); const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; try { const extraido = await processarIA(prompt); limparTudo(); idAtual = null; const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; preencherEditor(extraido); } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } }
+    async function extrairDadosIA() { 
+        const txt = getValSafe('texto-ia'); 
+        if(!txt) return alert("Cole texto!"); 
+        
+        const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; 
+        
+        try { 
+            const extraido = await processarIA(prompt); 
+            limparTudo(); 
+            idAtual = null; 
+            const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; 
+            
+            origemAtual = "Extraído via IA (Texto colado)";
+            atualizarStatusOrigem();
+
+            preencherEditor(extraido); 
+        } catch (err) { 
+            if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
+        } 
+    }
     
     async function ajustarCurriculoVaga() { 
         const idBase = getValSafe('select-curriculo-base'); const textoVaga = getValSafe('texto-vaga'); const nivelAjuste = getValSafe('nivel-ajuste'); 
@@ -729,11 +773,19 @@
             
             limparTudo(); 
             
-            // Grava a explicação da IA e mostra o botão
             if(extraido.resumo_alteracoes) {
                 ultimasAlteracoesIA = extraido.resumo_alteracoes;
                 document.getElementById('btn-ver-alteracoes').style.display = 'inline-flex';
             }
+
+            // Define a origem com base na marcação da extensão
+            let matchOrigem = textoVaga.match(/\[ORIGEM DA VAGA: (.*?)\]/);
+            if (matchOrigem) {
+                origemAtual = `Extensão Chrome (${matchOrigem[1]})`;
+            } else {
+                origemAtual = `Adaptado da vaga (Texto colado)`;
+            }
+            atualizarStatusOrigem();
 
             const primeiroNome = (extraido.nome || "Candidato").split(" ")[0]; const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada"; idAtual = `${primeiroNome} - ${tituloVagaFormatado}`; 
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + idAtual; 
@@ -745,7 +797,6 @@
                 const chk = document.getElementById('chkPretensao'); if(chk) chk.checked = !!c.pessoais.mostrarPretensao;
             }
             
-            // Ocultar painel de extração
             document.getElementById('panel-ia-extracao').style.display = 'none';
 
             preencherEditor(extraido); irPara('tela-editor'); 
@@ -775,6 +826,9 @@
         ultimasAlteracoesIA = "";
         document.getElementById('btn-ver-alteracoes').style.display = 'none';
         
+        origemAtual = "Criado do zero";
+        atualizarStatusOrigem();
+
         editResumoNode = null; editExpNode = null; editEscNode = null; editIdiNode = null; editHabNode = null; 
         ['preRes','preExp','preEsc','preIdi','preHab'].forEach(i => { const el = document.getElementById(i); if(el) el.innerHTML = ""; }); 
         ['inNome','inData','inIdade','inEnd','inCep','inEmail','inWhats','inLinkedin','inPretensao','texto-ia'].forEach(i => setValSafe(i,"")); 
