@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=12">
+    <link rel="manifest" href="manifest.json?v=13">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=12'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=13'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -22,7 +22,14 @@
         * { box-sizing: border-box; transition: background 0.3s, color 0.3s, border-color 0.3s; } 
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin:0; background: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
         
-        #toast { display: none; position: fixed; top: 20px; right: 20px; background: var(--accent); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold; }
+        #toast { display: none; position: fixed; top: 20px; right: 20px; background: var(--accent); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10002; font-weight: bold; }
+
+        /* TELA DE CARREGAMENTO UNIVERSAL */
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10005; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .spinner { font-size: 60px; animation: spin 2s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #loading-text { font-size: 20px; font-weight: bold; color: var(--primary); text-align: center; }
+        .loading-subtext { font-size: 14px; color: #ccc; margin-top: 10px; max-width: 300px; text-align: center; }
 
         .tela { display: none; width: 100%; max-width: 1250px; padding: 30px; }
         .tela.ativa { display: flex; flex-direction: column; align-items: center; }
@@ -86,23 +93,15 @@
 
         @media (max-width: 1024px) { #container-editor { flex-direction: column; align-items: center; } #editor { width: 100%; min-width: 100%; position: relative; top: 0; max-height: none; } .features-grid { grid-template-columns: 1fr; } }
         
-        /* AJUSTE MOBILE */
         @media (max-width: 768px) { 
-            .tela { padding: 15px; padding-top: 60px;} 
-            h1 { font-size: 26px; text-align: center; margin-top: 30px !important; } 
-            .hero-title { font-size: 36px; } 
-            .theme-toggle { right: 10px; width: 40px; height: 40px; font-size: 18px; } 
-            .btn-luz { top: 10px; } .btn-admin-config { top: 60px; } .btn-admin-users { top: 110px; } 
-            .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } 
-            .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } 
-            .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; align-items: stretch; } 
-            #tela-editor .top-bar { top: 5px; z-index: 995; }
+            .tela { padding: 15px; padding-top: 60px;} h1 { font-size: 26px; text-align: center; margin-top: 30px !important; } .hero-title { font-size: 36px; } 
+            .theme-toggle { right: 10px; width: 40px; height: 40px; font-size: 18px; } .btn-luz { top: 10px; } .btn-admin-config { top: 60px; } .btn-admin-users { top: 110px; } 
+            .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } 
+            .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; align-items: stretch; } #tela-editor .top-bar { top: 5px; z-index: 995; }
             #status-nome { font-size: 14px; width: 100%; text-align: center; margin-bottom: 5px; } 
             .botoes-topo-editor { display: flex; flex-wrap: wrap; width: 100%; gap: 6px; justify-content: space-between; } 
-            .botoes-topo-editor .btn-full { flex-basis: 100%; margin-bottom: 5px; } 
-            .botoes-topo-editor button:not(.btn-full) { flex: 1; padding: 12px 2px !important; font-size: 11px; white-space: nowrap; } 
-            #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } 
-            #editor { position: relative; top: 0; max-height: none; }
+            .botoes-topo-editor .btn-full { flex-basis: 100%; margin-bottom: 5px; } .botoes-topo-editor button:not(.btn-full) { flex: 1; padding: 12px 2px !important; font-size: 11px; white-space: nowrap; } 
+            #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } #editor { position: relative; top: 0; max-height: none; }
         }
         
         .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
@@ -115,8 +114,22 @@
 </head>
 <body>
 
+    <div id="loading-overlay">
+        <div class="spinner">⏳</div>
+        <div id="loading-text">Processando Inteligência Artificial...</div>
+        <div class="loading-subtext">Isso pode levar alguns segundos. Estamos a ler, cruzar os dados e reescrever o seu currículo.</div>
+    </div>
+
     <div id="toast">✔ Operação realizada com sucesso!</div>
     
+    <div id="modal-alteracoes" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10003; justify-content: center; align-items: center; padding: 15px;">
+        <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
+            <h2 style="color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 20px;">🔍 O que a IA ajustou?</h2>
+            <p id="texto-alteracoes-ia" style="font-size: 14px; color: var(--text-main); line-height: 1.6; white-space: pre-wrap; margin-bottom: 20px;">Nenhuma informação disponível.</p>
+            <button class="btn-base btn-neutral" onclick="document.getElementById('modal-alteracoes').style.display='none'" style="width: 100%;">Fechar</button>
+        </div>
+    </div>
+
     <div id="tour-panel" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--primary); color:white; padding:20px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.3); z-index:10001; max-width:320px; border: 1px solid rgba(255,255,255,0.2);">
         <h3 style="margin-top:0; font-size:16px; margin-bottom:10px;">💡 Dicas do Editor</h3>
         <p id="tour-text" style="font-size:13.5px; line-height:1.5; margin-bottom:15px;"></p>
@@ -137,40 +150,16 @@
             
             <div class="input-group" style="margin-top: 0;">
                 <input type="text" id="onb-nome" placeholder="Nome Completo">
-                
-                <div style="display: flex; gap: 10px;">
-                    <input type="email" id="onb-email" placeholder="E-mail de Contacto" style="flex: 1;">
-                    <input type="text" id="onb-whats" placeholder="WhatsApp" oninput="mascaraWhats(this)" style="flex: 1;">
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;">
-                    <input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly>
-                </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;">
-                    <input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;">
-                </div>
-
+                <div style="display: flex; gap: 10px;"><input type="email" id="onb-email" placeholder="E-mail de Contacto" style="flex: 1;"><input type="text" id="onb-whats" placeholder="WhatsApp" oninput="mascaraWhats(this)" style="flex: 1;"></div>
+                <div style="display: flex; gap: 10px;"><input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;"><input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly></div>
+                <div style="display: flex; gap: 10px;"><input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;"><input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;"></div>
                 <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn (Opcional)">
-                
                 <hr style="border: none; border-top: 1px solid var(--border-color); margin: 10px 0;">
-
                 <label style="font-size: 13px; font-weight: bold;">Informações de Mercado (Privado):</label>
                 <select id="onb-vaga">
-                    <option value="">Selecione o nível da vaga almejada...</option>
-                    <option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
+                    <option value="">Selecione o nível da vaga almejada...</option><option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
                 </select>
-
-                <div style="display: flex; gap: 10px;">
-                    <select id="onb-status" style="flex: 1;">
-                        <option value="Ativo (Empregado)">Ativo (Empregado)</option>
-                        <option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option>
-                    </select>
-                    <input type="text" id="onb-pretensao" placeholder="Pretensão (R$)" style="flex: 1;">
-                </div>
-                
+                <div style="display: flex; gap: 10px;"><select id="onb-status" style="flex: 1;"><option value="Ativo (Empregado)">Ativo (Empregado)</option><option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option></select><input type="text" id="onb-pretensao" placeholder="Pretensão (R$)" style="flex: 1;"></div>
                 <button class="btn-base btn-primary" onclick="salvarOnboardingEContinuar()" style="width: 100%; margin-top: 15px; padding: 15px; font-size: 16px;">Salvar e Criar Currículo ➔</button>
             </div>
         </div>
@@ -228,11 +217,11 @@
         <div class="features-grid">
             <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">Extração Mágica</div><div class="feature-desc">Cole o texto bagunçado do seu LinkedIn ou currículo antigo. A nossa Inteligência Artificial lê, compreende e preenche todos os campos automaticamente para si.</div></div>
             <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Match com a Vaga</div><div class="feature-desc">Cole a descrição da vaga de emprego que deseja. O Edi Pro reescreve e ajusta o seu currículo para destacar exatamente o que os recrutadores estão buscando.</div></div>
-            <div class="feature-card"><div class="feature-icon">📄</div><div class="feature-title">Design Vencedor</div><div class="feature-desc">Um layout limpo, direto e profissional, otimizado para sistemas de recrutamento (ATS). Exporte um PDF perfeito e pronto para enviar em um clique.</div></div>
+            <div class="feature-card"><div class="feature-icon">📄</div><div class="feature-title">Design Vencedor</div><div class="feature-desc">Um layout limpo, direto e profissional, otimizado para sistemas de recrutamento (ATS). Exporte um PDF perfeito e pronto para enviar num clique.</div></div>
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.4</strong><br><br>
+            <strong>Edi Pro v1.1.5</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -284,7 +273,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.4</strong><br><br>
+            <strong>Edi Pro v1.1.5</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -334,6 +323,7 @@
             <div id="status-nome">📄 Currículo: NOVO</div>
             <div class="botoes-topo-editor">
                 <button class="btn-base btn-neutral btn-full" onclick="irPara('tela-menu')">← Menu Inicial</button>
+                <button id="btn-ver-alteracoes" class="btn-base" style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);" onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
                 <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑 Salvar Cópia</button>
                 <button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar</button>
                 <button class="btn-base btn-neutral" onclick="gerarPDF()">📄 Gerar PDF</button>
@@ -342,7 +332,7 @@
         <div id="container-editor">
             <div id="editor">
                 
-                <details style="border: 2px solid var(--ia); background: var(--primary-dim); margin-bottom: 15px;">
+                <details id="panel-ia-extracao" style="border: 2px solid var(--ia); background: var(--primary-dim); margin-bottom: 15px;">
                     <summary style="color: var(--primary); font-weight: bold;">✨ IA - Extração Rápida de Texto</summary>
                     <div class="input-group">
                         <textarea id="texto-ia" placeholder="Cole aqui o texto bruto de um currículo antigo ou LinkedIn..." style="height: 100px; background: var(--bg-panel);"></textarea>
@@ -423,6 +413,7 @@
     let idAtual = null; let usuarioAtual = null;
     let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
     let modoCriarConta = false;
+    let ultimasAlteracoesIA = ""; // Guarda o texto explicativo da IA
 
     // === LÓGICA DO TOUR/TUTORIAL ===
     let passoTour = 0;
@@ -437,7 +428,7 @@
     function fecharTour() { document.getElementById('tour-panel').style.display = 'none'; localStorage.setItem('tourV1', 'concluido'); }
 
     // === FUNÇÕES BLINDADAS DE DOM (EVITAR NULL ERRORS) ===
-    function setValSafe(id, val) { const el = document.getElementById(id); if(el) el.value = val; }
+    function setValSafe(id, val) { const el = document.getElementById(id); if(el) el.value = val || ""; }
     function getValSafe(id) { const el = document.getElementById(id); return el ? el.value : ""; }
 
     function syncNome() { const el = document.getElementById('inNome'); const prev = document.getElementById('nomePreview'); if(el && prev) prev.innerText = el.value || "NOME COMPLETO"; }
@@ -451,13 +442,22 @@
 
     function mascaraCep(i) { if(!i) return; i.value = i.value.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").substring(0, 9); syncContato(); }
     function mascaraWhats(i) { if(!i) return; let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 15); syncContato(); }
-    function showToast(msg) { const t = document.getElementById('toast'); if(t) { t.innerText = msg || "✔ Operação realizada com sucesso!"; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); } }
+    
+    function showToast(msg) { 
+        const t = document.getElementById('toast'); 
+        if(t) { 
+            t.innerText = msg || "✔ Operação realizada com sucesso!"; 
+            t.style.background = msg && msg.includes("login") ? "var(--primary)" : "var(--accent)";
+            t.style.display = 'block'; 
+            setTimeout(() => t.style.display = 'none', 4000); 
+        } 
+    }
 
     const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
     function validarSenha(senha) { return regexSenha.test(senha); }
 
-    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
-    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem NENHUM texto antes ou depois e sem blocos de código (markdown). Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"] }`;
+    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou e melhorou neste currículo para o deixar aderente a esta vaga específica." }`;
+    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou, cortou ou adicionou neste currículo para o deixar 100% aderente a esta vaga específica." }`;
 
     function verificarAdmin() {
         if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'flex'; if(u) u.style.display = 'flex'; } 
@@ -487,14 +487,11 @@
     window.addEventListener('load', async () => {
         applyTheme(localStorage.getItem('themePreference') || 'light');
         
-        // 1. CAPTURAR VAGA EXTERNA DA URL (Extensão Chrome / Windows)
         const urlParams = new URLSearchParams(window.location.search);
         const vagaPendenteUrl = urlParams.get('vaga_id');
         
-        // Se veio um ID na URL, guardamos no LocalStorage para processar depois do login
         if (vagaPendenteUrl) {
             localStorage.setItem('vaga_pendente_importacao', vagaPendenteUrl);
-            // Limpa a URL para não ficar feia e não reimportar acidentalmente
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -507,14 +504,11 @@
             const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; 
             verificarAdmin(); 
             
-            // VERIFICA SE TEM VAGA PENDENTE PARA IMPORTAR AGORA QUE ESTÁ LOGADO
             const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-            if (idVagaPendente) {
-                receberVagaExterna(idVagaPendente);
-            } else {
-                irPara('tela-menu'); 
-            }
+            if (idVagaPendente) { receberVagaExterna(idVagaPendente); } else { irPara('tela-menu'); }
         } else { 
+            const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
+            if (idVagaPendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
             irPara('tela-landing'); 
         }
 
@@ -525,11 +519,8 @@
                 const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; 
                 verificarAdmin(); 
                 
-                // Trata a vaga logo após o login se houver
                 const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-                if (idVagaPendente) {
-                    receberVagaExterna(idVagaPendente);
-                } else {
+                if (idVagaPendente) { receberVagaExterna(idVagaPendente); } else { 
                     const tl = document.getElementById('tela-login'); const tld = document.getElementById('tela-landing'); 
                     if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { irPara('tela-menu'); } 
                 }
@@ -545,30 +536,21 @@
         const cv = document.getElementById('curriculo'); if(cv) { const observer = new MutationObserver(ajustarZoomMobile); observer.observe(cv, { childList: true, subtree: true, characterData: true }); } setTimeout(ajustarZoomMobile, 100);
     });
 
-    // Função para puxar o texto mágico do Supabase
     async function receberVagaExterna(idTransferencia) {
         try {
             const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
-            
             if (data && data.texto) {
                 localStorage.removeItem('vaga_pendente_importacao');
                 await abrirTelaVaga(); 
-                
                 const txtEl = document.getElementById('texto-vaga');
                 if(txtEl) txtEl.value = data.texto;
-                
                 showToast("✨ Vaga capturada com sucesso! Selecione seu currículo base e clique em Gerar.");
-                
-                // Limpa o lixo
                 await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
             } else {
-                localStorage.removeItem('vaga_pendente_importacao');
-                irPara('tela-menu');
+                localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
             }
         } catch (e) {
-            console.error("Erro ao importar", e);
-            localStorage.removeItem('vaga_pendente_importacao');
-            irPara('tela-menu');
+            console.error("Erro ao importar", e); localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
         }
     }
 
@@ -612,6 +594,13 @@
     function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('themePreference', newTheme); applyTheme(newTheme); }
     function irPara(id) { document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); const dest = document.getElementById(id); if(dest) dest.classList.add('ativa'); window.scrollTo(0,0); setTimeout(ajustarZoomMobile, 50); }
 
+    function mostrarCarregamento() { document.getElementById('loading-overlay').style.display = 'flex'; }
+    function ocultarCarregamento() { document.getElementById('loading-overlay').style.display = 'none'; }
+    function mostrarAlteracoes() { 
+        document.getElementById('texto-alteracoes-ia').innerText = ultimasAlteracoesIA || "Nenhum resumo de alteração foi gerado pela IA para este currículo.";
+        document.getElementById('modal-alteracoes').style.display = 'flex'; 
+    }
+
     function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
     function calcularIdadeEditor() { const dateInput = getValSafe('inData'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970)); syncContato(); } }
     
@@ -622,6 +611,7 @@
         const cepEl = document.getElementById('inCep'); if(cepEl) mascaraCep(cepEl);
         syncNome(); syncContato();
         const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'none'; 
+        document.getElementById('panel-ia-extracao').style.display = 'block';
         irPara('tela-editor'); iniciarTour();
     }
 
@@ -695,6 +685,7 @@
             if(c.idiomas) c.idiomas.forEach(i => { const p = i.replace(regexLimpa, '').split(':'); adicionarIdioma({nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}); }); 
             if(c.habilidades) c.habilidades.forEach(h => adicionarHabilidade(h.replace(regexLimpa, ''))); 
             
+            document.getElementById('panel-ia-extracao').style.display = 'block';
             irPara('tela-editor'); iniciarTour();
         } 
     }
@@ -702,8 +693,9 @@
     async function deletar(id) { if(confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id); fluxoLista(); } }
     async function abrirTelaVaga() { irPara('tela-vaga'); const select = document.getElementById('select-curriculo-base'); if(!select) return; select.innerHTML = "<option>Carregando...</option>"; const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id); if (error || !data || data.length === 0) { select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>"; return; } select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>"; data.forEach(item => { select.innerHTML += `<option value="${item.identificador}">${item.identificador}</option>`; }); }
     
-    async function processarIA(promptContent, btnRef, loadText, successText) { 
-        btnRef.disabled = true; const originalText = btnRef.innerText; btnRef.innerText = loadText; let respostaBruta = ""; let sucessoIA = false; 
+    async function processarIA(promptContent) { 
+        mostrarCarregamento();
+        let respostaBruta = ""; let sucessoIA = false; 
         try { 
             const modelResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`); 
             if (!modelResp.ok) throw new Error("Erro API."); const modelData = await modelResp.json(); 
@@ -718,10 +710,10 @@
             const inicioJson = respostaBruta.indexOf('{'); const fimJson = respostaBruta.lastIndexOf('}'); 
             if (inicioJson === -1 || fimJson === -1) { const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } throw new Error("Erro JSON."); } 
             try { return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); } catch(e) { const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } throw new Error("Erro JSON."); }
-        } finally { btnRef.disabled = false; btnRef.innerText = originalText; } 
+        } finally { ocultarCarregamento(); } 
     }
 
-    async function extrairDadosIA() { const txt = getValSafe('texto-ia'); if(!txt) return alert("Cole texto!"); const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; try { const extraido = await processarIA(prompt, document.getElementById('btn-ia'), "🤖 Extraindo...", ""); limparTudo(); idAtual = null; const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; preencherEditor(extraido); } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } }
+    async function extrairDadosIA() { const txt = getValSafe('texto-ia'); if(!txt) return alert("Cole texto!"); const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; try { const extraido = await processarIA(prompt); limparTudo(); idAtual = null; const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; preencherEditor(extraido); } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } }
     
     async function ajustarCurriculoVaga() { 
         const idBase = getValSafe('select-curriculo-base'); const textoVaga = getValSafe('texto-vaga'); const nivelAjuste = getValSafe('nivel-ajuste'); 
@@ -733,9 +725,16 @@
             const basePrompt = nivelAjuste === 'agressivo' ? (localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO) : (localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); 
             const prompt = `${basePrompt} DADOS: ${JSON.stringify(dadosDoCandidato)} VAGA: ${textoVaga}`; 
             
-            const extraido = await processarIA(prompt, document.getElementById('btn-gerar-vaga'), "🤖 Ajustando...", ""); 
+            const extraido = await processarIA(prompt); 
             
             limparTudo(); 
+            
+            // Grava a explicação da IA e mostra o botão
+            if(extraido.resumo_alteracoes) {
+                ultimasAlteracoesIA = extraido.resumo_alteracoes;
+                document.getElementById('btn-ver-alteracoes').style.display = 'inline-flex';
+            }
+
             const primeiroNome = (extraido.nome || "Candidato").split(" ")[0]; const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada"; idAtual = `${primeiroNome} - ${tituloVagaFormatado}`; 
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + idAtual; 
             
@@ -745,6 +744,10 @@
                 setValSafe('inPretensao', c.pessoais.pretensao || ""); 
                 const chk = document.getElementById('chkPretensao'); if(chk) chk.checked = !!c.pessoais.mostrarPretensao;
             }
+            
+            // Ocultar painel de extração
+            document.getElementById('panel-ia-extracao').style.display = 'none';
+
             preencherEditor(extraido); irPara('tela-editor'); 
         } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } 
     }
@@ -769,6 +772,9 @@
     }
     
     function limparTudo() { 
+        ultimasAlteracoesIA = "";
+        document.getElementById('btn-ver-alteracoes').style.display = 'none';
+        
         editResumoNode = null; editExpNode = null; editEscNode = null; editIdiNode = null; editHabNode = null; 
         ['preRes','preExp','preEsc','preIdi','preHab'].forEach(i => { const el = document.getElementById(i); if(el) el.innerHTML = ""; }); 
         ['inNome','inData','inIdade','inEnd','inCep','inEmail','inWhats','inLinkedin','inPretensao','texto-ia'].forEach(i => setValSafe(i,"")); 
@@ -831,8 +837,7 @@
             } 
             y += 7; 
         }); 
-        doc.save(arquivo);
-        
+        doc.save(arquivo); 
     }
 </script>
 </body>
