@@ -504,11 +504,25 @@
     window.addEventListener('load', async () => {
         applyTheme(localStorage.getItem('themePreference') || 'light');
         
+        // 1. CAPTURAR VAGA EXTERNA DA URL (Extensão, Windows ou Celular)
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // Verifica se veio do Chrome/Windows (ID do Supabase)
         const vagaPendenteUrl = urlParams.get('vaga_id');
         
+        // Verifica se veio do menu Compartilhar do Celular (Texto/Link direto)
+        const tituloMobile = urlParams.get('titulo_vaga');
+        const textoMobile = urlParams.get('texto_vaga');
+        const linkMobile = urlParams.get('link_vaga');
+
         if (vagaPendenteUrl) {
+            // Fluxo da Extensão
             localStorage.setItem('vaga_pendente_importacao', vagaPendenteUrl);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (tituloMobile || textoMobile || linkMobile) {
+            // Fluxo do Celular (Junta tudo o que o celular mandou)
+            const conteudoMontado = `[ORIGEM DA VAGA: Celular (Compartilhamento Nativo)]\n\n${tituloMobile || ''}\n${textoMobile || ''}\n${linkMobile || ''}`.trim();
+            localStorage.setItem('vaga_mobile_pendente', conteudoMontado);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -522,7 +536,15 @@
             verificarAdmin(); 
             
             const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-            if (idVagaPendente) { receberVagaExterna(idVagaPendente); } else { irPara('tela-menu'); }
+            const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
+
+            if (idVagaPendente) { 
+                receberVagaExterna(idVagaPendente); 
+            } else if (textoMobilePendente) {
+                receberVagaMobile(textoMobilePendente);
+            } else { 
+                irPara('tela-menu'); 
+            }
         } else { 
             const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
             if (idVagaPendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
@@ -569,6 +591,21 @@
         } catch (e) {
             console.error("Erro ao importar", e); localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
         }
+    }
+
+    // Função mágica que lê a vaga do celular (sem precisar de banco de dados)
+    async function receberVagaMobile(textoCompleto) {
+        localStorage.removeItem('vaga_mobile_pendente');
+        
+        // Vai para a tela de Ajustar Vaga
+        await abrirTelaVaga(); 
+        
+        // Cola o texto da vaga no campo
+        const txtEl = document.getElementById('texto-vaga');
+        if(txtEl) txtEl.value = textoCompleto;
+        
+        // Avisa o usuário
+        showToast("📱 Vaga recebida do celular! Selecione o seu currículo base e clique em Gerar.");
     }
 
     function alternarModoLogin() {
