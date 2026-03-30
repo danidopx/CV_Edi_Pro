@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Edi Pro - Currículos com Inteligência Artificial</title>
+    <title>CV Edi Pro - Currículos com Inteligência Artificial</title>
     
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=19">
+    <link rel="manifest" href="manifest.json?v=20">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=19'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=20'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -161,7 +161,7 @@
                 Para recuperar o seu acesso ou entender o que aconteceu, por favor, entre em contato com a nossa equipe amigável de suporte:
             </p>
             <div style="background: var(--primary-dim); color: var(--primary); font-weight: bold; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px dashed var(--primary);">
-                <span id="texto-email-suporte">suporte@edipro.com</span>
+                <span id="texto-email-suporte">suporte@cvedipro.com</span>
             </div>
             <button class="btn-base btn-neutral" onclick="document.getElementById('modal-bloqueado').style.display='none'" style="width: 100%;">Voltar para Login</button>
         </div>
@@ -182,21 +182,33 @@
 
     <div id="modal-onboarding" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
         <div style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
+            
+            <button class="btn-base btn-neutral" onclick="fecharOnboarding()" style="margin-bottom: 20px; padding: 8px 15px; font-size: 12px;">← Voltar</button>
+
             <h2 style="color: var(--primary); margin-top: 0; font-size: 24px;">👤 Configure o seu Perfil Base</h2>
-            <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">Preencha estas informações uma única vez. Elas servirão de base para todos os seus currículos e ajudarão a nossa IA a entender o seu momento de carreira.</p>
+            <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">Preencha os dados essenciais para ajudar a nossa IA a entender o seu momento de carreira. Você pode pular os opcionais.</p>
             
             <div class="input-group" style="margin-top: 0;">
-                <input type="text" id="onb-nome" placeholder="Nome Completo">
-                <div style="display: flex; gap: 10px;"><input type="email" id="onb-email" placeholder="E-mail de Contato" style="flex: 1;"><input type="text" id="onb-whats" placeholder="WhatsApp" oninput="mascaraWhats(this)" style="flex: 1;"></div>
-                <div style="display: flex; gap: 10px;"><input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;"><input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly></div>
+                <label style="font-size: 12px; font-weight: bold; margin-bottom: -5px;">Nome Completo <span style="color: red;">*</span></label>
+                <input type="text" id="onb-nome" placeholder="Seu nome">
+                
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: -5px; display:block;">E-mail <span style="color: red;">*</span></label><input type="email" id="onb-email" placeholder="E-mail de Contato"></div>
+                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: -5px; display:block;">WhatsApp <span style="color: red;">*</span></label><input type="text" id="onb-whats" placeholder="(11) 90000-0000" oninput="mascaraWhats(this)"></div>
+                </div>
+                
+                <label style="font-size: 12px; font-weight: bold; margin-bottom: -5px; margin-top: 5px;">Dados Opcionais</label>
+                <div style="display: flex; gap: 10px;"><input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;" title="Data de Nascimento"><input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly></div>
                 <div style="display: flex; gap: 10px;"><input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;"><input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;"></div>
-                <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn (Opcional)">
+                <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn">
+                
                 <hr style="border: none; border-top: 1px solid var(--border-color); margin: 10px 0;">
-                <label style="font-size: 13px; font-weight: bold;">Informações de Mercado (Privado):</label>
+                <label style="font-size: 13px; font-weight: bold;">Informações de Mercado (Opcional):</label>
                 <select id="onb-vaga">
                     <option value="">Selecione o nível da vaga almejada...</option><option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
                 </select>
                 <div style="display: flex; gap: 10px;"><select id="onb-status" style="flex: 1;"><option value="Ativo (Empregado)">Ativo (Empregado)</option><option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option></select><input type="text" id="onb-pretensao" placeholder="Pretensão (R$)" style="flex: 1;"></div>
+                
                 <button class="btn-base btn-primary" onclick="salvarOnboardingEContinuar()" style="width: 100%; margin-top: 15px; padding: 15px; font-size: 16px;">Salvar e Criar Currículo ➔</button>
             </div>
         </div>
@@ -247,7 +259,7 @@
 
     <div id="tela-landing" class="tela ativa">
         <div class="landing-header">
-            <div class="landing-logo">Edi Pro.</div>
+            <div class="landing-logo">CV Edi Pro.</div>
             <button class="btn-base btn-neutral" onclick="irPara('tela-login')">Entrar na Conta</button>
         </div>
         <div class="hero-section">
@@ -257,12 +269,12 @@
         </div>
         <div class="features-grid">
             <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">Extração Mágica</div><div class="feature-desc">Cole o texto bagunçado do seu LinkedIn ou currículo antigo. A nossa Inteligência Artificial lê, compreende e preenche todos os campos automaticamente para você.</div></div>
-            <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Match com a Vaga</div><div class="feature-desc">Cole a descrição da vaga de emprego que deseja. O Edi Pro reescreve e ajusta o seu currículo para destacar exatamente o que os recrutadores estão buscando.</div></div>
+            <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Match com a Vaga</div><div class="feature-desc">Cole a descrição da vaga de emprego que deseja. O CV Edi Pro reescreve e ajusta o seu currículo para destacar exatamente o que os recrutadores estão buscando.</div></div>
             <div class="feature-card"><div class="feature-icon">📄</div><div class="feature-title">Design Vencedor</div><div class="feature-desc">Um layout limpo, direto e profissional, otimizado para sistemas de recrutamento (ATS). Exporte um PDF perfeito e pronto para enviar num clique.</div></div>
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.12</strong><br><br>
+            <strong>CV Edi Pro v1.1.13</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -301,11 +313,14 @@
 
     <div id="tela-menu" class="tela">
         <div class="top-bar" style="justify-content: flex-end; padding-top: 10px; padding-bottom: 10px;">
-            <span id="user-email-display" style="font-size: 13px; font-weight: bold; color: var(--text-light); margin-right: 15px;"></span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;">
+                <span id="user-name-display" style="font-size: 14px; font-weight: bold; color: var(--primary);">Olá, Usuário</span>
+                <span id="user-email-display" style="font-size: 11px; font-weight: bold; color: var(--text-light);"></span>
+            </div>
             <button class="btn-base btn-neutral" onclick="irPara('tela-conta')" style="border: 1px solid var(--border-color); margin-right: 10px;">⚙️ Minha Conta</button>
             <button class="btn-base btn-danger" style="border: 1px solid var(--danger);" onclick="fazerLogout()">Sair da Conta</button>
         </div>
-        <h1 style="color: var(--primary); font-weight: 800; font-size: 32px;">Bem-vindo ao Edi Pro</h1>
+        <h1 style="color: var(--primary); font-weight: 800; font-size: 32px;">Bem-vindo ao CV Edi Pro</h1>
         <p style="color: var(--text-light); margin-bottom: 40px; text-align: center; max-width: 500px;">O que deseja fazer hoje?</p>
         <div class="menu-botoes" style="display:flex; gap: 20px; justify-content: center;">
             <button class="btn-base btn-primary" onclick="fluxoNovo()" style="padding: 30px 45px; font-size: 16px;">➕ NOVO CURRÍCULO</button>
@@ -314,7 +329,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.12</strong><br><br>
+            <strong>CV Edi Pro v1.1.13</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -324,7 +339,17 @@
             <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">⚙️ Minha Conta</h2>
             
-            <div style="margin-bottom: 25px;"><label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar E-mail de Acesso:</label><div style="display: flex; gap: 10px;"><input type="email" id="novo-email" placeholder="Novo e-mail"><button class="btn-base btn-primary" onclick="atualizarEmail()">Atualizar</button></div><small style="color: var(--text-light);">Enviaremos um link de confirmação.</small></div>
+            <div style="margin-bottom: 25px;">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Nome de Exibição:</label>
+                <div style="display: flex; gap: 10px;"><input type="text" id="novo-nome" placeholder="Seu nome (ex: João Silva)"><button class="btn-base btn-primary" onclick="atualizarNomeConta()">Salvar Nome</button></div>
+                <small style="color: var(--text-light);">Este nome aparecerá no topo do sistema.</small>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar E-mail de Acesso:</label>
+                <div style="display: flex; gap: 10px;"><input type="email" id="novo-email" placeholder="Novo e-mail"><button class="btn-base btn-primary" onclick="atualizarEmail()">Atualizar</button></div>
+                <small style="color: var(--text-light);">Enviaremos um link de confirmação.</small>
+            </div>
             
             <div style="margin-bottom: 35px;">
                 <label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar Senha:</label>
@@ -566,10 +591,33 @@
         else { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'none'; if(u) u.style.display = 'none'; }
     }
     
+    function atualizarInfosUsuarioTopo() {
+        if (!usuarioAtual) return;
+        const displayEmail = document.getElementById('user-email-display');
+        const displayName = document.getElementById('user-name-display');
+        if (displayEmail) displayEmail.innerText = usuarioAtual.email;
+        if (displayName) {
+            const nomeMeta = usuarioAtual.user_metadata?.full_name || usuarioAtual.user_metadata?.name || 'Usuário';
+            displayName.innerText = `Olá, ${nomeMeta.split(' ')[0]}`;
+        }
+    }
+
+    async function atualizarNomeConta() {
+        const novoNome = getValSafe('novo-nome');
+        if (!novoNome) return alert("Digite o nome desejado.");
+        const { data, error } = await sb.auth.updateUser({ data: { full_name: novoNome } });
+        if (error) { alert("Erro ao atualizar nome: " + error.message); } 
+        else { 
+            usuarioAtual = data.user;
+            atualizarInfosUsuarioTopo();
+            showToast("Nome atualizado com sucesso!"); 
+        }
+    }
+
     function abrirConfigAdmin() { 
         setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); 
         setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO); 
-        setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@edipro.com');
+        setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
         document.getElementById('modal-admin').style.display = 'flex'; 
     }
     
@@ -592,12 +640,10 @@
             const ehAdmin = u.email === 'dop.jr82@gmail.com'; const inativo = u.email.includes('_inativo.local');
             let botoesAcao = '-';
             if (!ehAdmin) {
-                // Monta o botão de Status (Reabilitar ou Desativar)
                 let btnStatus = inativo 
                     ? `<button class="btn-base btn-primary" style="padding: 6px 12px; font-size: 11px;" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>`
                     : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size: 11px;" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
                 
-                // Monta o botão de Exclusão Definitiva (Lixeira)
                 let btnExcluir = `<button class="btn-base btn-danger" style="padding: 6px 10px; font-size: 12px; border: 1px solid var(--danger);" onclick="excluirUsuarioDefinitivo('${u.id}', '${u.email}')" title="Excluir Definitivamente">🗑️</button>`;
                 
                 botoesAcao = `<div style="display: flex; gap: 8px; align-items: center;">${btnStatus}${btnExcluir}</div>`;
@@ -719,7 +765,7 @@
         if (session) { 
             usuarioAtual = session.user; 
             localStorage.setItem('ultima_atividade_app', Date.now()); 
-            const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; 
+            atualizarInfosUsuarioTopo();
             verificarAdmin(); 
             
             const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
@@ -743,7 +789,7 @@
             if (event === 'SIGNED_IN' && session) { 
                 usuarioAtual = session.user; 
                 localStorage.setItem('ultima_atividade_app', Date.now()); 
-                const d = document.getElementById('user-email-display'); if(d) d.innerText = usuarioAtual.email; 
+                atualizarInfosUsuarioTopo();
                 verificarAdmin(); 
                 
                 const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
@@ -818,13 +864,11 @@
             const { data, error } = await sb.auth.signInWithPassword({ email, password }); 
             if (error) { 
                 if(msgLog) msgLog.style.display = 'none';
-                // Detecta se é um bloqueio ou inatividade
                 if (error.message.toLowerCase().includes('ban') || error.message.toLowerCase().includes('inativo') || error.message.toLowerCase().includes('suspen') || error.message.toLowerCase().includes('block')) {
-                    const emailSuporte = localStorage.getItem('adminEmailSuporte') || 'suporte@edipro.com';
+                    const emailSuporte = localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com';
                     document.getElementById('texto-email-suporte').innerText = emailSuporte;
                     document.getElementById('modal-bloqueado').style.display = 'flex';
                 } else {
-                    // Erro genérico
                     alert("Erro: E-mail ou senha incorretos.");
                 }
             }
@@ -839,7 +883,13 @@
         if(s1 !== s2) return alert("As senhas não coincidem."); if(!validarSenha(s1)) return alert("A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.");
         const { error } = await sb.auth.updateUser({ password: s1 }); if (error) { alert("Erro: " + error.message); } else { alert("Senha atualizada!"); setValSafe('nova-senha', ""); setValSafe('nova-senha-conf', ""); } 
     }
-    async function solicitarExclusao() { if(confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) { const { error } = await sb.rpc('desativar_minha_conta'); if(error) alert("Erro ao desativar: " + error.message); else { await fazerLogout(); alert("Conta desativada com sucesso."); } } }
+    async function solicitarExclusao() { 
+        if(usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { return alert("A conta de administrador principal não pode ser excluída."); }
+        if(confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) { 
+            const { error } = await sb.rpc('desativar_minha_conta'); 
+            if(error) alert("Erro ao desativar: " + error.message); else { await fazerLogout(); alert("Conta desativada com sucesso."); } 
+        } 
+    }
     
     async function fazerLoginGoogle() { 
         const msg = document.getElementById('msg-login'); if(msg) msg.style.display = 'block'; 
@@ -858,7 +908,13 @@
     function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('themePreference', newTheme); applyTheme(newTheme); }
     
     function irPara(id) { 
-        if (temAlteracoesNaoSalvas && !confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
+        const telaEditor = document.getElementById('tela-editor');
+        const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa') && id !== 'tela-editor';
+        
+        if (saindoDoEditor && temAlteracoesNaoSalvas) {
+            if (!confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
+            temAlteracoesNaoSalvas = false;
+        }
 
         const telaAtiva = document.querySelector('.tela.ativa');
         if (telaAtiva && telaAtiva.id !== id && telaAtiva.id !== 'tela-landing' && telaAtiva.id !== 'tela-login') {
@@ -879,7 +935,13 @@
     }
 
     function voltarTela() {
-        if (temAlteracoesNaoSalvas && !confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
+        const telaEditor = document.getElementById('tela-editor');
+        const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa');
+        
+        if (saindoDoEditor && temAlteracoesNaoSalvas) {
+            if (!confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
+            temAlteracoesNaoSalvas = false;
+        }
 
         if (historicoTelas.length > 0) {
             const id = historicoTelas.pop();
@@ -908,16 +970,33 @@
     function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
     function calcularIdadeEditor() { const dateInput = getValSafe('inData'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970)); syncContato(); } }
     
+    function fecharOnboarding() {
+        const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'none';
+        irPara('tela-menu');
+    }
+
     function fluxoNovo() { 
         idAtual = null; 
         localStorage.removeItem('cvRecuperacao');
         limparTudo(); 
         const st = document.getElementById('status-nome'); if(st) st.innerText = "📄 Currículo: NOVO"; 
+        
+        // Auto preencher e-mail e nome (se vier do google)
+        if(usuarioAtual) {
+            setValSafe('onb-email', usuarioAtual.email);
+            if(usuarioAtual.user_metadata?.full_name || usuarioAtual.user_metadata?.name) {
+                setValSafe('onb-nome', usuarioAtual.user_metadata.full_name || usuarioAtual.user_metadata.name);
+            }
+        }
+
         const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'flex'; 
     }
     
     function salvarOnboardingEContinuar() {
-        setValSafe('inNome', getValSafe('onb-nome')); setValSafe('inEmail', getValSafe('onb-email')); setValSafe('inWhats', getValSafe('onb-whats')); setValSafe('inData', getValSafe('onb-data')); setValSafe('inIdade', getValSafe('onb-idade')); setValSafe('inCep', getValSafe('onb-cep')); setValSafe('inEnd', getValSafe('onb-end')); setValSafe('inLinkedin', getValSafe('onb-linkedin')); setValSafe('inVaga', getValSafe('onb-vaga')); setValSafe('inStatus', getValSafe('onb-status')); setValSafe('inPretensao', getValSafe('onb-pretensao'));
+        const n = getValSafe('onb-nome'); const e = getValSafe('onb-email'); const w = getValSafe('onb-whats');
+        if(!n || !e || !w) return alert("Por favor, preencha o Nome, E-mail e WhatsApp para criar a base do seu currículo.");
+
+        setValSafe('inNome', n); setValSafe('inEmail', e); setValSafe('inWhats', w); setValSafe('inData', getValSafe('onb-data')); setValSafe('inIdade', getValSafe('onb-idade')); setValSafe('inCep', getValSafe('onb-cep')); setValSafe('inEnd', getValSafe('onb-end')); setValSafe('inLinkedin', getValSafe('onb-linkedin')); setValSafe('inVaga', getValSafe('onb-vaga')); setValSafe('inStatus', getValSafe('onb-status')); setValSafe('inPretensao', getValSafe('onb-pretensao'));
         const whatsEl = document.getElementById('inWhats'); if(whatsEl) mascaraWhats(whatsEl);
         const cepEl = document.getElementById('inCep'); if(cepEl) mascaraCep(cepEl);
         syncNome(); syncContato();
