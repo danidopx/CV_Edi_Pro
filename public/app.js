@@ -1,545 +1,5 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>CV Edi Pro - Currículos com Inteligência Artificial</title>
-    
-    <link rel="icon" type="image/png" href="icon-512.png">
-    <link rel="apple-touch-icon" href="icon-512.png">
-    
-    <link rel="manifest" href="manifest.json?v=25">
-    <meta name="theme-color" content="#6c5ce7">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=25'); }</script>
-
-    <style>
-        :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
-        body.dark-mode { --bg-body: #121212; --bg-panel: #1e1e1e; --text-main: #e0e0e0; --text-light: #a0a0a0; --primary: #a29bfe; --primary-dim: #2d2a3e; --accent: #81c784; --accent-dim: #1e3a29; --border-color: #333333; --danger: #ef9a9a; --ia: #c7c3fb; --shadow: 0 4px 6px rgba(0,0,0,0.3); --shadow-hover: 0 8px 15px rgba(0,0,0,0.5); }
-        * { box-sizing: border-box; transition: background 0.3s, color 0.3s, border-color 0.3s; } 
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin:0; background: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
-        
-        #toast { display: none; position: fixed; top: 20px; right: 20px; background: var(--accent); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10002; font-weight: bold; }
-
-        /* TELA DE CARREGAMENTO UNIVERSAL */
-        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10005; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        .spinner { font-size: 60px; animation: spin 2s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #loading-text { font-size: 20px; font-weight: bold; color: var(--primary); text-align: center; }
-        .loading-subtext { font-size: 14px; color: #ccc; margin-top: 10px; max-width: 300px; text-align: center; }
-
-        .tela { display: none; width: 100%; max-width: 1250px; padding: 30px; }
-        .tela.ativa { display: flex; flex-direction: column; align-items: center; }
-
-        .theme-toggle { position: fixed; right: 20px; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: var(--shadow); z-index: 1000; }
-        .btn-luz { top: 20px; } .btn-admin-config { top: 75px; display: none; } .btn-admin-users { top: 130px; display: none; }
-        
-        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 25px; background: var(--bg-panel); padding: 15px 80px 15px 25px; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--border-color); flex-wrap: wrap; }
-        #tela-editor .top-bar { position: sticky; top: 15px; z-index: 995; box-shadow: var(--shadow-hover); }
-
-        .status-container { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; justify-content: center; }
-        #status-nome { font-weight: 800; color: var(--primary); font-size: 15px; }
-        #status-origem { font-size: 11px; color: var(--text-light); font-weight: 600; margin-top: 3px; background: var(--bg-body); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-color); }
-
-        .botoes-topo-editor { display: flex; gap: 10px; align-items: center; }
-        
-        .btn-base { border: none; padding: 12px 24px; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-base:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-        .btn-primary { background: var(--primary); color: white; } .btn-accent { background: var(--accent); color: white; }
-        .btn-neutral { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-neutral:hover { background: var(--bg-body); }
-        .btn-danger { background: none; color: var(--danger); padding: 5px 10px; font-size: 12px; text-transform: none; box-shadow: none; border-radius: 4px; }
-        .btn-ia { background: var(--ia); color: white; }
-
-        /* LANDING PAGE & LOGIN */
-        .landing-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 40px; }
-        .landing-logo { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: -1px; }
-        .hero-section { text-align: center; max-width: 800px; margin: 0 auto 60px auto; }
-        .hero-title { font-size: 48px; font-weight: 900; color: var(--text-main); line-height: 1.1; margin-bottom: 20px; }
-        .hero-title span { color: var(--primary); }
-        .hero-subtitle { font-size: 18px; color: var(--text-light); line-height: 1.6; margin-bottom: 35px; }
-        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; width: 100%; }
-        .feature-card { background: var(--bg-panel); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow); text-align: left; }
-        .feature-icon { font-size: 40px; margin-bottom: 15px; }
-
-        #login-box { background: var(--bg-panel); padding: 50px 40px; border-radius: 16px; box-shadow: var(--shadow-hover); text-align: center; border: 1px solid var(--border-color); max-width: 450px; width: 100%; margin-top: 5vh; }
-        .btn-google { background: white; color: #757575; border: 1px solid #ddd; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s;}
-
-        /* EDITOR */
-        #container-editor { display: flex; gap: 20px; width: 100%; align-items: flex-start; margin-top: 10px; scroll-behavior: smooth; }
-        
-        #editor { 
-            width: 440px; min-width: 440px; background: var(--bg-panel); padding: 15px; 
-            border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 95px; 
-            max-height: calc(100vh - 110px); overflow-y: auto; border: 1px solid var(--border-color); 
-            scroll-behavior: smooth; 
-            /* Ocultar barra de rolagem */
-            -ms-overflow-style: none; scrollbar-width: none; 
-        }
-        #editor::-webkit-scrollbar { display: none; }
-
-        #curriculo-wrapper { width: 100%; display: flex; justify-content: center; flex: 1; overflow: hidden; position: relative; }
-        #curriculo { background: var(--bg-paper); padding: 50px; width: 680px; min-width: 680px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-height: 950px; transform-origin: top center; color: var(--text-paper); border: 1px solid #d0d0d0; border-radius: 4px; margin: 0 auto; }
-
-        details { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; padding: 10px 15px; cursor: pointer; scroll-margin-top: 20px; }
-        details[open] { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
-        summary { font-weight: bold; color: var(--text-main); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-        summary::after { content: '➔'; font-size: 11px; transition: transform 0.2s; color: var(--text-light); } details[open] summary::after { transform: rotate(90deg); color: var(--primary); }
-        .input-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; cursor: default; }
-        input, textarea, select { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; width: 100%; background: var(--bg-body); color: var(--text-main); }
-        input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
-        .btn-add-block { width: 100%; margin-top: 8px; padding: 10px; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary); font-size: 13px; }
-        .checkbox-inline { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; color: var(--text-main); white-space: nowrap; }
-
-        /* MOBILE FULLSCREEN ZOOM */
-        #btn-abrir-fullscreen, #btn-fechar-fullscreen { display: none; }
-        
-        .wrapper-fullscreen {
-            position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
-            background: rgba(0,0,0,0.9) !important; z-index: 10005 !important;
-            overflow: auto !important; padding: 20px !important;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-        }
-        .wrapper-fullscreen #curriculo { transform: none !important; margin: 0 auto !important; margin-bottom: 80px !important; }
-        .wrapper-fullscreen #btn-fechar-fullscreen {
-            display: flex; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 10006; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 15px; padding: 15px 30px; border-radius: 30px;
-        }
-
-        /* TEXTOS CURRICULO */
-        #nomePreview { font-size: 30px; margin: 0; color: #111; text-align: center; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
-        .contato-line { font-size: 11.5px; color: #555; text-align: center; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 18px; line-height: 1.5; }
-        .secao-titulo { border-bottom: 2.5px solid #222; margin-top: 28px; margin-bottom: 12px; text-transform: uppercase; font-size: 14px; font-weight: 700; color: #222; letter-spacing: 1px; padding-bottom: 3px;}
-        .texto-justificado { font-size: 13px; line-height: 1.6; text-align: justify; color: #333; margin-bottom: 8px; transition: all 0.2s; }
-        .bloco-exp { transition: all 0.2s; }
-        .exp-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 13.5px; color: #222; }
-        .exp-empresa { color: #555; font-size: 12.5px; font-style: italic; margin-top: 2px; }
-        .item-lista { font-size: 13px; margin-bottom: 6px; color: #333; transition: all 0.2s; }
-
-        @media (max-width: 1024px) { #container-editor { flex-direction: column; align-items: center; } #editor { width: 100%; min-width: 100%; position: relative; top: 0; max-height: none; } .features-grid { grid-template-columns: 1fr; } }
-        
-        @media (max-width: 768px) { 
-            .tela { padding: 15px; padding-top: 60px;} h1 { font-size: 26px; text-align: center; margin-top: 30px !important; } .hero-title { font-size: 36px; } 
-            .theme-toggle { right: 10px; width: 40px; height: 40px; font-size: 18px; } .btn-luz { top: 10px; } .btn-admin-config { top: 60px; } .btn-admin-users { top: 110px; } 
-            .menu-botoes { flex-direction: column; width: 100%; padding: 0 10px; gap: 15px; } .menu-botoes button { width: 100%; padding: 20px !important; font-size: 15px; } 
-            .top-bar { flex-direction: column; padding: 15px 12px; gap: 12px; align-items: stretch; } #tela-editor .top-bar { top: 5px; z-index: 995; }
-            
-            .status-container { align-items: center; margin-bottom: 5px; width: 100%; }
-            #status-nome { font-size: 14px; text-align: center; } 
-            
-            .botoes-topo-editor { display: flex; flex-wrap: wrap; width: 100%; gap: 6px; justify-content: space-between; } 
-            .botoes-topo-editor .btn-full { flex-basis: 100%; margin-bottom: 5px; } .botoes-topo-editor button:not(.btn-full) { flex: 1; padding: 12px 2px !important; font-size: 11px; white-space: nowrap; } 
-            #curriculo-wrapper { padding: 0 15px; margin-top: 15px; } #curriculo { margin: 0; } #editor { position: relative; top: 0; max-height: none; }
-            #btn-abrir-fullscreen { display: flex; width: 100%; margin-top: 15px; padding: 15px; font-size: 15px; justify-content: center; }
-        }
-        
-        .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
-        table.tabela-admin { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; } table.tabela-admin th, table.tabela-admin td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-main); } table.tabela-admin th { background: var(--bg-body); font-weight: bold; }
-        
-        .footer-info { margin-top: 50px; text-align: center; font-size: 13px; color: var(--text-light); padding-bottom: 20px; }
-        .footer-info a { color: var(--primary); font-weight: bold; text-decoration: none; }
-        .footer-info a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-
-    <div id="loading-overlay">
-        <div class="spinner">⏳</div>
-        <div id="loading-text">Processando Inteligência Artificial...</div>
-        <div class="loading-subtext">Isso pode levar alguns segundos. Estamos lendo os dados e trabalhando no seu currículo.</div>
-    </div>
-
-    <div id="toast">✔ Operação realizada com sucesso!</div>
-    
-    <div id="modal-alteracoes" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10003; justify-content: center; align-items: center; padding: 15px;">
-        <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
-            <h2 style="color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 20px;">🔍 O que a IA ajustou?</h2>
-            <p id="texto-alteracoes-ia" style="font-size: 14px; color: var(--text-main); line-height: 1.6; white-space: pre-wrap; margin-bottom: 20px;">Nenhuma informação disponível.</p>
-            <button class="btn-base btn-neutral" onclick="document.getElementById('modal-alteracoes').style.display='none'" style="width: 100%;">Fechar</button>
-        </div>
-    </div>
-
-    <div id="modal-bloqueado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10004; justify-content: center; align-items: center; padding: 15px;">
-        <div style="background: var(--bg-panel); padding: 35px; border-radius: 16px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
-            <div style="font-size: 50px; margin-bottom: 15px;">🔒</div>
-            <h2 style="color: var(--primary); margin-top: 0; margin-bottom: 10px;">Acesso Suspenso</h2>
-            <p style="font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 25px;">
-                Ops! Parece que o acesso para esta conta foi temporariamente desativado no nosso sistema.<br><br>
-                Para recuperar o seu acesso ou entender o que aconteceu, por favor, entre em contato com a nossa equipe amigável de suporte:
-            </p>
-            <div style="background: var(--primary-dim); color: var(--primary); font-weight: bold; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px dashed var(--primary);">
-                <span id="texto-email-suporte">suporte@cvedipro.com</span>
-            </div>
-            <button class="btn-base btn-neutral" onclick="document.getElementById('modal-bloqueado').style.display='none'" style="width: 100%;">Voltar para Login</button>
-        </div>
-    </div>
-
-    <div id="tour-panel" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--primary); color:white; padding:20px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.3); z-index:10001; max-width:320px; border: 1px solid rgba(255,255,255,0.2);">
-        <h3 style="margin-top:0; font-size:16px; margin-bottom:10px;">💡 Dicas do Editor</h3>
-        <p id="tour-text" style="font-size:13.5px; line-height:1.5; margin-bottom:15px;"></p>
-        <div style="display:flex; justify-content:space-between; align-items: center;">
-            <button onclick="fecharTour()" style="background:none; border:none; color:rgba(255,255,255,0.7); text-decoration:underline; font-size:12px; cursor:pointer; padding:0;">Pular Tutorial</button>
-            <button onclick="proximoTour()" style="background:white; color:var(--primary); border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">Próximo ➔</button>
-        </div>
-    </div>
-
-    <button class="theme-toggle btn-luz" onclick="toggleTheme()" title="Modo Claro/Escuro">💡</button>
-    <button id="btn-admin-config" class="theme-toggle btn-admin-config" onclick="abrirConfigAdmin()" title="Configurações da IA (Admin)">⚙️</button>
-    <button id="btn-admin-users" class="theme-toggle btn-admin-users" onclick="abrirGestaoUsuarios()" title="Gestão de Usuários (Admin)">👥</button>
-
-    <div id="modal-onboarding" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
-        <div style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
-            
-            <button class="btn-base btn-neutral" onclick="fecharOnboarding()" style="margin-bottom: 20px; padding: 8px 15px; font-size: 12px;">← Voltar</button>
-
-            <h2 style="color: var(--primary); margin-top: 0; font-size: 24px;">👤 Configure o seu Perfil Base</h2>
-            <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">Preencha os dados essenciais para ajudar a nossa IA a entender o seu momento de carreira. Você pode pular os opcionais.</p>
-            
-            <div class="input-group" style="margin-top: 0;">
-                <label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">Nome Completo <span style="color: red;">*</span></label>
-                <input type="text" id="onb-nome" placeholder="Seu nome">
-                
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display:block;">E-mail <span style="color: red;">*</span></label><input type="email" id="onb-email" placeholder="E-mail de Contato"></div>
-                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display:block;">WhatsApp <span style="color: red;">*</span></label><input type="text" id="onb-whats" placeholder="(11) 90000-0000" oninput="mascaraWhats(this)"></div>
-                </div>
-                
-                <label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; margin-top: 15px; display: block;">Dados Opcionais</label>
-                <div style="display: flex; gap: 10px;"><input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;" title="Data de Nascimento"><input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly></div>
-                <div style="display: flex; gap: 10px;"><input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;"><input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;"></div>
-                <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn">
-                
-                <hr style="border: none; border-top: 1px solid var(--border-color); margin: 10px 0;">
-                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px;">Informações de Mercado (Opcional):</label>
-                <select id="onb-vaga">
-                    <option value="">Selecione o nível da vaga almejada...</option><option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
-                </select>
-                <div style="display: flex; gap: 10px;"><select id="onb-status" style="flex: 1;"><option value="Ativo (Empregado)">Ativo (Empregado)</option><option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option></select><input type="text" id="onb-pretensao" placeholder="Pretensão (R$)" style="flex: 1;"></div>
-                
-                <button class="btn-base btn-primary" onclick="salvarOnboardingEContinuar()" style="width: 100%; margin-top: 15px; padding: 15px; font-size: 16px;">Salvar e Criar Currículo ➔</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-erro-ia" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
-        <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
-            <h2 style="color: var(--danger); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">⚠️ Falha na Leitura da IA</h2>
-            <p style="font-size: 14px; color: var(--text-main);">A Inteligência Artificial se perdeu no formato. Feche isto e tente clicar em Gerar novamente.</p>
-            <textarea id="texto-bruto-erro" style="width: 100%; height: 250px; background: #2c3e50; color: #ecf0f1; font-family: monospace; font-size: 13px; padding: 15px; border-radius: 8px; border: none; margin-bottom: 15px; resize: none;" readonly></textarea>
-            <button class="btn-base btn-accent" onclick="document.getElementById('modal-erro-ia').style.display='none'" style="width: 100%;">FECHAR E TENTAR NOVAMENTE</button>
-        </div>
-    </div>
-
-    <div id="modal-admin" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
-        <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 800px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
-            <h2 style="color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">⚙️ Configuração da IA</h2>
-            
-            <label style="font-weight: bold; margin-bottom: 8px; margin-top: 15px; display: block;">📧 E-mail de Suporte (Mostrado em bloqueios):</label>
-            <input type="email" id="admin-email-suporte" placeholder="Ex: suporte@meusite.com" style="margin-bottom: 15px;">
-
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--accent);">🟢 Prompt - Ajuste Simples:</label>
-            <textarea id="admin-prompt-simples" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-            
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--danger);">🔴 Prompt - Ajuste Agressivo:</label>
-            <textarea id="admin-prompt-agressivo" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-            
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: #f39c12;">📊 Prompt - Análise de Vaga (ATS):</label>
-            <textarea id="admin-prompt-ats" style="width: 100%; height: 200px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-            
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-base btn-neutral" onclick="document.getElementById('modal-admin').style.display='none'" style="flex: 1;">Cancelar</button>
-                <button class="btn-base btn-accent" onclick="salvarConfigAdmin()" style="flex: 1;">💾 Salvar Configurações</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tela-admin-usuarios" class="tela">
-        <div style="width: 100%; max-width: 1000px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
-            <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">👥 Painel Administrativo de Usuários</h2>
-            <p style="font-size: 15px; margin-bottom: 25px; color: var(--text-light);">Acesso exclusivo para <b>dop.jr82@gmail.com</b>.</p>
-            
-            <div style="overflow-x: auto;">
-                <table class="tabela-admin">
-                    <thead><tr><th>E-mail do Usuário</th><th>Data de Cadastro</th><th>Ações</th></tr></thead>
-                    <tbody id="corpo-tabela-usuarios"><tr><td colspan="3" style="text-align: center;">Carregando usuários...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="tela-landing" class="tela ativa">
-        <div class="landing-header">
-            <div class="landing-logo">CV Edi Pro.</div>
-            <button class="btn-base btn-neutral" onclick="irPara('tela-login')">Entrar na Conta</button>
-        </div>
-        <div class="hero-section">
-            <h1 class="hero-title">O Currículo Perfeito e <span>Validado</span> por IA</h1>
-            <p class="hero-subtitle">Não perca mais tempo formatando arquivos. Construa currículos modernos, extraia dados num clique e descubra o seu Score ATS antes mesmo de se candidatar à vaga.</p>
-            <button class="btn-base btn-primary" style="padding: 20px 40px; font-size: 18px;" onclick="irPara('tela-login')">COMEÇAR A CRIAR GRÁTIS ✨</button>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">Extração Mágica</div><div class="feature-desc">Cole o texto bagunçado do seu LinkedIn ou currículo antigo. A nossa Inteligência Artificial lê, compreende e preenche todos os campos automaticamente.</div></div>
-            <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Match com a Vaga</div><div class="feature-desc">Cole a descrição da vaga de emprego. O CV Edi Pro reescreve e ajusta o seu currículo para destacar exatamente o que os recrutadores estão buscando.</div></div>
-            <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Análise ATS e Score</div><div class="feature-desc">Saiba exatamente suas chances! A IA gera um score de compatibilidade, mostra seus pontos fortes e dá dicas claras do que melhorar para não ser eliminado.</div></div>
-        </div>
-        
-        <div class="footer-info">
-            <strong>CV Edi Pro v1.1.18</strong><br><br>
-            Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
-        </div>
-    </div>
-
-    <div id="tela-login" class="tela">
-        <div style="width: 100%; max-width: 800px; display: flex; justify-content: flex-start; margin-bottom: -5vh;">
-            <button class="btn-base btn-neutral" style="border:none; box-shadow:none; padding:10px;" onclick="voltarTela()">← Voltar</button>
-        </div>
-        <div id="login-box">
-            <h1 style="color: var(--primary); margin-top: 0; font-weight: 800; font-size: 32px;">Acessar Sistema</h1>
-            <p style="color: var(--text-light); margin-bottom: 25px;">Entre ou crie sua conta para guardar seus currículos.</p>
-            
-            <form action="#" onsubmit="event.preventDefault(); processarFormularioLogin();" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px;">
-                <input type="email" id="login-email" placeholder="Seu e-mail" style="padding: 15px;" autocomplete="username">
-                <input type="password" id="login-senha" placeholder="Sua senha" style="padding: 15px;" autocomplete="current-password">
-                
-                <div id="box-confirma-senha" style="display: none; flex-direction: column; gap: 5px;">
-                    <input type="password" id="login-senha-conf" placeholder="Confirme sua senha" style="padding: 15px;" autocomplete="new-password">
-                    <small style="color: var(--text-light); text-align: left; font-size: 11px;">Mínimo 8 caracteres, 1 número e 1 letra maiúscula.</small>
-                </div>
-
-                <button type="submit" id="btn-acao-login" class="btn-base btn-primary" style="width: 100%; padding: 15px; font-size: 16px;">Entrar no Sistema</button>
-                
-                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 5px;">
-                    <a href="#" onclick="recuperarSenha(); return false;" style="color: var(--text-light); text-decoration: none;">Esqueci a senha</a>
-                    <span id="txt-troca-login">Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a></span>
-                </div>
-            </form>
-
-            <div style="display: flex; align-items: center; margin: 25px 0; color: var(--text-light); font-size: 12px; font-weight: bold;"><hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);"><span style="padding: 0 10px;">OU</span><hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);"></div>
-            
-            <button class="btn-google" onclick="fazerLoginGoogle()"><svg width="24" height="24" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Entrar com Google</button>
-            <p id="msg-login" style="color: var(--text-light); font-size: 13px; margin-top: 20px; display: none; font-weight: bold;">Conectando...</p>
-        </div>
-    </div>
-
-    <div id="tela-menu" class="tela">
-        <div class="top-bar" style="justify-content: flex-end; padding-top: 10px; padding-bottom: 10px;">
-            <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;">
-                <span id="user-name-display" style="font-size: 14px; font-weight: bold; color: var(--primary);">Olá, Usuário</span>
-                <span id="user-email-display" style="font-size: 11px; font-weight: bold; color: var(--text-light);"></span>
-            </div>
-            <button class="btn-base btn-neutral" onclick="irPara('tela-conta')" style="border: 1px solid var(--border-color); margin-right: 10px;">⚙️ Minha Conta</button>
-            <button class="btn-base btn-danger" style="border: 1px solid var(--danger);" onclick="fazerLogout()">Sair da Conta</button>
-        </div>
-        <h1 style="color: var(--primary); font-weight: 800; font-size: 32px;">Bem-vindo ao CV Edi Pro</h1>
-        <p style="color: var(--text-light); margin-bottom: 40px; text-align: center; max-width: 500px;">O que deseja fazer hoje?</p>
-        <div class="menu-botoes" style="display:flex; gap: 20px; justify-content: center;">
-            <button class="btn-base btn-primary" onclick="fluxoNovo()" style="padding: 30px 45px; font-size: 16px;">➕ NOVO CURRÍCULO</button>
-            <button class="btn-base btn-accent" onclick="fluxoLista()" style="padding: 30px 45px; font-size: 16px;">📂 VER SALVOS</button>
-            <button class="btn-base btn-ia" onclick="abrirTelaVaga()" style="padding: 30px 45px; font-size: 16px;">🎯 AJUSTAR À VAGA</button>
-        </div>
-        
-        <div class="footer-info">
-            <strong>CV Edi Pro v1.1.18</strong><br><br>
-            Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
-        </div>
-    </div>
-
-    <div id="tela-conta" class="tela">
-        <div style="width: 100%; max-width: 600px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
-            <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">⚙️ Minha Conta</h2>
-            
-            <div style="margin-bottom: 25px;">
-                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Nome de Exibição:</label>
-                <div style="display: flex; gap: 10px;"><input type="text" id="novo-nome" placeholder="Seu nome (ex: João Silva)"><button class="btn-base btn-primary" onclick="atualizarNomeConta()">Salvar Nome</button></div>
-                <small style="color: var(--text-light);">Este nome aparecerá no topo do sistema.</small>
-            </div>
-
-            <div style="margin-bottom: 25px;">
-                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar E-mail de Acesso:</label>
-                <div style="display: flex; gap: 10px;"><input type="email" id="novo-email" placeholder="Novo e-mail"><button class="btn-base btn-primary" onclick="atualizarEmail()">Atualizar</button></div>
-                <small style="color: var(--text-light);">Enviaremos um link de confirmação.</small>
-            </div>
-            
-            <div style="margin-bottom: 35px;">
-                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar Senha:</label>
-                <form action="#" onsubmit="event.preventDefault(); atualizarSenhaConta();" style="display: flex; flex-direction: column; gap: 10px;">
-                    <input type="text" autocomplete="username" value="user" style="display:none;">
-                    <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password">
-                    <input type="password" id="nova-senha-conf" placeholder="Confirme a nova senha" autocomplete="new-password">
-                    <button type="submit" class="btn-base btn-primary">Atualizar Senha</button>
-                    <small style="color: var(--text-light);">Mínimo 8 caracteres, 1 número e 1 letra maiúscula.</small>
-                </form>
-            </div>
-            
-            <hr style="border: none; border-top: 1px solid var(--border-color); margin-bottom: 25px;">
-            <div><h3 style="color: var(--danger); margin-top: 0;">Zona de Perigo</h3><p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Ao excluir sua conta, o acesso será permanentemente bloqueado. Os dados dos currículos poderão ser retidos de forma anônima para fins estatísticos.</p><button class="btn-base btn-danger" style="border: 1px solid var(--danger); padding: 12px 20px;" onclick="solicitarExclusao()">🚨 Excluir Minha Conta</button></div>
-        </div>
-    </div>
-
-    <div id="tela-vaga" class="tela">
-        <div style="width: 100%; max-width: 800px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
-            <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">🎯 Ajustar à Vaga</h2>
-            <p style="font-size: 15px; margin-bottom: 25px;">A IA vai cruzar os dados do seu currículo base com os requisitos da vaga para criar o match perfeito.</p>
-            
-            <label style="font-weight: bold; margin-bottom: 8px;">1. Selecione o seu Currículo Base:</label>
-            <select id="select-curriculo-base" style="margin-bottom: 20px;" onchange="verificarCurriculoBase()"></select>
-            
-            <div id="aviso-cv-incompleto" style="display:none; color: var(--danger); font-size: 13px; margin-bottom: 20px; padding: 12px; border: 1px solid var(--danger); border-radius: 8px; background: rgba(255,118,117,0.1); line-height: 1.5;">
-                <b>⚠️ Atenção:</b> O currículo selecionado parece estar incompleto (faltam dados, experiências ou habilidades). A IA tentará preencher as lacunas baseada na vaga, mas o resultado final precisará de uma boa revisão manual sua.
-            </div>
-
-            <label style="font-weight: bold; margin-bottom: 8px;">2. Nível de Ajuste:</label>
-            <select id="nivel-ajuste" style="margin-bottom: 20px;"><option value="simples">🟢 Ajuste Simples (Melhora palavras, mantém estrutura)</option><option value="agressivo">🔴 Ajuste Agressivo (Corta/Adiciona itens, foca 100% na vaga)</option></select>
-            <label style="font-weight: bold; margin-bottom: 8px;">3. Cole a Descrição da Vaga (Requisitos/Perfil):</label><textarea id="texto-vaga" style="height: 200px; margin-bottom: 25px;"></textarea>
-            <button id="btn-gerar-vaga" class="btn-base btn-ia" onclick="ajustarCurriculoVaga()" style="width: 100%; padding: 18px; font-size: 16px;">✨ GERAR CURRÍCULO AJUSTADO</button>
-        </div>
-    </div>
-
-    <div id="tela-lista" class="tela">
-        <div style="width: 100%; max-width: 900px;"><div class="top-bar" style="justify-content: flex-start;"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div><h2 style="color: var(--primary); text-align: center; font-weight: 800; font-size: 28px;">Meus Currículos Salvos</h2><div id="grid-salvos" class="grid-salvos"></div></div>
-    </div>
-
-    <div id="tela-editor" class="tela">
-        <div class="top-bar">
-            
-            <div class="status-container">
-                <div id="status-nome">📄 Currículo: NOVO</div>
-                <div id="status-origem">Origem: Criado do zero</div>
-            </div>
-
-            <div class="botoes-topo-editor">
-                <button class="btn-base btn-neutral btn-full" onclick="voltarTela()">← Voltar</button>
-                <button id="btn-ver-alteracoes" class="btn-base" style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);" onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
-                <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑 Salvar Cópia</button>
-                <button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar</button>
-                <button class="btn-base btn-neutral" onclick="gerarPDF()">📄 Gerar PDF</button>
-            </div>
-        </div>
-        <div id="container-editor">
-            <div id="editor">
-
-                <div id="alerta-email-vaga" style="display:none; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--text-main); padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; font-size: 13px;">
-                    <strong style="color: var(--accent); font-size: 14px;">💡 Dica da IA:</strong> A descrição desta vaga pede que o currículo seja enviado para o e-mail: <br><strong id="texto-email-vaga" style="font-size: 15px; display: inline-block; margin-top: 5px;"></strong>
-                </div>
-                
-                <details id="panel-ia-extracao" style="border: 2px solid var(--ia); background: var(--primary-dim); margin-bottom: 8px;">
-                    <summary style="color: var(--primary); font-weight: bold;">✨ IA - Extração Rápida de Texto</summary>
-                    <div class="input-group">
-                        <textarea id="texto-ia" placeholder="Cole aqui o texto bruto de um currículo antigo ou LinkedIn..." style="height: 100px; background: var(--bg-panel);"></textarea>
-                        <button class="btn-base btn-ia" id="btn-ia" onclick="extrairDadosIA()" style="width: 100%;">🤖 Extrair Todos os Dados</button>
-                    </div>
-                </details>
-
-                <details style="border: 1px solid var(--accent); background: var(--bg-panel); margin-bottom: 8px;">
-                    <summary style="color: var(--text-main); font-weight: bold;">👤 Dados Pessoais & Perfil</summary>
-                    <div class="input-group">
-                        <input id="inNome" placeholder="Nome Completo" oninput="syncNome()">
-                        
-                        <div style="display:flex; gap:8px">
-                            <input type="date" id="inData" onchange="calcularIdadeEditor()" style="flex:2">
-                            <input type="number" id="inIdade" placeholder="Idade" style="flex:1" readonly>
-                        </div>
-                        
-                        <div style="display:flex; gap:8px">
-                            <input id="inCep" placeholder="CEP" oninput="mascaraCep(this)" style="flex:1">
-                            <input id="inEnd" placeholder="Cidade - UF" oninput="syncContato()" style="flex:2">
-                        </div>
-                        
-                        <div style="display:flex; gap:8px">
-                            <input id="inEmail" placeholder="E-mail" oninput="syncContato()">
-                            <input id="inWhats" placeholder="WhatsApp" oninput="mascaraWhats(this)">
-                        </div>
-                        
-                        <input id="inLinkedin" placeholder="URL do LinkedIn (Opcional)" oninput="syncContato()">
-                        
-                        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 5px 0;">
-                        <small style="color: var(--text-light); font-size: 11px;">Dados para a Inteligência Artificial:</small>
-                        
-                        <select id="inVaga">
-                            <option value="">Nível da vaga...</option><option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
-                        </select>
-                        <select id="inStatus"><option value="Ativo (Empregado)">Ativo (Empregado)</option><option value="Inativo (Buscando Recolocação)">Buscando Recolocação</option></select>
-                        
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap: wrap;">
-                            <input id="inPretensao" placeholder="Pretensão (Ex: R$ 3.500,00)" oninput="syncContato()" style="flex:1; min-width: 150px;">
-                            <label class="checkbox-inline" title="Se marcado, o valor vai aparecer impresso no currículo."><input type="checkbox" id="chkPretensao" onchange="syncContato()"> Exibir no PDF</label>
-                        </div>
-                    </div>
-                </details>
-
-                <details><summary>📝 Resumo Profissional</summary><div class="input-group"><textarea id="resIn" placeholder="Descreva o seu perfil de forma impactante..." style="height: 120px;"></textarea><button id="btn-add-res" class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar Resumo</button></div></details>
-                
-                <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:8px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:12px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="document.getElementById('expFim').disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
-                
-                <details><summary>🎓 Formação Acadêmica</summary><div class="input-group">
-                    <input id="escC" placeholder="Curso/Nível"> 
-                    <input id="escI" placeholder="Instituição">
-                    <div style="display:flex; gap:8px">
-                        <input id="escIni" placeholder="Início (Ano)" style="flex:1">
-                        <select id="escStatus" style="flex:1">
-                            <option value="Concluído">Concluído</option>
-                            <option value="Cursando">Cursando</option>
-                            <option value="Trancado">Trancado</option>
-                        </select>
-                    </div>
-                    <button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button>
-                </div></details>
-                
-                <details><summary>🌐 Idiomas</summary><div class="input-group">
-                    <input id="idiIn" placeholder="Ex: Inglês">
-                    <select id="idiNivel">
-                        <option value="Básico">Básico</option>
-                        <option value="Intermediário">Intermediário</option>
-                        <option value="Avançado">Avançado</option>
-                        <option value="Fluente">Fluente</option>
-                        <option value="Nativo">Nativo</option>
-                        <option value="A1 (Iniciante)">A1 (Iniciante)</option>
-                        <option value="A2 (Básico)">A2 (Básico)</option>
-                        <option value="B1 (Intermediário)">B1 (Intermediário)</option>
-                        <option value="B2 (Intermediário Superior)">B2 (Intermediário Superior)</option>
-                        <option value="C1 (Avançado)">C1 (Avançado)</option>
-                        <option value="C2 (Proficiente/Nativo)">C2 (Proficiente/Nativo)</option>
-                    </select>
-                    <button id="btn-add-idi" class="btn-base btn-primary btn-add-block" onclick="adicionarIdioma()">+ Adicionar Idioma</button>
-                </div></details>
-                
-                <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
-
-                <details id="details-ats" style="display: none; margin-top: 15px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-panel); box-shadow: var(--shadow); padding: 0;">
-                    <summary style="font-weight: bold; padding: 12px 15px; background: var(--bg-body); color: var(--text-main); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
-                        <span id="titulo-ats-lateral">📊 Análise da Vaga</span>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <button id="btn-recalcular-ats" style="display: none; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; align-items: center; justify-content: center; padding: 0; font-size: 14px; box-shadow: var(--shadow);" title="Recalcular Score" onclick="acionarRecalculoATS(event)">🔄</button>
-                            <span id="badge-score-ats" style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: bold;"> Score: 0</span>
-                        </div>
-                    </summary>
-                    <div id="painel-ats-conteudo" style="padding: 15px;">
-                        </div>
-                </details>
-
-            </div>
-            
-            <button id="btn-abrir-fullscreen" class="btn-base btn-primary" onclick="toggleFullscreenCV()">📱 Ampliar Currículo</button>
-            
-            <div id="curriculo-wrapper">
-                <button id="btn-fechar-fullscreen" class="btn-base btn-danger" onclick="toggleFullscreenCV()">Fechar Visualização</button>
-                <div id="curriculo">
-                    <h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line" id="contatoPreview">...</div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-<script>
     const SUPABASE_URL = 'https://gjrnaavkyalwolldexft.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_CPM-CH4JV3muBw_DrGk-zQ_Rii5iGU6';
-    const GEMINI_KEY = 'AIzaSyBeLcVJ_7ZV9Nz7ssxZFQAEm3Mvhc3IdEo';
     
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
@@ -808,29 +268,64 @@ Formato EXATO obrigatório:
     // ==========================================
     
     // Função para buscar modelos disponíveis e salvar o melhor em background
-    async function inicializarModeloIA() {
-        try {
-            const modelResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
-            if (modelResp.ok) {
-                const modelData = await modelResp.json();
-                const modelosDisponiveis = modelData.models
-                    .filter(m => m.supportedGenerationMethods.includes("generateContent") && m.name.includes("gemini"))
-                    .map(m => m.name.split('/')[1]);
-                
-                // Prioriza os melhores modelos, salva na variável global
-                if (modelosDisponiveis.includes("gemini-1.5-flash")) {
-                    modeloIAPreferido = "gemini-1.5-flash";
-                } else if (modelosDisponiveis.includes("gemini-1.5-pro")) {
-                    modeloIAPreferido = "gemini-1.5-pro";
-                } else if (modelosDisponiveis.length > 0) {
-                    modeloIAPreferido = modelosDisponiveis[0];
-                }
-                console.log("IA Configurada para modelo rápido:", modeloIAPreferido);
+async function inicializarModeloIA() {
+    try {
+        // Agora chama a sua Vercel Function!
+        const modelResp = await fetch('/api/modelos');
+        if (modelResp.ok) {
+            const modelData = await modelResp.json();
+            const modelosDisponiveis = modelData.models
+                .filter(m => m.supportedGenerationMethods.includes("generateContent") && m.name.includes("gemini"))
+                .map(m => m.name.split('/')[1]);
+            
+            if (modelosDisponiveis.includes("gemini-1.5-flash")) {
+                modeloIAPreferido = "gemini-1.5-flash";
+            } else if (modelosDisponiveis.includes("gemini-1.5-pro")) {
+                modeloIAPreferido = "gemini-1.5-pro";
+            } else if (modelosDisponiveis.length > 0) {
+                modeloIAPreferido = modelosDisponiveis[0];
             }
-        } catch (e) {
-            console.warn("Aviso: Falha ao pré-carregar os modelos da IA, será usado o modelo padrão fallback.");
+            console.log("IA Configurada para modelo rápido:", modeloIAPreferido);
         }
+    } catch (e) {
+        console.warn("Aviso: Falha ao pré-carregar os modelos da IA, será usado o modelo padrão fallback.");
     }
+}
+
+// Substitua a antiga processarIA por esta:
+async function processarIA(promptContent) { 
+    let respostaBruta = ""; 
+    try { 
+        // Agora chama a sua Vercel Function enviando o prompt e o modelo!
+        const response = await fetch('/api/ia', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ prompt: promptContent, modelo: modeloIAPreferido }) 
+        }); 
+        
+        if (!response.ok) throw new Error("Falha na API interna."); 
+        
+        const dataResp = await response.json(); 
+        respostaBruta = dataResp.candidates[0].content.parts[0].text; 
+        
+        const inicioJson = respostaBruta.indexOf('{'); 
+        const fimJson = respostaBruta.lastIndexOf('}'); 
+        
+        if (inicioJson === -1 || fimJson === -1) { 
+            const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); 
+            if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } 
+            throw new Error("Erro JSON."); 
+        } 
+        try { return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); } 
+        catch(e) { 
+            const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); 
+            if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } 
+            throw new Error("Erro JSON."); 
+        }
+    } catch (err) {
+        throw err;
+    } 
+}
 
     function recuperarEstadoTela() {
         const telaSalva = localStorage.getItem('telaRecuperacao');
@@ -1684,6 +1179,3 @@ Formato EXATO obrigatório:
         }); 
         doc.save(arquivo); 
     }
-</script>
-</body>
-</html>
