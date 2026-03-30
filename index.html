@@ -2,19 +2,19 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Edi Pro - Currículos com Inteligência Artificial</title>
     
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=14">
+    <link rel="manifest" href="manifest.json?v=15">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=14'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=15'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -71,7 +71,7 @@
         /* EDITOR */
         #container-editor { display: flex; gap: 30px; width: 100%; align-items: flex-start; margin-top: 10px; scroll-behavior: smooth; }
         #editor { width: 460px; min-width: 460px; background: var(--bg-panel); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 95px; max-height: calc(100vh - 110px); overflow-y: auto; border: 1px solid var(--border-color); scroll-behavior: smooth; }
-        #curriculo-wrapper { width: 100%; display: flex; justify-content: center; flex: 1; overflow: hidden; }
+        #curriculo-wrapper { width: 100%; display: flex; justify-content: center; flex: 1; overflow: hidden; position: relative; }
         #curriculo { background: var(--bg-paper); padding: 50px; width: 680px; min-width: 680px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-height: 950px; transform-origin: top center; color: var(--text-paper); border: 1px solid #d0d0d0; border-radius: 4px; margin: 0 auto; }
 
         details { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; padding: 15px; cursor: pointer; scroll-margin-top: 20px; }
@@ -83,6 +83,21 @@
         input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
         .btn-add-block { width: 100%; margin-top: 10px; padding: 12px; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary); }
         .checkbox-inline { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; color: var(--text-main); white-space: nowrap; }
+
+        /* MOBILE FULLSCREEN ZOOM */
+        #btn-abrir-fullscreen, #btn-fechar-fullscreen { display: none; }
+        
+        .wrapper-fullscreen {
+            position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;
+            background: rgba(0,0,0,0.9) !important; z-index: 10005 !important;
+            overflow: auto !important; padding: 20px !important;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        }
+        .wrapper-fullscreen #curriculo { transform: none !important; margin: 0 auto !important; margin-bottom: 80px !important; }
+        .wrapper-fullscreen #btn-fechar-fullscreen {
+            display: flex; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 10006; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 15px; padding: 15px 30px; border-radius: 30px;
+        }
 
         /* TEXTOS CURRICULO */
         #nomePreview { font-size: 30px; margin: 0; color: #111; text-align: center; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
@@ -107,7 +122,8 @@
             
             .botoes-topo-editor { display: flex; flex-wrap: wrap; width: 100%; gap: 6px; justify-content: space-between; } 
             .botoes-topo-editor .btn-full { flex-basis: 100%; margin-bottom: 5px; } .botoes-topo-editor button:not(.btn-full) { flex: 1; padding: 12px 2px !important; font-size: 11px; white-space: nowrap; } 
-            #curriculo-wrapper { padding: 0 15px; } #curriculo { margin: 0; } #editor { position: relative; top: 0; max-height: none; }
+            #curriculo-wrapper { padding: 0 15px; margin-top: 15px; } #curriculo { margin: 0; } #editor { position: relative; top: 0; max-height: none; }
+            #btn-abrir-fullscreen { display: flex; width: 100%; margin-top: 15px; padding: 15px; font-size: 15px; justify-content: center; }
         }
         
         .grid-salvos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; width: 100%; margin-top: 20px; } .card-salvo { background: var(--bg-panel); padding: 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); border-left: 5px solid var(--primary); border: 1px solid var(--border-color); }
@@ -197,7 +213,7 @@
 
     <div id="tela-admin-usuarios" class="tela">
         <div style="width: 100%; max-width: 1000px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="irPara('tela-menu')">← Menu Inicial</button></div>
+            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">👥 Painel Administrativo de Usuários</h2>
             <p style="font-size: 15px; margin-bottom: 25px; color: var(--text-light);">Acesso exclusivo para <b>dop.jr82@gmail.com</b>.</p>
             
@@ -227,14 +243,14 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.7</strong><br><br>
+            <strong>Edi Pro v1.1.8</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
 
     <div id="tela-login" class="tela">
         <div style="width: 100%; max-width: 800px; display: flex; justify-content: flex-start; margin-bottom: -5vh;">
-            <button class="btn-base btn-neutral" style="border:none; box-shadow:none; padding:10px;" onclick="irPara('tela-landing')">← Voltar</button>
+            <button class="btn-base btn-neutral" style="border:none; box-shadow:none; padding:10px;" onclick="voltarTela()">← Voltar</button>
         </div>
         <div id="login-box">
             <h1 style="color: var(--primary); margin-top: 0; font-weight: 800; font-size: 32px;">Acessar Sistema</h1>
@@ -279,14 +295,14 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.7</strong><br><br>
+            <strong>Edi Pro v1.1.8</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
 
     <div id="tela-conta" class="tela">
         <div style="width: 100%; max-width: 600px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="irPara('tela-menu')">← Menu Inicial</button></div>
+            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">⚙️ Minha Conta</h2>
             
             <div style="margin-bottom: 25px;"><label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar E-mail de Acesso:</label><div style="display: flex; gap: 10px;"><input type="email" id="novo-email" placeholder="Novo e-mail"><button class="btn-base btn-primary" onclick="atualizarEmail()">Atualizar</button></div><small style="color: var(--text-light);">Enviaremos um link de confirmação.</small></div>
@@ -309,10 +325,17 @@
 
     <div id="tela-vaga" class="tela">
         <div style="width: 100%; max-width: 800px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="irPara('tela-menu')">← Menu Inicial</button></div>
+            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">🎯 Ajustar à Vaga</h2>
             <p style="font-size: 15px; margin-bottom: 25px;">A IA vai cruzar os dados do seu currículo base com os requisitos da vaga para criar o match perfeito.</p>
-            <label style="font-weight: bold; margin-bottom: 8px;">1. Selecione o seu Currículo Base:</label><select id="select-curriculo-base" style="margin-bottom: 20px;"></select>
+            
+            <label style="font-weight: bold; margin-bottom: 8px;">1. Selecione o seu Currículo Base:</label>
+            <select id="select-curriculo-base" style="margin-bottom: 20px;" onchange="verificarCurriculoBase()"></select>
+            
+            <div id="aviso-cv-incompleto" style="display:none; color: var(--danger); font-size: 13px; margin-bottom: 20px; padding: 12px; border: 1px solid var(--danger); border-radius: 8px; background: rgba(255,118,117,0.1); line-height: 1.5;">
+                <b>⚠️ Atenção:</b> O currículo selecionado parece estar incompleto (faltam dados, experiências ou habilidades). A IA tentará preencher as lacunas baseada na vaga, mas o resultado final precisará de uma boa revisão manual sua para evitar inventar dados.
+            </div>
+
             <label style="font-weight: bold; margin-bottom: 8px;">2. Nível de Ajuste:</label>
             <select id="nivel-ajuste" style="margin-bottom: 20px;"><option value="simples">🟢 Ajuste Simples (Melhora palavras, mantém estrutura)</option><option value="agressivo">🔴 Ajuste Agressivo (Corta/Adiciona itens, foca 100% na vaga)</option></select>
             <label style="font-weight: bold; margin-bottom: 8px;">3. Cole a Descrição da Vaga (Requisitos/Perfil):</label><textarea id="texto-vaga" style="height: 200px; margin-bottom: 25px;"></textarea>
@@ -321,7 +344,7 @@
     </div>
 
     <div id="tela-lista" class="tela">
-        <div style="width: 100%; max-width: 900px;"><div class="top-bar" style="justify-content: flex-start;"><button class="btn-base btn-neutral" onclick="irPara('tela-menu')">← Menu Inicial</button></div><h2 style="color: var(--primary); text-align: center; font-weight: 800; font-size: 28px;">Meus Currículos Salvos</h2><div id="grid-salvos" class="grid-salvos"></div></div>
+        <div style="width: 100%; max-width: 900px;"><div class="top-bar" style="justify-content: flex-start;"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div><h2 style="color: var(--primary); text-align: center; font-weight: 800; font-size: 28px;">Meus Currículos Salvos</h2><div id="grid-salvos" class="grid-salvos"></div></div>
     </div>
 
     <div id="tela-editor" class="tela">
@@ -333,7 +356,7 @@
             </div>
 
             <div class="botoes-topo-editor">
-                <button class="btn-base btn-neutral btn-full" onclick="irPara('tela-menu')">← Menu Inicial</button>
+                <button class="btn-base btn-neutral btn-full" onclick="voltarTela()">← Voltar</button>
                 <button id="btn-ver-alteracoes" class="btn-base" style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);" onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
                 <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑 Salvar Cópia</button>
                 <button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar</button>
@@ -414,7 +437,15 @@
                 
                 <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
             </div>
-            <div id="curriculo-wrapper"><div id="curriculo"><h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line" id="contatoPreview">...</div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div></div></div>
+            
+            <button id="btn-abrir-fullscreen" class="btn-base btn-primary" onclick="toggleFullscreenCV()">📱 Ampliar Currículo</button>
+            
+            <div id="curriculo-wrapper">
+                <button id="btn-fechar-fullscreen" class="btn-base btn-danger" onclick="toggleFullscreenCV()">Fechar Visualização</button>
+                <div id="curriculo">
+                    <h2 id="nomePreview">NOME COMPLETO</h2><div class="contato-line" id="contatoPreview">...</div><div class="secao-titulo">Resumo Profissional</div><div id="preRes"></div><div class="secao-titulo">Experiência Profissional</div><div id="preExp"></div><div class="secao-titulo">Formação Acadêmica</div><div id="preEsc"></div><div class="secao-titulo">Idiomas</div><div id="preIdi"></div><div class="secao-titulo">Habilidades</div><div id="preHab" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -430,6 +461,7 @@
     let modoCriarConta = false;
     let ultimasAlteracoesIA = ""; 
     let origemAtual = "Criado do zero"; 
+    let historicoTelas = [];
 
     // === LÓGICA DO TOUR/TUTORIAL ===
     let passoTour = 0;
@@ -499,8 +531,23 @@
     }
     async function deletarUsuarioAdmin(userId, userEmail) { if(confirm(`ATENÇÃO: Deseja desativar ${userEmail}?`)) { const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId }); if(error) alert("Erro: " + error.message); else { showToast(); abrirGestaoUsuarios(); } } }
 
-    function ajustarZoomMobile() { const wrapper = document.getElementById('curriculo-wrapper'); const curriculo = document.getElementById('curriculo'); if(wrapper && curriculo) { if (window.innerWidth <= 1024) { const larguraDisponivel = wrapper.clientWidth - 30; let escala = larguraDisponivel / 680; curriculo.style.transformOrigin = "top center"; curriculo.style.transform = `scale(${escala})`; wrapper.style.height = `${curriculo.offsetHeight * escala}px`; } else { curriculo.style.transform = "none"; wrapper.style.height = "auto"; } } }
+    function ajustarZoomMobile() { const wrapper = document.getElementById('curriculo-wrapper'); const curriculo = document.getElementById('curriculo'); if(wrapper && curriculo) { if (window.innerWidth <= 1024 && !wrapper.classList.contains('wrapper-fullscreen')) { const larguraDisponivel = wrapper.clientWidth - 30; let escala = larguraDisponivel / 680; curriculo.style.transformOrigin = "top center"; curriculo.style.transform = `scale(${escala})`; wrapper.style.height = `${curriculo.offsetHeight * escala}px`; } else if (!wrapper.classList.contains('wrapper-fullscreen')) { curriculo.style.transform = "none"; wrapper.style.height = "auto"; } } }
     window.addEventListener('resize', ajustarZoomMobile);
+
+    function toggleFullscreenCV() {
+        const wrapper = document.getElementById('curriculo-wrapper');
+        const cv = document.getElementById('curriculo');
+        if (!wrapper || !cv) return;
+        
+        if (wrapper.classList.contains('wrapper-fullscreen')) {
+            wrapper.classList.remove('wrapper-fullscreen');
+            ajustarZoomMobile(); 
+        } else {
+            wrapper.classList.add('wrapper-fullscreen');
+            cv.style.transform = "none"; 
+            wrapper.style.height = "100vh";
+        }
+    }
 
     // ==========================================
     // INICIALIZAÇÃO E CAPTURA DE VAGAS
@@ -644,7 +691,31 @@
 
     function applyTheme(theme) { if (theme === 'dark') { document.body.classList.add('dark-mode'); const b = document.querySelector('.btn-luz'); if(b) b.innerText = '☀️'; } else { document.body.classList.remove('dark-mode'); const b = document.querySelector('.btn-luz'); if(b) b.innerText = '💡'; } }
     function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('themePreference', newTheme); applyTheme(newTheme); }
-    function irPara(id) { document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); const dest = document.getElementById(id); if(dest) dest.classList.add('ativa'); window.scrollTo(0,0); setTimeout(ajustarZoomMobile, 50); }
+    
+    function irPara(id) { 
+        const telaAtiva = document.querySelector('.tela.ativa');
+        if (telaAtiva && telaAtiva.id !== id && telaAtiva.id !== 'tela-landing') {
+            historicoTelas.push(telaAtiva.id);
+        }
+        document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); 
+        const dest = document.getElementById(id); 
+        if(dest) dest.classList.add('ativa'); 
+        window.scrollTo(0,0); 
+        setTimeout(ajustarZoomMobile, 50); 
+    }
+
+    function voltarTela() {
+        if (historicoTelas.length > 0) {
+            const id = historicoTelas.pop();
+            document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); 
+            const dest = document.getElementById(id); 
+            if(dest) dest.classList.add('ativa'); 
+            window.scrollTo(0,0); 
+            setTimeout(ajustarZoomMobile, 50); 
+        } else {
+            irPara('tela-menu'); // Fallback seguro
+        }
+    }
 
     function mostrarCarregamento() { document.getElementById('loading-overlay').style.display = 'flex'; }
     function ocultarCarregamento() { document.getElementById('loading-overlay').style.display = 'none'; }
@@ -656,13 +727,20 @@
     function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
     function calcularIdadeEditor() { const dateInput = getValSafe('inData'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970)); syncContato(); } }
     
-    function fluxoNovo() { idAtual = null; limparTudo(); const st = document.getElementById('status-nome'); if(st) st.innerText = "📄 Currículo: NOVO"; const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'flex'; }
+    function fluxoNovo() { 
+        idAtual = null; 
+        limparTudo(); 
+        const st = document.getElementById('status-nome'); if(st) st.innerText = "📄 Currículo: NOVO"; 
+        const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'flex'; 
+    }
+    
     function salvarOnboardingEContinuar() {
         setValSafe('inNome', getValSafe('onb-nome')); setValSafe('inEmail', getValSafe('onb-email')); setValSafe('inWhats', getValSafe('onb-whats')); setValSafe('inData', getValSafe('onb-data')); setValSafe('inIdade', getValSafe('onb-idade')); setValSafe('inCep', getValSafe('onb-cep')); setValSafe('inEnd', getValSafe('onb-end')); setValSafe('inLinkedin', getValSafe('onb-linkedin')); setValSafe('inVaga', getValSafe('onb-vaga')); setValSafe('inStatus', getValSafe('onb-status')); setValSafe('inPretensao', getValSafe('onb-pretensao'));
         const whatsEl = document.getElementById('inWhats'); if(whatsEl) mascaraWhats(whatsEl);
         const cepEl = document.getElementById('inCep'); if(cepEl) mascaraCep(cepEl);
         syncNome(); syncContato();
         const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'none'; 
+        
         document.getElementById('panel-ia-extracao').style.display = 'block';
         
         origemAtual = "Criado do zero";
@@ -745,14 +823,47 @@
             if(c.idiomas) c.idiomas.forEach(i => { const p = i.replace(regexLimpa, '').split(':'); adicionarIdioma({nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}); }); 
             if(c.habilidades) c.habilidades.forEach(h => adicionarHabilidade(h.replace(regexLimpa, ''))); 
             
-            document.getElementById('panel-ia-extracao').style.display = 'block';
+            document.getElementById('panel-ia-extracao').style.display = 'none';
             irPara('tela-editor'); iniciarTour();
         } 
     }
     
     async function deletar(id) { if(confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id); fluxoLista(); } }
-    async function abrirTelaVaga() { irPara('tela-vaga'); const select = document.getElementById('select-curriculo-base'); if(!select) return; select.innerHTML = "<option>Carregando...</option>"; const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id); if (error || !data || data.length === 0) { select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>"; return; } select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>"; data.forEach(item => { select.innerHTML += `<option value="${item.identificador}">${item.identificador}</option>`; }); }
     
+    async function abrirTelaVaga() { 
+        irPara('tela-vaga'); 
+        const select = document.getElementById('select-curriculo-base'); if(!select) return; 
+        select.innerHTML = "<option>Carregando...</option>"; 
+        const aviso = document.getElementById('aviso-cv-incompleto'); if(aviso) aviso.style.display = 'none';
+
+        const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id); 
+        if (error || !data || data.length === 0) { select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>"; return; } 
+        select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>"; 
+        data.forEach(item => { select.innerHTML += `<option value="${item.identificador}">${item.identificador}</option>`; }); 
+    }
+    
+    // VALIDAÇÃO EM TEMPO REAL DO CURRÍCULO BASE
+    async function verificarCurriculoBase() {
+        const idBase = getValSafe('select-curriculo-base');
+        const aviso = document.getElementById('aviso-cv-incompleto');
+        if (!idBase || !aviso) { aviso.style.display = 'none'; return; }
+        
+        try {
+            const { data } = await sb.from('curriculos_saas').select('conteudo').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single();
+            if(data && data.conteudo) {
+                const c = data.conteudo;
+                let valido = true;
+                
+                let resumoText = c.resumo ? c.resumo.join(' ') : '';
+                if (resumoText.length < 50) valido = false;
+                if (!c.experiencias || c.experiencias.length === 0) valido = false;
+                if (!c.habilidades || c.habilidades.length === 0) valido = false;
+                
+                if (!valido) { aviso.style.display = 'block'; } else { aviso.style.display = 'none'; }
+            }
+        } catch(e) { console.error("Erro validação base", e); }
+    }
+
     async function processarIA(promptContent) { 
         mostrarCarregamento();
         let respostaBruta = ""; let sucessoIA = false; 
@@ -918,7 +1029,7 @@
             } else if (s.type === "grid") { 
                 const habs = Array.from(el.querySelectorAll('.item-lista')).map(el => el.querySelector('.hab-text') ? el.querySelector('.hab-text').innerText.replace(regexClean, '').trim() : "");
                 const habString = habs.filter(h => h).join("   •   ");
-                const linhasHab = doc.splitTextToSize(habString, 170); // Correção matemática do PDF aqui
+                const linhasHab = doc.splitTextToSize(habString, 170);
                 checarQuebra((linhasHab.length * 5) + 5);
                 doc.text(linhasHab, margin, y, { align: "left" });
                 y += (linhasHab.length * 5) + 5;
