@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=15">
+    <link rel="manifest" href="manifest.json?v=16">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=15'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=16'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -139,7 +139,7 @@
     <div id="loading-overlay">
         <div class="spinner">⏳</div>
         <div id="loading-text">Processando Inteligência Artificial...</div>
-        <div class="loading-subtext">Isso pode levar alguns segundos. Estamos lendo, cruzando os dados e reescrevendo o seu currículo.</div>
+        <div class="loading-subtext">Isso pode levar alguns segundos. Estamos lendo os dados e trabalhando no seu currículo.</div>
     </div>
 
     <div id="toast">✔ Operação realizada com sucesso!</div>
@@ -243,7 +243,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.8</strong><br><br>
+            <strong>Edi Pro v1.1.9</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -295,7 +295,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.8</strong><br><br>
+            <strong>Edi Pro v1.1.9</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -333,7 +333,7 @@
             <select id="select-curriculo-base" style="margin-bottom: 20px;" onchange="verificarCurriculoBase()"></select>
             
             <div id="aviso-cv-incompleto" style="display:none; color: var(--danger); font-size: 13px; margin-bottom: 20px; padding: 12px; border: 1px solid var(--danger); border-radius: 8px; background: rgba(255,118,117,0.1); line-height: 1.5;">
-                <b>⚠️ Atenção:</b> O currículo selecionado parece estar incompleto (faltam dados, experiências ou habilidades). A IA tentará preencher as lacunas baseada na vaga, mas o resultado final precisará de uma boa revisão manual sua para evitar inventar dados.
+                <b>⚠️ Atenção:</b> O currículo selecionado parece estar incompleto (faltam dados, experiências ou habilidades). A IA tentará preencher as lacunas baseada na vaga, mas o resultado final precisará de uma boa revisão manual sua.
             </div>
 
             <label style="font-weight: bold; margin-bottom: 8px;">2. Nível de Ajuste:</label>
@@ -546,6 +546,14 @@
             wrapper.classList.add('wrapper-fullscreen');
             cv.style.transform = "none"; 
             wrapper.style.height = "100vh";
+        }
+    }
+    
+    function fecharFullscreenSeguro() {
+        const wrapper = document.getElementById('curriculo-wrapper');
+        if (wrapper && wrapper.classList.contains('wrapper-fullscreen')) {
+            wrapper.classList.remove('wrapper-fullscreen');
+            ajustarZoomMobile();
         }
     }
 
@@ -865,7 +873,6 @@
     }
 
     async function processarIA(promptContent) { 
-        mostrarCarregamento();
         let respostaBruta = ""; let sucessoIA = false; 
         try { 
             const modelResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`); 
@@ -879,14 +886,28 @@
             } 
             if (!sucessoIA) throw new Error("Falha IA."); 
             const inicioJson = respostaBruta.indexOf('{'); const fimJson = respostaBruta.lastIndexOf('}'); 
-            if (inicioJson === -1 || fimJson === -1) { const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } throw new Error("Erro JSON."); } 
-            try { return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); } catch(e) { const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } throw new Error("Erro JSON."); }
-        } finally { ocultarCarregamento(); } 
+            if (inicioJson === -1 || fimJson === -1) { 
+                const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); 
+                if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } 
+                throw new Error("Erro JSON."); 
+            } 
+            try { return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); } 
+            catch(e) { 
+                const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia'); 
+                if(terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; } 
+                throw new Error("Erro JSON."); 
+            }
+        } catch (err) {
+            throw err;
+        } 
     }
 
     async function extrairDadosIA() { 
         const txt = getValSafe('texto-ia'); 
         if(!txt) return alert("Cole texto!"); 
+        
+        mostrarCarregamento();
+        document.getElementById('loading-text').innerText = "Processando Inteligência Artificial...";
         
         const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; 
         
@@ -902,13 +923,32 @@
             preencherEditor(extraido); 
         } catch (err) { 
             if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
-        } 
+        } finally {
+            ocultarCarregamento();
+        }
     }
     
     async function ajustarCurriculoVaga() { 
         const idBase = getValSafe('select-curriculo-base'); const textoVaga = getValSafe('texto-vaga'); const nivelAjuste = getValSafe('nivel-ajuste'); 
         if (!idBase || !textoVaga) return alert("Preencha todos os campos da tela."); 
+        
+        mostrarCarregamento();
+        
         try { 
+            // PASSO 1: VALIDAÇÃO DA VAGA PELA IA
+            document.getElementById('loading-text').innerText = "Analisando a vaga...";
+            const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ou requisitos de uma posição? Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga"}. Texto: ${textoVaga.substring(0, 1500)}`;
+            const validacao = await processarIA(promptValidacao);
+            
+            if (validacao && validacao.valida === false) {
+                ocultarCarregamento();
+                alert("⚠️ Aviso da IA: " + (validacao.motivo || "O texto inserido não parece conter os dados de uma vaga de emprego."));
+                return;
+            }
+
+            // PASSO 2: CRUZAMENTO DOS DADOS (SE PASSOU PELA VALIDAÇÃO)
+            document.getElementById('loading-text').innerText = "Reescrevendo o seu currículo...";
+            
             const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single(); 
             if (!data) throw new Error("Erro ao ler currículo base."); const c = data.conteudo; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g; 
             const dadosDoCandidato = { nome: c.pessoais.nome, endereco: c.pessoais.end, cep: c.pessoais.cep, email: c.pessoais.email, whatsapp: c.pessoais.whats, linkedin: c.pessoais.linkedin, resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "", experiencias: c.experiencias ? c.experiencias.map(e => { const dates = e.data.split(' — '); return {cargo: e.cargo, empresa: e.empresa, ini: dates[0] || "", fim: dates[1] || "", desc: e.desc.replace(regexLimpa, '')}; }) : [], formacao: c.escolaridade ? c.escolaridade.map(esc => ({curso: esc.replace(regexLimpa, ''), inst: "", ini: "", fim: ""})) : [], idiomas: c.idiomas ? c.idiomas.map(i => { const p = i.replace(regexLimpa, '').split(':'); return {nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}; }) : [], habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : [] }; 
@@ -945,14 +985,18 @@
             document.getElementById('panel-ia-extracao').style.display = 'none';
 
             preencherEditor(extraido); irPara('tela-editor'); 
-        } catch (err) { if(err.message !== "Erro JSON.") alert("Erro: " + err.message); } 
+        } catch (err) { 
+            if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
+        } finally {
+            ocultarCarregamento();
+        }
     }
     
-    function editarResumo(btn) { const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if(editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if(!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({texto: val}); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if(pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarExperiencia(btn) { const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if(expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if(expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if(editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarEscolaridade(btn) { const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escFim', raw.fim === "Cursando" ? "" : raw.fim); const escAtual = document.getElementById('escAtual'); if(escAtual) escAtual.checked = raw.fim === "Cursando"; const escFim = document.getElementById('escFim'); if(escFim) escFim.disabled = raw.fim === "Cursando"; if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); const escAtual = document.getElementById('escAtual'); let fim = dados?.fim || ((escAtual && escAtual.checked) ? "Cursando" : getValSafe('escFim')); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, fim}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; if (ini || fim) html += ` (${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni','escFim'].forEach(i => setValSafe(i,"")); if(escAtual) escAtual.checked = false; const eFim = document.getElementById('escFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarIdioma(btn) { const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarHabilidade(btn) { const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if(editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
+    function editarResumo(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if(editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if(!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({texto: val}); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if(pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
+    function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if(expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if(expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if(editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
+    function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escFim', raw.fim === "Cursando" ? "" : raw.fim); const escAtual = document.getElementById('escAtual'); if(escAtual) escAtual.checked = raw.fim === "Cursando"; const escFim = document.getElementById('escFim'); if(escFim) escFim.disabled = raw.fim === "Cursando"; if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); const escAtual = document.getElementById('escAtual'); let fim = dados?.fim || ((escAtual && escAtual.checked) ? "Cursando" : getValSafe('escFim')); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, fim}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; if (ini || fim) html += ` (${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni','escFim'].forEach(i => setValSafe(i,"")); if(escAtual) escAtual.checked = false; const eFim = document.getElementById('escFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
+    function editarIdioma(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
+    function editarHabilidade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if(editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
     
     function preencherEditor(extraido) { 
         setValSafe('inNome', extraido.nome || ""); setValSafe('inEnd', extraido.endereco || ""); setValSafe('inCep', extraido.cep || ""); 
