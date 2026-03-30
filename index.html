@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=16">
+    <link rel="manifest" href="manifest.json?v=18">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=16'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=18'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -243,7 +243,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.9</strong><br><br>
+            <strong>Edi Pro v1.1.11</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -295,7 +295,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.9</strong><br><br>
+            <strong>Edi Pro v1.1.11</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -463,6 +463,18 @@
     let origemAtual = "Criado do zero"; 
     let historicoTelas = [];
 
+    // === PREVENÇÃO DE PERDA DE DADOS (F5 ou fechar aba) ===
+    window.addEventListener('beforeunload', function (e) {
+        const telaEditor = document.getElementById('tela-editor');
+        // Se estiver no editor e for um currículo não salvo (idAtual nulo)
+        if (telaEditor && telaEditor.classList.contains('ativa') && idAtual === null) {
+            e.preventDefault();
+            // A mensagem exata abaixo é requerida pelo código, mas navegadores modernos a substituem por um alerta padrão de segurança.
+            e.returnValue = 'Deseja seguir com a atualização da pagina? Todos seus dados não salvos serão perdidos!';
+            return e.returnValue;
+        }
+    });
+
     // === LÓGICA DO TOUR/TUTORIAL ===
     let passoTour = 0;
     const tourTextos = [
@@ -531,7 +543,24 @@
     }
     async function deletarUsuarioAdmin(userId, userEmail) { if(confirm(`ATENÇÃO: Deseja desativar ${userEmail}?`)) { const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId }); if(error) alert("Erro: " + error.message); else { showToast(); abrirGestaoUsuarios(); } } }
 
-    function ajustarZoomMobile() { const wrapper = document.getElementById('curriculo-wrapper'); const curriculo = document.getElementById('curriculo'); if(wrapper && curriculo) { if (window.innerWidth <= 1024 && !wrapper.classList.contains('wrapper-fullscreen')) { const larguraDisponivel = wrapper.clientWidth - 30; let escala = larguraDisponivel / 680; curriculo.style.transformOrigin = "top center"; curriculo.style.transform = `scale(${escala})`; wrapper.style.height = `${curriculo.offsetHeight * escala}px`; } else if (!wrapper.classList.contains('wrapper-fullscreen')) { curriculo.style.transform = "none"; wrapper.style.height = "auto"; } } }
+    function ajustarZoomMobile() { 
+        const wrapper = document.getElementById('curriculo-wrapper'); 
+        const curriculo = document.getElementById('curriculo'); 
+        if(wrapper && curriculo) { 
+            if (window.innerWidth <= 1024 && !wrapper.classList.contains('wrapper-fullscreen')) { 
+                const larguraDisponivel = wrapper.clientWidth - 30; 
+                let escala = larguraDisponivel / 680; 
+                curriculo.style.transformOrigin = "top center"; 
+                curriculo.style.transform = `scale(${escala})`; 
+                wrapper.style.height = `${curriculo.offsetHeight * escala}px`; 
+                wrapper.scrollTo(0,0);
+            } else if (!wrapper.classList.contains('wrapper-fullscreen')) { 
+                curriculo.style.transform = "none"; 
+                wrapper.style.height = "auto"; 
+                wrapper.scrollTo(0,0);
+            } 
+        } 
+    }
     window.addEventListener('resize', ajustarZoomMobile);
 
     function toggleFullscreenCV() {
@@ -541,6 +570,7 @@
         
         if (wrapper.classList.contains('wrapper-fullscreen')) {
             wrapper.classList.remove('wrapper-fullscreen');
+            wrapper.scrollTo(0,0);
             ajustarZoomMobile(); 
         } else {
             wrapper.classList.add('wrapper-fullscreen');
@@ -553,6 +583,7 @@
         const wrapper = document.getElementById('curriculo-wrapper');
         if (wrapper && wrapper.classList.contains('wrapper-fullscreen')) {
             wrapper.classList.remove('wrapper-fullscreen');
+            wrapper.scrollTo(0,0);
             ajustarZoomMobile();
         }
     }
@@ -560,10 +591,28 @@
     // ==========================================
     // INICIALIZAÇÃO E CAPTURA DE VAGAS
     // ==========================================
+    
+    function recuperarEstadoTela() {
+        const telaSalva = localStorage.getItem('telaRecuperacao');
+        const cvSalvo = localStorage.getItem('cvRecuperacao');
+        
+        if (telaSalva === 'tela-editor' && cvSalvo) {
+            carregar(cvSalvo);
+        } else if (telaSalva === 'tela-editor' && !cvSalvo) {
+            irPara('tela-menu');
+        } else if (telaSalva && document.getElementById(telaSalva)) {
+            if(telaSalva === 'tela-lista') fluxoLista();
+            else if(telaSalva === 'tela-vaga') abrirTelaVaga();
+            else if(telaSalva === 'tela-admin-usuarios') abrirGestaoUsuarios();
+            else irPara(telaSalva);
+        } else {
+            irPara('tela-menu');
+        }
+    }
+
     window.addEventListener('load', async () => {
         applyTheme(localStorage.getItem('themePreference') || 'light');
         
-        // 1. CAPTURAR VAGA EXTERNA DA URL (Extensão, Windows ou Celular)
         const urlParams = new URLSearchParams(window.location.search);
         const vagaPendenteUrl = urlParams.get('vaga_id');
         const tituloMobile = urlParams.get('titulo_vaga');
@@ -596,7 +645,7 @@
             } else if (textoMobilePendente) {
                 receberVagaMobile(textoMobilePendente);
             } else { 
-                irPara('tela-menu'); 
+                recuperarEstadoTela(); 
             }
         } else { 
             const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
@@ -621,7 +670,7 @@
                     receberVagaMobile(textoMobilePendente);
                 } else { 
                     const tl = document.getElementById('tela-login'); const tld = document.getElementById('tela-landing'); 
-                    if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { irPara('tela-menu'); } 
+                    if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { recuperarEstadoTela(); } 
                 }
             } 
             else if (event === 'SIGNED_OUT') { usuarioAtual = null; verificarAdmin(); irPara('tela-landing'); }
@@ -695,19 +744,31 @@
     }
     async function solicitarExclusao() { if(confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) { const { error } = await sb.rpc('desativar_minha_conta'); if(error) alert("Erro ao desativar: " + error.message); else { await fazerLogout(); alert("Conta desativada com sucesso."); } } }
     async function fazerLoginGoogle() { const msg = document.getElementById('msg-login'); if(msg) msg.style.display = 'block'; const { error } = await sb.auth.signInWithOAuth({ provider: 'google' }); if (error) { alert("Erro: " + error.message); if(msg) msg.style.display = 'none'; } }
-    async function fazerLogout() { await sb.auth.signOut(); localStorage.removeItem('ultima_atividade_app'); }
+    async function fazerLogout() { 
+        await sb.auth.signOut(); 
+        localStorage.removeItem('ultima_atividade_app'); 
+        localStorage.removeItem('telaRecuperacao');
+        localStorage.removeItem('cvRecuperacao');
+    }
 
     function applyTheme(theme) { if (theme === 'dark') { document.body.classList.add('dark-mode'); const b = document.querySelector('.btn-luz'); if(b) b.innerText = '☀️'; } else { document.body.classList.remove('dark-mode'); const b = document.querySelector('.btn-luz'); if(b) b.innerText = '💡'; } }
     function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('themePreference', newTheme); applyTheme(newTheme); }
     
     function irPara(id) { 
         const telaAtiva = document.querySelector('.tela.ativa');
-        if (telaAtiva && telaAtiva.id !== id && telaAtiva.id !== 'tela-landing') {
+        if (telaAtiva && telaAtiva.id !== id && telaAtiva.id !== 'tela-landing' && telaAtiva.id !== 'tela-login') {
             historicoTelas.push(telaAtiva.id);
         }
         document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); 
         const dest = document.getElementById(id); 
         if(dest) dest.classList.add('ativa'); 
+        
+        if (id !== 'tela-landing' && id !== 'tela-login') {
+            localStorage.setItem('telaRecuperacao', id);
+            if (idAtual) localStorage.setItem('cvRecuperacao', idAtual);
+            else localStorage.removeItem('cvRecuperacao');
+        }
+
         window.scrollTo(0,0); 
         setTimeout(ajustarZoomMobile, 50); 
     }
@@ -718,10 +779,15 @@
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); 
             const dest = document.getElementById(id); 
             if(dest) dest.classList.add('ativa'); 
+            
+            if (id !== 'tela-landing' && id !== 'tela-login') {
+                localStorage.setItem('telaRecuperacao', id);
+            }
+
             window.scrollTo(0,0); 
             setTimeout(ajustarZoomMobile, 50); 
         } else {
-            irPara('tela-menu'); // Fallback seguro
+            irPara('tela-menu');
         }
     }
 
@@ -737,6 +803,7 @@
     
     function fluxoNovo() { 
         idAtual = null; 
+        localStorage.removeItem('cvRecuperacao');
         limparTudo(); 
         const st = document.getElementById('status-nome'); if(st) st.innerText = "📄 Currículo: NOVO"; 
         const mod = document.getElementById('modal-onboarding'); if(mod) mod.style.display = 'flex'; 
@@ -801,13 +868,14 @@
             } 
         }; 
         const { error } = await sb.from('curriculos_saas').upsert(payload, { onConflict: 'identificador, user_id' }); 
-        if(!error) { idAtual = id; const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; showToast(); } else { alert("Erro ao salvar."); } 
+        if(!error) { idAtual = id; localStorage.setItem('cvRecuperacao', idAtual); const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; showToast(); } else { alert("Erro ao salvar."); } 
     }
     
     async function carregar(id) { 
         const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', id).eq('user_id', usuarioAtual.id).single(); 
         if(data) { 
             limparTudo(); idAtual = id; 
+            localStorage.setItem('cvRecuperacao', idAtual);
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; 
             const c = data.conteudo || {}; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g; 
 
@@ -915,6 +983,7 @@
             const extraido = await processarIA(prompt); 
             limparTudo(); 
             idAtual = null; 
+            localStorage.removeItem('cvRecuperacao');
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: NOVO"; 
             
             origemAtual = "Extraído via IA (Texto colado)";
@@ -973,6 +1042,8 @@
             atualizarStatusOrigem();
 
             const primeiroNome = (extraido.nome || "Candidato").split(" ")[0]; const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada"; idAtual = `${primeiroNome} - ${tituloVagaFormatado}`; 
+            
+            localStorage.setItem('cvRecuperacao', idAtual);
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + idAtual; 
             
             if(c.pessoais) { 
