@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=24">
+    <link rel="manifest" href="manifest.json?v=25">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=24'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=25'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -68,7 +68,7 @@
         #login-box { background: var(--bg-panel); padding: 50px 40px; border-radius: 16px; box-shadow: var(--shadow-hover); text-align: center; border: 1px solid var(--border-color); max-width: 450px; width: 100%; margin-top: 5vh; }
         .btn-google { background: white; color: #757575; border: 1px solid #ddd; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s;}
 
-        /* EDITOR (Otimizado para não gerar scroll interno visível) */
+        /* EDITOR */
         #container-editor { display: flex; gap: 20px; width: 100%; align-items: flex-start; margin-top: 10px; scroll-behavior: smooth; }
         
         #editor { 
@@ -288,7 +288,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>CV Edi Pro v1.1.17</strong><br><br>
+            <strong>CV Edi Pro v1.1.18</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -343,7 +343,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>CV Edi Pro v1.1.17</strong><br><br>
+            <strong>CV Edi Pro v1.1.18</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -514,7 +514,10 @@
                 <details id="details-ats" style="display: none; margin-top: 15px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-panel); box-shadow: var(--shadow); padding: 0;">
                     <summary style="font-weight: bold; padding: 12px 15px; background: var(--bg-body); color: var(--text-main); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
                         <span id="titulo-ats-lateral">📊 Análise da Vaga e Score (ATS)</span>
-                        <span id="badge-score-ats" style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: bold;"> Score: 0</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button id="btn-recalcular-ats" class="btn-base btn-primary" style="display: none; padding: 4px 10px; font-size: 11px; margin: 0;" onclick="acionarRecalculoATS(event)">🔄 Recalcular</button>
+                            <span id="badge-score-ats" style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: bold;"> Score: 0</span>
+                        </div>
                     </summary>
                     <div id="painel-ats-conteudo" style="padding: 15px;">
                         </div>
@@ -544,15 +547,25 @@
     let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
     let modoCriarConta = false;
     let ultimasAlteracoesIA = ""; 
-    let analiseAtsAtual = null; // Armazena a última análise ATS gerada
+    let analiseAtsAtual = null; 
+    let vagaOriginalAtual = ""; // Guarda o texto da vaga para recalcular o ATS depois
     let origemAtual = "Criado do zero"; 
     let historicoTelas = [];
     
     // MODELO DE IA PADRÃO (Sendo atualizado via busca de API no load)
     let modeloIAPreferido = "gemini-1.5-flash"; 
     
-    // VARIÁVEL DE PROTEÇÃO CONTRA PERDA DE DADOS
+    // VARIÁVEL DE PROTEÇÃO CONTRA PERDA DE DADOS E GATILHO PARA RECALCULAR ATS
     let temAlteracoesNaoSalvas = false;
+
+    function marcarAlteracao() {
+        temAlteracoesNaoSalvas = true;
+        // Se existe uma análise ATS e uma vaga salva, mostra o botão de recalcular
+        if (analiseAtsAtual && vagaOriginalAtual) {
+            const btnRecalcular = document.getElementById('btn-recalcular-ats');
+            if (btnRecalcular) btnRecalcular.style.display = 'inline-block';
+        }
+    }
 
     // === PREVENÇÃO DE PERDA DE DADOS (F5 ou fechar aba) ===
     window.addEventListener('beforeunload', function (e) {
@@ -568,7 +581,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const editorPanel = document.getElementById('editor');
         if (editorPanel) {
-            editorPanel.addEventListener('input', () => { temAlteracoesNaoSalvas = true; });
+            editorPanel.addEventListener('input', marcarAlteracao);
         }
     });
 
@@ -1066,7 +1079,7 @@ Formato EXATO obrigatório:
     }
 
     // ==== RENDERIZAÇÃO E CARREGAMENTO DO PAINEL ATS ====
-    function mostrarCarregamentoATS() {
+    function mostrarCarregamentoATS(abrirPainel = true) {
         const detailsAts = document.getElementById('details-ats');
         const painelConteudo = document.getElementById('painel-ats-conteudo');
         const badgeScore = document.getElementById('badge-score-ats');
@@ -1082,7 +1095,7 @@ Formato EXATO obrigatório:
         }
         if(detailsAts) {
             detailsAts.style.display = 'block';
-            detailsAts.setAttribute('open', 'true');
+            if(abrirPainel) detailsAts.setAttribute('open', 'true');
         }
     }
 
@@ -1169,23 +1182,50 @@ Formato EXATO obrigatório:
         origemAtual = "Criado do zero";
         atualizarStatusOrigem();
         
-        temAlteracoesNaoSalvas = true; // Aciona o bloqueio ao começar a criar
+        marcarAlteracao(); // Aciona o bloqueio ao começar a criar
         irPara('tela-editor'); iniciarTour();
+    }
+
+    // ==== GESTÃO DE CURRÍCULO PADRÃO ====
+    function definirPadrao(id) {
+        if (!usuarioAtual) return;
+        localStorage.setItem('cv_padrao_' + usuarioAtual.id, id);
+        showToast("⭐ Currículo Padrão atualizado!");
+        fluxoLista(); // Recarrega a lista para mostrar a estrela
     }
 
     async function fluxoLista() { 
         irPara('tela-lista'); const grid = document.getElementById('grid-salvos'); if(!grid) return; grid.innerHTML = "<p>Carregando...</p>"; 
+        
+        const padraoId = localStorage.getItem('cv_padrao_' + usuarioAtual.id);
+        
         const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id).order('identificador', { ascending: true }); 
-        grid.innerHTML = ""; if(!data || data.length === 0) { grid.innerHTML = "<p>Nenhum currículo salvo.</p>"; return; } 
+        grid.innerHTML = ""; 
+        
+        if(!data || data.length === 0) { grid.innerHTML = "<p>Nenhum currículo salvo.</p>"; return; } 
+
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; background: var(--primary-dim); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: var(--text-main);">
+                <strong>💡 Dica de Mestre:</strong> Crie um currículo contendo <b>todas</b> as suas experiências, habilidades e formações (mesmo que fique grande). Salve-o e depois clique em <b>"⭐ Definir Padrão"</b>. Ele será a sua base oficial para a IA gerar currículos perfeitos para cada vaga!
+            </div>
+        `;
+
         data.forEach(item => { 
+            const isPadrao = item.identificador === padraoId;
+            const btnPadrao = isPadrao 
+                ? `<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>` 
+                : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
+
             const card = document.createElement('div'); card.className = "card-salvo"; 
             card.innerHTML = `
                 <strong style="cursor:pointer; flex:1; min-width: 150px;" onclick="carregar('${item.identificador}')">${item.identificador}</strong>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; align-items: center; flex-wrap: wrap;">
+                    ${btnPadrao}
                     <button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:12px;" onclick="duplicar('${item.identificador}')">📑 Duplicar</button>
                     <button class="btn-base btn-danger" onclick="deletar('${item.identificador}')">🗑️ Apagar</button>
                 </div>
             `; 
+            if(isPadrao) card.style.borderLeft = "5px solid var(--accent)";
             grid.appendChild(card); 
         }); 
     }
@@ -1209,6 +1249,7 @@ Formato EXATO obrigatório:
             conteudo: { 
                 origem: origemAtual,
                 analise_ats: analiseAtsAtual, // Salva o resultado do ATS
+                vaga_original: vagaOriginalAtual, // Guarda a vaga para recalcular no futuro
                 pessoais: { nome: getValSafe('inNome'), data: getValSafe('inData'), idade: getValSafe('inIdade'), cep: getValSafe('inCep'), end: getValSafe('inEnd'), email: getValSafe('inEmail'), whats: getValSafe('inWhats'), linkedin: getValSafe('inLinkedin'), vaga: getValSafe('inVaga'), status: getValSafe('inStatus'), pretensao: getValSafe('inPretensao'), mostrarPretensao: document.getElementById('chkPretensao')?.checked }, 
                 resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()), 
                 experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ cargo: el.querySelector('.exp-header span:first-child').innerText, data: el.querySelector('.exp-header span:last-child').innerText, empresa: el.querySelector('.exp-empresa').innerText, desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() })), 
@@ -1222,7 +1263,11 @@ Formato EXATO obrigatório:
             idAtual = id; 
             localStorage.setItem('cvRecuperacao', idAtual); 
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; 
+            
             temAlteracoesNaoSalvas = false; // Desbloqueia fechamento seguro
+            const btnRecalcular = document.getElementById('btn-recalcular-ats');
+            if (btnRecalcular) btnRecalcular.style.display = 'none'; // Esconde o botão após salvar
+
             showToast(); 
         } else { alert("Erro ao salvar."); } 
     }
@@ -1237,6 +1282,8 @@ Formato EXATO obrigatório:
 
             origemAtual = c.origem || "Não identificada";
             atualizarStatusOrigem();
+
+            vagaOriginalAtual = c.vaga_original || "";
 
             // Carrega análise ATS se existir
             analiseAtsAtual = c.analise_ats || null;
@@ -1264,7 +1311,11 @@ Formato EXATO obrigatório:
             if(c.habilidades) c.habilidades.forEach(h => adicionarHabilidade(h.replace(regexLimpa, ''))); 
             
             document.getElementById('panel-ia-extracao').style.display = 'none';
+            
             temAlteracoesNaoSalvas = false; // Acabou de carregar, não há alterações
+            const btnRecalcular = document.getElementById('btn-recalcular-ats');
+            if (btnRecalcular) btnRecalcular.style.display = 'none';
+
             irPara('tela-editor'); iniciarTour();
         } 
     }
@@ -1279,8 +1330,16 @@ Formato EXATO obrigatório:
 
         const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id); 
         if (error || !data || data.length === 0) { select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>"; return; } 
+        
+        const padraoId = localStorage.getItem('cv_padrao_' + usuarioAtual.id);
+        
         select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>"; 
-        data.forEach(item => { select.innerHTML += `<option value="${item.identificador}">${item.identificador}</option>`; }); 
+        data.forEach(item => { 
+            const isSelected = item.identificador === padraoId ? 'selected' : '';
+            select.innerHTML += `<option value="${item.identificador}" ${isSelected}>${item.identificador} ${item.identificador === padraoId ? '(⭐ Padrão)' : ''}</option>`; 
+        }); 
+
+        if (padraoId) verificarCurriculoBase(); // Executa validação se já puxou o default
     }
     
     // VALIDAÇÃO EM TEMPO REAL DO CURRÍCULO BASE
@@ -1359,7 +1418,7 @@ Formato EXATO obrigatório:
             atualizarStatusOrigem();
 
             preencherEditor(extraido); 
-            temAlteracoesNaoSalvas = true; // Aciona trava de F5
+            marcarAlteracao(); // Aciona trava de F5
         } catch (err) { 
             if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
         } finally {
@@ -1368,8 +1427,8 @@ Formato EXATO obrigatório:
     }
     
     // Função separada para gerar o ATS assincronamente sem travar a tela
-    async function gerarAtsEmSegundoPlano(textoVaga, curriculoAdaptado) {
-        mostrarCarregamentoATS();
+    async function gerarAtsEmSegundoPlano(textoVaga, curriculoAdaptado, abrirPainel = true) {
+        mostrarCarregamentoATS(abrirPainel);
         try {
             const promptAtsBase = localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS;
             const promptFinalAts = promptAtsBase.replace('{{VAGA}}', textoVaga).replace('{{CURRICULO}}', JSON.stringify(curriculoAdaptado));
@@ -1382,6 +1441,47 @@ Formato EXATO obrigatório:
             const titulo = document.getElementById('titulo-ats-lateral');
             if(titulo) titulo.innerText = "⚠️ Erro ao gerar Score. Tente novamente.";
         }
+    }
+
+    // Botão de Recalcular ATS Manualmente
+    async function acionarRecalculoATS(e) {
+        e.stopPropagation(); // Previne abrir/fechar o painel de details
+        const btn = document.getElementById('btn-recalcular-ats');
+        
+        // Proteção contra múltiplos cliques (Rate Limit)
+        btn.disabled = true;
+        btn.innerText = "⏳ Recalculando...";
+        btn.style.opacity = "0.7";
+        btn.style.cursor = "not-allowed";
+
+        // Montar o JSON atual do currículo diretamente da tela (simulando a IA)
+        const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
+        const cvAtualMontado = {
+            nome: getValSafe('inNome'),
+            resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()).join('\n'),
+            experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ 
+                cargo: el.querySelector('.exp-header span:first-child').innerText, 
+                fim: el.querySelector('.exp-header span:last-child').innerText, 
+                empresa: el.querySelector('.exp-empresa').innerText, 
+                desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() 
+            })),
+            formacao: Array.from(document.querySelectorAll('#preEsc .item-lista')).map(el => {
+                const raw = el.dataset.raw ? JSON.parse(el.dataset.raw) : {};
+                return { curso: raw.curso || el.innerText.replace(regexClean, '').trim(), status: raw.status || "" };
+            }),
+            idiomas: Array.from(document.querySelectorAll('#preIdi .item-lista')).map(el => ({ nome: el.innerText.replace(regexClean, '').trim() })),
+            habilidades: Array.from(document.querySelectorAll('#preHab .item-lista')).map(el => el.innerText.replace(regexClean, '').trim())
+        };
+
+        // Chama a API passando a vaga que ficou salva em memória
+        await gerarAtsEmSegundoPlano(vagaOriginalAtual, cvAtualMontado, false);
+        
+        // Restaura e esconde o botão, só vai aparecer na próxima alteração
+        btn.innerText = "🔄 Recalcular";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+        btn.style.display = 'none'; 
     }
 
     async function ajustarCurriculoVaga() { 
@@ -1419,6 +1519,9 @@ Formato EXATO obrigatório:
             
             limparTudo(); 
             
+            // Salvando a vaga na variável global para o ATS Recalcular depois
+            vagaOriginalAtual = textoVaga;
+
             // VERIFICAR E-MAIL DE ENVIO DA VAGA
             const alertaMail = document.getElementById('alerta-email-vaga');
             if(extraido.email_envio_vaga && extraido.email_envio_vaga.includes('@')) {
@@ -1454,13 +1557,17 @@ Formato EXATO obrigatório:
             document.getElementById('panel-ia-extracao').style.display = 'none';
 
             preencherEditor(extraido); 
-            temAlteracoesNaoSalvas = true; 
+            marcarAlteracao(); 
 
             // Redireciona rapidamente para a tela de editor
             irPara('tela-editor'); 
             
             // Inicia o cálculo do ATS em segundo plano para não travar a UX do usuário
             gerarAtsEmSegundoPlano(textoVaga, extraido);
+
+            // Esconde o botão de recalcular (pois acabou de gerar do zero)
+            const btnRecalcular = document.getElementById('btn-recalcular-ats');
+            if (btnRecalcular) btnRecalcular.style.display = 'none';
 
         } catch (err) { 
             if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
@@ -1470,20 +1577,19 @@ Formato EXATO obrigatório:
     }
     
     function editarResumo(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if(editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
-    function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if(!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({texto: val}); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if(pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('resIn'); temAlteracoesNaoSalvas = true; }
+    function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if(!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({texto: val}); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`; if(!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if(pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('resIn'); marcarAlteracao(); }
     
     function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if(expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if(expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if(editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
-    function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); temAlteracoesNaoSalvas = true; }
+    function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); marcarAlteracao(); }
     
-    // ATUALIZADA: Mapeamento de status e dropdown
     function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escStatus', raw.status || "Concluído"); if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
-    function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); let status = dados?.status || getValSafe('escStatus'); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, status}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; let infoExtra = []; if(ini) infoExtra.push(ini); if(status) infoExtra.push(status); if(infoExtra.length > 0) html += ` (${infoExtra.join(' - ')})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni'].forEach(i => setValSafe(i,"")); setValSafe('escStatus', "Concluído"); const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); temAlteracoesNaoSalvas = true; }
+    function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); let status = dados?.status || getValSafe('escStatus'); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, status}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; let infoExtra = []; if(ini) infoExtra.push(ini); if(status) infoExtra.push(status); if(infoExtra.length > 0) html += ` (${infoExtra.join(' - ')})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni'].forEach(i => setValSafe(i,"")); setValSafe('escStatus', "Concluído"); const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); marcarAlteracao(); }
     
     function editarIdioma(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
-    function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('idiIn'); temAlteracoesNaoSalvas = true; }
+    function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('idiIn'); marcarAlteracao(); }
     
     function editarHabilidade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if(editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
-    function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('habIn'); temAlteracoesNaoSalvas = true; }
+    function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('habIn'); marcarAlteracao(); }
     
     function preencherEditor(extraido) { 
         setValSafe('inNome', extraido.nome || ""); setValSafe('inEnd', extraido.endereco || ""); setValSafe('inCep', extraido.cep || ""); 
@@ -1501,6 +1607,8 @@ Formato EXATO obrigatório:
     function limparTudo() { 
         ultimasAlteracoesIA = "";
         analiseAtsAtual = null;
+        vagaOriginalAtual = "";
+
         document.getElementById('btn-ver-alteracoes').style.display = 'none';
         document.getElementById('alerta-email-vaga').style.display = 'none';
         document.getElementById('details-ats').style.display = 'none';
@@ -1519,6 +1627,10 @@ Formato EXATO obrigatório:
         document.querySelectorAll('#editor details').forEach(d => d.removeAttribute('open'));
 
         document.querySelectorAll('.btn-add-block').forEach(btn => { btn.innerText = btn.innerText.replace('💾 Salvar Edição', '+ Adicionar').replace('💾 Salvar Experiência', '+ Adicionar Experiência').replace('💾 Salvar Formação', '+ Adicionar Formação').replace('💾 Salvar Idioma', '+ Adicionar Idioma'); btn.classList.remove('btn-accent'); btn.classList.add('btn-primary'); }); 
+        
+        const btnRecalcular = document.getElementById('btn-recalcular-ats');
+        if (btnRecalcular) btnRecalcular.style.display = 'none';
+
         setTimeout(ajustarZoomMobile, 100); 
     }
     
