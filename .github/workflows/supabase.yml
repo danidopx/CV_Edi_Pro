@@ -28,27 +28,22 @@ jobs:
           DEFAULT_BUMP: patch # Se você não usar feat/fix, ele sobe o final (.22)
 
       # 2. INJETAR VERSÃO NO CÓDIGO
-      - name: Atualizar arquivos com a nova versão
+      - name: Update Files
         run: |
           NEW_VER=${{ steps.tag_version.outputs.new_tag }}
-          
-          # Atualiza o package.json (formato padrão JSON)
+          # Limpa o package.json
           sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VER\"/" package.json
-          
-          # Atualiza o index.html (Texto visual do rodapé: CV Edi Pro vX.Y.Z)
-          # Aqui garantimos que ele substitua o padrão "CV Edi Pro v" seguido de qualquer número pelo novo
+          # Limpa o rodapé (remove qualquer lixo anterior e coloca a versão limpa)
           sed -i "s/CV Edi Pro v[0-9.]*/CV Edi Pro v$NEW_VER/g" public/index.html
+          # Gera um ID de cache curto e limpo
+          CACHE_ID=$(date +%s | cut -c 6-10)
+          sed -i "s/manifest\.json?v=[0-9.]*/manifest.json?v=$CACHE_ID/g" public/index.html
+          sed -i "s/sw\.js?v=[0-9.]*/sw.js?v=$CACHE_ID/g" public/index.html
           
-          # Atualiza os links de cache (?v=) com um número limpo (timestamp)
-          CACHE_ID=$(date +%s)
-          # Procura especificamente por manifest.json?v= e sw.js?v= e troca o número
-          sed -i "s/manifest\.json?v=[0-9]*/manifest.json?v=$CACHE_ID/g" public/index.html
-          sed -i "s/sw\.js?v=[0-9]*/sw.js?v=$CACHE_ID/g" public/index.html
-          
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add .
-          git commit -m "chore: carimba versão $NEW_VER [skip ci]" || echo "Sem mudanças"
+          git commit -m "chore: v$NEW_VER [skip ci]" || echo "No changes"
           git push origin HEAD:main
         
       # 3. SINCRONIZAR BANCO DE DADOS (O que já fazíamos)
