@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=20">
+    <link rel="manifest" href="manifest.json?v=21">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=20'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=21'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -189,21 +189,21 @@
             <p style="font-size: 14px; color: var(--text-light); margin-bottom: 20px;">Preencha os dados essenciais para ajudar a nossa IA a entender o seu momento de carreira. Você pode pular os opcionais.</p>
             
             <div class="input-group" style="margin-top: 0;">
-                <label style="font-size: 12px; font-weight: bold; margin-bottom: -5px;">Nome Completo <span style="color: red;">*</span></label>
+                <label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">Nome Completo <span style="color: red;">*</span></label>
                 <input type="text" id="onb-nome" placeholder="Seu nome">
                 
                 <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: -5px; display:block;">E-mail <span style="color: red;">*</span></label><input type="email" id="onb-email" placeholder="E-mail de Contato"></div>
-                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: -5px; display:block;">WhatsApp <span style="color: red;">*</span></label><input type="text" id="onb-whats" placeholder="(11) 90000-0000" oninput="mascaraWhats(this)"></div>
+                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display:block;">E-mail <span style="color: red;">*</span></label><input type="email" id="onb-email" placeholder="E-mail de Contato"></div>
+                    <div style="flex: 1;"><label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; display:block;">WhatsApp <span style="color: red;">*</span></label><input type="text" id="onb-whats" placeholder="(11) 90000-0000" oninput="mascaraWhats(this)"></div>
                 </div>
                 
-                <label style="font-size: 12px; font-weight: bold; margin-bottom: -5px; margin-top: 5px;">Dados Opcionais</label>
+                <label style="font-size: 12px; font-weight: bold; margin-bottom: 5px; margin-top: 15px; display: block;">Dados Opcionais</label>
                 <div style="display: flex; gap: 10px;"><input type="date" id="onb-data" onchange="calcularIdadeOnboarding()" style="flex: 2;" title="Data de Nascimento"><input type="number" id="onb-idade" placeholder="Idade" style="flex: 1;" readonly></div>
                 <div style="display: flex; gap: 10px;"><input type="text" id="onb-cep" placeholder="CEP" oninput="mascaraCep(this)" style="flex: 1;"><input type="text" id="onb-end" placeholder="Cidade - UF" style="flex: 2;"></div>
                 <input type="text" id="onb-linkedin" placeholder="URL do LinkedIn">
                 
                 <hr style="border: none; border-top: 1px solid var(--border-color); margin: 10px 0;">
-                <label style="font-size: 13px; font-weight: bold;">Informações de Mercado (Opcional):</label>
+                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px;">Informações de Mercado (Opcional):</label>
                 <select id="onb-vaga">
                     <option value="">Selecione o nível da vaga almejada...</option><option value="Aprendiz">Aprendiz</option><option value="Estagiário">Estagiário</option><option value="Auxiliar">Auxiliar</option><option value="Operacional / Operador">Operacional / Operador</option><option value="Assistente">Assistente</option><option value="Técnico">Técnico</option><option value="Staff">Staff</option><option value="Analista Júnior">Analista Júnior</option><option value="Analista Pleno">Analista Pleno</option><option value="Analista Sênior">Analista Sênior</option><option value="Especialista">Especialista</option><option value="Líder">Líder</option><option value="Supervisor">Supervisor</option><option value="Coordenador">Coordenador</option><option value="Gerente">Gerente</option><option value="Diretor">Diretor</option>
                 </select>
@@ -232,8 +232,12 @@
 
             <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--accent);">🟢 Prompt - Ajuste Simples:</label>
             <textarea id="admin-prompt-simples" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
+            
             <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--danger);">🔴 Prompt - Ajuste Agressivo:</label>
             <textarea id="admin-prompt-agressivo" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
+            
+            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: #f39c12;">📊 Prompt - Análise ATS (Vaga vs Currículo):</label>
+            <textarea id="admin-prompt-ats" style="width: 100%; height: 200px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
             
             <div style="display: flex; gap: 10px;">
                 <button class="btn-base btn-neutral" onclick="document.getElementById('modal-admin').style.display='none'" style="flex: 1;">Cancelar</button>
@@ -274,7 +278,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>CV Edi Pro v1.1.13</strong><br><br>
+            <strong>CV Edi Pro v1.1.14</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -329,7 +333,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>CV Edi Pro v1.1.13</strong><br><br>
+            <strong>CV Edi Pro v1.1.14</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -484,6 +488,10 @@
                 </div></details>
                 
                 <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
+
+                <div id="painel-ats" style="display: none; margin-top: 20px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: var(--shadow);">
+                </div>
+
             </div>
             
             <button id="btn-abrir-fullscreen" class="btn-base btn-primary" onclick="toggleFullscreenCV()">📱 Ampliar Currículo</button>
@@ -508,6 +516,7 @@
     let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
     let modoCriarConta = false;
     let ultimasAlteracoesIA = ""; 
+    let analiseAtsAtual = null; // Armazena a última análise ATS gerada
     let origemAtual = "Criado do zero"; 
     let historicoTelas = [];
     
@@ -585,6 +594,41 @@
 
     const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou e melhorou" }`;
     const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou, cortou ou adicionou" }`;
+    const DEFAULT_PROMPT_ATS = `Você é um sistema de triagem de currículos baseado em ATS (Applicant Tracking System) com análise complementar de recrutador humano.
+Sua tarefa é analisar a compatibilidade entre uma VAGA e o CURRÍCULO AJUSTADO.
+Considere critérios reais utilizados por plataformas como InfoJobs, Indeed e Glassdoor: Palavras-chave, Experiência relevante, Clareza e Aderência geral ao cargo.
+
+ETAPA 1 — Extração da vaga
+Identifique Cargo principal, responsabilidades, requisitos obrigatórios e palavras-chave.
+ETAPA 2 — Extração do currículo
+Identifique Experiências, tempo de exp, hard skills, soft skills.
+ETAPA 3 — Análise de compatibilidade
+Compare vaga vs currículo e defina Pontos Fortes, Pontos Médios e Pontos Fracos (Gaps).
+ETAPA 4 — Score geral
+Dê uma nota de 0 a 100 baseada na aderência.
+ETAPA 5 — Risco de eliminação automática
+Informe: Alto / Médio / Baixo.
+ETAPA 6 — Sugestões práticas de melhoria
+Diga exatamente o que ajustar no currículo (se necessário).
+
+IMPORTANTE: Retorne APENAS um objeto JSON válido. NÃO use markdown ou blocos de código (\`\`\`json).
+Formato EXATO obrigatório:
+{
+  "pontos_fortes": ["Ponto 1"],
+  "pontos_medios": ["Ponto 1"],
+  "pontos_fracos": ["Ponto 1"],
+  "score": 85,
+  "motivo_score": "Breve explicação",
+  "risco": "Baixo",
+  "motivo_risco": "Breve explicação",
+  "sugestoes": ["Sugestão 1"]
+}
+
+[VAGA]
+{{VAGA}}
+
+[CURRÍCULO]
+{{CURRICULO}}`;
 
     function verificarAdmin() {
         if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'flex'; if(u) u.style.display = 'flex'; } 
@@ -617,15 +661,21 @@
     function abrirConfigAdmin() { 
         setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); 
         setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO); 
+        setValSafe('admin-prompt-ats', localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS); 
         setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
         document.getElementById('modal-admin').style.display = 'flex'; 
     }
     
     function salvarConfigAdmin() { 
-        const pS = getValSafe('admin-prompt-simples').trim(); const pA = getValSafe('admin-prompt-agressivo').trim(); 
+        const pS = getValSafe('admin-prompt-simples').trim(); 
+        const pA = getValSafe('admin-prompt-agressivo').trim(); 
+        const pATS = getValSafe('admin-prompt-ats').trim(); 
         const emailSuporte = getValSafe('admin-email-suporte').trim();
-        if(pS && pA) { 
-            localStorage.setItem('adminPromptSimples', pS); localStorage.setItem('adminPromptAgressivo', pA); 
+        
+        if(pS && pA && pATS) { 
+            localStorage.setItem('adminPromptSimples', pS); 
+            localStorage.setItem('adminPromptAgressivo', pA); 
+            localStorage.setItem('adminPromptAts', pATS); 
             if(emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
             document.getElementById('modal-admin').style.display = 'none'; showToast(); 
         } else { alert("Os prompts não podem ficar vazios."); } 
@@ -967,6 +1017,47 @@
         document.getElementById('modal-alteracoes').style.display = 'flex'; 
     }
 
+    // ==== RENDERIZAÇÃO DO PAINEL ATS ====
+    function renderizarATS(dados) {
+        const painel = document.getElementById('painel-ats');
+        if (!dados) { painel.style.display = 'none'; return; }
+
+        const pontuacao = dados.score || 0;
+        let corScore = pontuacao >= 75 ? 'var(--accent)' : (pontuacao >= 50 ? '#f39c12' : 'var(--danger)');
+        
+        let riscoTxt = (dados.risco || "").toLowerCase();
+        let corRisco = riscoTxt.includes('baixo') ? 'var(--accent)' : (riscoTxt.includes('médio') || riscoTxt.includes('medio') ? '#f39c12' : 'var(--danger)');
+
+        let html = `
+            <h3 style="margin-top:0; color:var(--primary); font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                📊 Análise ATS da Vaga
+                <span style="background: ${corScore}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Score: ${pontuacao}</span>
+            </h3>
+            
+            <div style="font-size: 13px; margin-bottom: 15px;">
+                <strong>Risco de Eliminação:</strong> <span style="color: ${corRisco}; font-weight: bold;">${dados.risco || 'Não avaliado'}</span><br>
+                <span style="color: var(--text-light); font-size: 11px;">${dados.motivo_risco || ''}</span>
+            </div>
+        `;
+
+        if (dados.pontos_fortes && dados.pontos_fortes.length > 0) {
+            html += `<div style="margin-bottom: 10px;"><strong style="color: var(--accent); font-size: 13px;">🔵 Pontos Fortes:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_fortes.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+        }
+        if (dados.pontos_medios && dados.pontos_medios.length > 0) {
+            html += `<div style="margin-bottom: 10px;"><strong style="color: #f39c12; font-size: 13px;">🟡 Pontos Médios:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_medios.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+        }
+        if (dados.pontos_fracos && dados.pontos_fracos.length > 0) {
+            html += `<div style="margin-bottom: 10px;"><strong style="color: var(--danger); font-size: 13px;">🔴 Gaps / Faltam na Vaga:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_fracos.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+        }
+        if (dados.sugestoes && dados.sugestoes.length > 0) {
+            html += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);"><strong style="color: var(--primary); font-size: 13px;">💡 Dicas Práticas de Melhoria:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.sugestoes.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+        }
+
+        painel.innerHTML = html;
+        painel.style.display = 'block';
+        painel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
     function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
     function calcularIdadeEditor() { const dateInput = getValSafe('inData'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970)); syncContato(); } }
     
@@ -1046,6 +1137,7 @@
             identificador: id, user_id: usuarioAtual.id, 
             conteudo: { 
                 origem: origemAtual,
+                analise_ats: analiseAtsAtual, // Salva o resultado do ATS
                 pessoais: { nome: getValSafe('inNome'), data: getValSafe('inData'), idade: getValSafe('inIdade'), cep: getValSafe('inCep'), end: getValSafe('inEnd'), email: getValSafe('inEmail'), whats: getValSafe('inWhats'), linkedin: getValSafe('inLinkedin'), vaga: getValSafe('inVaga'), status: getValSafe('inStatus'), pretensao: getValSafe('inPretensao'), mostrarPretensao: document.getElementById('chkPretensao')?.checked }, 
                 resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()), 
                 experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ cargo: el.querySelector('.exp-header span:first-child').innerText, data: el.querySelector('.exp-header span:last-child').innerText, empresa: el.querySelector('.exp-empresa').innerText, desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() })), 
@@ -1074,6 +1166,10 @@
 
             origemAtual = c.origem || "Não identificada";
             atualizarStatusOrigem();
+
+            // Carrega análise ATS se existir
+            analiseAtsAtual = c.analise_ats || null;
+            renderizarATS(analiseAtsAtual);
 
             if(c.dados_mercado) { setValSafe('inData', c.dados_mercado.data || ""); setValSafe('inIdade', c.dados_mercado.idade || ""); setValSafe('inVaga', c.dados_mercado.vaga || ""); setValSafe('inStatus', c.dados_mercado.status || "Ativo (Empregado)"); setValSafe('inPretensao', c.dados_mercado.pretensao || ""); }
             if(c.pessoais) {
@@ -1258,7 +1354,21 @@
             document.getElementById('panel-ia-extracao').style.display = 'none';
 
             preencherEditor(extraido); 
-            temAlteracoesNaoSalvas = true; // Aciona trava de F5
+            temAlteracoesNaoSalvas = true; 
+
+            // PASSO 3: GERAÇÃO DA ANÁLISE ATS
+            document.getElementById('loading-text').innerText = "Analisando compatibilidade ATS...";
+            try {
+                const promptAtsBase = localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS;
+                const promptFinalAts = promptAtsBase.replace('{{VAGA}}', textoVaga).replace('{{CURRICULO}}', JSON.stringify(extraido));
+                
+                const resultadoAts = await processarIA(promptFinalAts);
+                analiseAtsAtual = resultadoAts;
+                renderizarATS(resultadoAts);
+            } catch (errAts) {
+                console.error("Erro na Análise ATS. Não vai quebrar o fluxo principal.", errAts);
+            }
+
             irPara('tela-editor'); 
         } catch (err) { 
             if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
@@ -1297,8 +1407,10 @@
     
     function limparTudo() { 
         ultimasAlteracoesIA = "";
+        analiseAtsAtual = null;
         document.getElementById('btn-ver-alteracoes').style.display = 'none';
         document.getElementById('alerta-email-vaga').style.display = 'none';
+        document.getElementById('painel-ats').style.display = 'none';
         
         origemAtual = "Criado do zero";
         atualizarStatusOrigem();
