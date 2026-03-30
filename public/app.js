@@ -793,7 +793,17 @@ async function carregar(id) {
     }
 }
 
-async function deletar(id) { if (confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id).fluxoLista(); } }
+async function deletar(id) {
+    if (confirm(`Tem certeza que deseja apagar o currículo "${id}" definitivamente?`)) {
+        const { error } = await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id);
+        if (error) {
+            alert("Erro ao apagar: " + error.message);
+        } else {
+            showToast("🗑️ Currículo apagado com sucesso!");
+            fluxoLista(); // Agora sim, recarrega a lista corretamente!
+        }
+    }
+}
 
 async function abrirTelaVaga() {
     irPara('tela-vaga');
