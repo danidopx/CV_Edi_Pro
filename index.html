@@ -592,18 +592,22 @@
             const ehAdmin = u.email === 'dop.jr82@gmail.com'; const inativo = u.email.includes('_inativo.local');
             let botoesAcao = '-';
             if (!ehAdmin) {
-                if (inativo) {
-                    botoesAcao = `<button class="btn-base btn-primary" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>`;
-                } else {
-                    botoesAcao = `<button class="btn-base btn-danger" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
-                }
+                // Monta o botão de Status (Reabilitar ou Desativar)
+                let btnStatus = inativo 
+                    ? `<button class="btn-base btn-primary" style="padding: 6px 12px; font-size: 11px;" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>`
+                    : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size: 11px;" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
+                
+                // Monta o botão de Exclusão Definitiva (Lixeira)
+                let btnExcluir = `<button class="btn-base btn-danger" style="padding: 6px 10px; font-size: 12px; border: 1px solid var(--danger);" onclick="excluirUsuarioDefinitivo('${u.id}', '${u.email}')" title="Excluir Definitivamente">🗑️</button>`;
+                
+                botoesAcao = `<div style="display: flex; gap: 8px; align-items: center;">${btnStatus}${btnExcluir}</div>`;
             }
             tabela.innerHTML += `<tr><td style="${inativo ? 'text-decoration: line-through; color: #999;' : ''}"><strong>${u.email}</strong> ${ehAdmin ? '(Você)' : ''} ${inativo ? '<span style="color:red; font-size:10px;">[Desativado]</span>' : ''}</td><td>${new Date(u.criado_em).toLocaleDateString('pt-BR')}</td><td>${botoesAcao}</td></tr>`;
         });
     }
 
     async function deletarUsuarioAdmin(userId, userEmail) { 
-        if(confirm(`ATENÇÃO: Deseja desativar ${userEmail}?`)) { 
+        if(confirm(`ATENÇÃO: Deseja suspender o acesso de ${userEmail}?`)) { 
             const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId }); 
             if(error) alert("Erro: " + error.message); else { showToast("Usuário desativado!"); abrirGestaoUsuarios(); } 
         } 
@@ -614,6 +618,14 @@
             const { error } = await sb.rpc('admin_reabilitar_usuario', { alvo_id: userId }); 
             if(error) alert("Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase."); else { showToast("Usuário reabilitado com sucesso!"); abrirGestaoUsuarios(); } 
         } 
+    }
+
+    async function excluirUsuarioDefinitivo(userId, userEmail) {
+        if(confirm(`⚠️ CUIDADO! Você está prestes a EXCLUIR DEFINITIVAMENTE o usuário:\n\n${userEmail}\n\nEsta ação apagará a conta do banco de dados e NÃO PODE SER DESFEITA. Deseja continuar?`)) { 
+            const { error } = await sb.rpc('admin_excluir_usuario_definitivo', { alvo_id: userId }); 
+            if(error) alert("Erro ao excluir: " + error.message); 
+            else { showToast("Usuário excluído permanentemente do sistema!"); abrirGestaoUsuarios(); } 
+        }
     }
 
     function ajustarZoomMobile() { 
