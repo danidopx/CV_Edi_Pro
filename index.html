@@ -513,9 +513,9 @@
 
                 <details id="details-ats" style="display: none; margin-top: 15px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-panel); box-shadow: var(--shadow); padding: 0;">
                     <summary style="font-weight: bold; padding: 12px 15px; background: var(--bg-body); color: var(--text-main); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
-                        <span id="titulo-ats-lateral">📊 Análise da Vaga e Score (ATS)</span>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button id="btn-recalcular-ats" class="btn-base btn-primary" style="display: none; padding: 4px 10px; font-size: 11px; margin: 0;" onclick="acionarRecalculoATS(event)">🔄 Recalcular</button>
+                        <span id="titulo-ats-lateral">📊 Análise da Vaga</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button id="btn-recalcular-ats" style="display: none; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; align-items: center; justify-content: center; padding: 0; font-size: 14px; box-shadow: var(--shadow);" title="Recalcular Score" onclick="acionarRecalculoATS(event)">🔄</button>
                             <span id="badge-score-ats" style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: bold;"> Score: 0</span>
                         </div>
                     </summary>
@@ -563,7 +563,8 @@
         // Se existe uma análise ATS e uma vaga salva, mostra o botão de recalcular
         if (analiseAtsAtual && vagaOriginalAtual) {
             const btnRecalcular = document.getElementById('btn-recalcular-ats');
-            if (btnRecalcular) btnRecalcular.style.display = 'inline-block';
+            // Alterado para 'flex' para manter o ícone centralizado no botão redondo
+            if (btnRecalcular) btnRecalcular.style.display = 'flex'; 
         }
     }
 
@@ -1085,7 +1086,7 @@ Formato EXATO obrigatório:
         const badgeScore = document.getElementById('badge-score-ats');
         const titulo = document.getElementById('titulo-ats-lateral');
 
-        if(titulo) titulo.innerText = "⏳ Analisando adequação à vaga...";
+        if(titulo) titulo.innerText = "⏳ Analisando vaga...";
         if(badgeScore) {
             badgeScore.innerText = " ... ";
             badgeScore.style.background = "var(--text-light)";
@@ -1107,7 +1108,7 @@ Formato EXATO obrigatório:
         
         if (!dados || !painelConteudo || !badgeScore) { if(detailsAts) detailsAts.style.display = 'none'; return; }
 
-        if(titulo) titulo.innerText = "📊 Análise da Vaga e Score (ATS)";
+        if(titulo) titulo.innerText = "📊 Análise da Vaga";
 
         const pontuacao = dados.score || 0;
         let corScore = pontuacao >= 75 ? 'var(--accent)' : (pontuacao >= 50 ? '#f39c12' : 'var(--danger)');
@@ -1265,8 +1266,6 @@ Formato EXATO obrigatório:
             const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; 
             
             temAlteracoesNaoSalvas = false; // Desbloqueia fechamento seguro
-            const btnRecalcular = document.getElementById('btn-recalcular-ats');
-            if (btnRecalcular) btnRecalcular.style.display = 'none'; // Esconde o botão após salvar
 
             showToast(); 
         } else { alert("Erro ao salvar."); } 
@@ -1450,7 +1449,7 @@ Formato EXATO obrigatório:
         
         // Proteção contra múltiplos cliques (Rate Limit)
         btn.disabled = true;
-        btn.innerText = "⏳ Recalculando...";
+        btn.innerText = "⏳";
         btn.style.opacity = "0.7";
         btn.style.cursor = "not-allowed";
 
@@ -1477,7 +1476,7 @@ Formato EXATO obrigatório:
         await gerarAtsEmSegundoPlano(vagaOriginalAtual, cvAtualMontado, false);
         
         // Restaura e esconde o botão, só vai aparecer na próxima alteração
-        btn.innerText = "🔄 Recalcular";
+        btn.innerText = "🔄";
         btn.disabled = false;
         btn.style.opacity = "1";
         btn.style.cursor = "pointer";
