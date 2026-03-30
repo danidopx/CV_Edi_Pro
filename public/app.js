@@ -1059,7 +1059,18 @@ async function ajustarCurriculoVaga() {
 }
 
 function editarResumo(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if (editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
-function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if (!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ texto: val }); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`; if (!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if (pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('resIn'); marcarAlteracao(); }
+function adicionarResumo(txt = null) {
+    let val = txt || getValSafe('resIn');
+    if (!val) return;
+
+    // Passa o texto pelo higienizador
+    val = higienizarTexto(val);
+
+    const rawStr = JSON.stringify({ texto: val });
+    // Adicionado o white-space: pre-wrap para respeitar os 'Enters'
+    const htmlStr = `<div style="white-space: pre-wrap;">${val}</div> <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`;
+    if (!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if (pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('resIn'); marcarAlteracao();
+}
 
 // Função auxiliar para converter "MM/AAAA" ou "Atual" em números para ordenação
 function parseDataParaSort(dataStr) {
@@ -1096,7 +1107,26 @@ function reordenarExperienciasDOM() {
 }
 
 function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if (expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if (expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if (editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
-function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if (!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ cargo, empresa: emp, ini, fim, desc: des }); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`; if (!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if (pe) pe.appendChild(div); } ['expC', 'expE', 'expIni', 'expFim', 'expDes'].forEach(i => setValSafe(i, "")); if (expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if (eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); reordenarExperienciasDOM(); marcarAlteracao(); }
+function adicionarExperiencia(dados = null) {
+    let cargo = dados?.cargo || getValSafe('expC');
+    let emp = dados?.empresa || getValSafe('expE');
+    let ini = dados?.ini || getValSafe('expIni');
+    const expAtual = document.getElementById('expAtual');
+    let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim'));
+    let des = dados?.desc || getValSafe('expDes');
+    if (!cargo || !emp) return;
+
+    // Limpa lixos, mas não remove as bolinhas da descrição
+    cargo = higienizarTexto(cargo).replace(/^[•\-\*]+/, '').trim();
+    des = higienizarTexto(des);
+
+    const rawStr = JSON.stringify({ cargo, empresa: emp, ini, fim, desc: des });
+    let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : '';
+
+    // Adicionado o white-space: pre-wrap para a descrição
+    const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado" style="white-space: pre-wrap;">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`;
+    if (!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if (pe) pe.appendChild(div); } ['expC', 'expE', 'expIni', 'expFim', 'expDes'].forEach(i => setValSafe(i, "")); if (expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if (eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); reordenarExperienciasDOM(); marcarAlteracao();
+}
 
 function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escStatus', raw.status || "Concluído"); if (editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
 function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); let status = dados?.status || getValSafe('escStatus'); if (!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ curso: cur, inst: ins, ini, status }); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; let infoExtra = []; if (ini) infoExtra.push(ini); if (status) infoExtra.push(status); if (infoExtra.length > 0) html += ` (${infoExtra.join(' - ')})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if (!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if (pe) pe.appendChild(div); } ['escC', 'escI', 'escIni'].forEach(i => setValSafe(i, "")); setValSafe('escStatus', "Concluído"); const btnAdd = document.getElementById('btn-add-esc'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); marcarAlteracao(); }
@@ -1185,7 +1215,7 @@ function gerarPDF() {
                 const dim = doc.getTextDimensions(desc, { maxWidth: 170 }); checarQuebra(dim.h + 16);
                 doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30); doc.text(cargo, margin, y); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100); doc.text(periodo, 190, y, { align: "right" }); y += 5.5;
                 doc.setFont("helvetica", "italic"); doc.setTextColor(80, 80, 80); doc.text(emp, margin, y); y += 5.5;
-                doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); doc.text(desc, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 7;
+                doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); doc.text(desc, margin, y, { maxWidth: 170, align: "left" }); y += dim.h + 7;
             });
         } else if (s.type === "list") {
             Array.from(el.querySelectorAll('.item-lista')).forEach(it => { checarQuebra(8); doc.text(it.innerText.replace(regexClean, '').trim(), margin, y); y += 6; });
@@ -1200,6 +1230,16 @@ function gerarPDF() {
         y += 7;
     });
     doc.save(arquivo);
+}
+
+// Remove caracteres invisíveis do Word/PDF e padroniza as "bolinhas"
+function higienizarTexto(texto) {
+    if (!texto) return "";
+    return texto
+        .replace(/[\u200B-\u200D\uFEFF]/g, '') // Arranca os fantasmas
+        .replace(/[▪]/g, '•') // Transforma bullets esquisitos na bolinha clássica
+        .replace(/\t/g, '  ') // Troca tabulação (Tab) por espaço normal
+        .trim();
 }
 
 // Configura as travas assim que a tela carrega

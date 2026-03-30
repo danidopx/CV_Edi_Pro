@@ -1,0 +1,29 @@
+name: Deploy Supabase DB
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  migracao:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v3
+
+      - name: Instalar o Supabase CLI no robô
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Conectar ao projeto e rodar os scripts SQL
+        run: |
+          supabase link --project-ref $SUPABASE_PROJECT_ID
+          supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
