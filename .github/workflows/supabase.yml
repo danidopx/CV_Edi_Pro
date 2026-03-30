@@ -1,4 +1,4 @@
-name: Deploy Supabase DB
+name: Deploy & Versionamento CV Edi Pro
 
 on:
   push:
@@ -7,19 +7,50 @@ on:
       - master
 
 jobs:
-  migracao:
+  versionar_e_deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permissão para o robô escrever no seu código
     
     steps:
-      - name: Baixar o código do repositório
+      - name: Baixar código
         uses: actions/checkout@v3
-
-      - name: Instalar o Supabase CLI no robô
-        uses: supabase/setup-cli@v1
         with:
-          version: latest
+          fetch-depth: 0 # Necessário para ler o histórico de versões
 
-      - name: Conectar ao projeto e rodar os scripts SQL
+      # 1. AUTOMAÇÃO DE VERSÃO (Sem você precisar digitar nada)
+      - name: Automatizar Versão (Semantic Versioning)
+        id: tag_version
+        uses: anothrNick/github-tag-action@1.64.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Chave padrão do GitHub
+          WITH_V: false
+          DEFAULT_BUMP: patch # Se você não usar feat/fix, ele sobe o final (.22)
+
+      # 2. INJETAR VERSÃO NO CÓDIGO
+      - name: Atualizar arquivos com a nova versão
+        run: |
+          NEW_VER=${{ steps.tag_version.outputs.new_tag }}
+          # Atualiza o package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VER\"/" package.json
+          # Atualiza o index.html (texto visual)
+          sed -i "s/CV Edi Pro v[0-9.]*/CV Edi Pro v$NEW_VER/g" public/index.html
+          # Atualiza o cache (?v=) baseando-se no timestamp da versão
+          CACHE_ID=$(date +%s)
+          sed -i "s/manifest\.json\?v=[0-9]*/manifest.json?v=$CACHE_ID/g" public/index.html
+          sed -i "s/sw\.js\?v=[0-9]*/sw.js?v=$CACHE_ID/g" public/index.html
+          
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "chore: atualiza versão para $NEW_VER [skip ci]" || echo "Sem mudanças"
+          git push origin HEAD:main
+        
+      # 3. SINCRONIZAR BANCO DE DADOS (O que já fazíamos)
+      - name: Instalar Supabase CLI
+        uses: supabase/setup-cli@v1
+      
+      - name: Deploy SQL para o Banco
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID
           supabase db push
