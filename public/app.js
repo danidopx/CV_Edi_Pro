@@ -565,9 +565,20 @@ function mostrarCarregamentoATS(abrirPainel = true) {
         badgeScore.innerHTML = " ... ";
         badgeScore.style.background = "var(--text-light)";
     }
+
     if (painelConteudo) {
-        painelConteudo.innerHTML = "<div style='text-align:center; padding: 25px 15px; color: var(--text-light); line-height: 1.5;'>A Inteligência Artificial está calculando o seu Score e separando os pontos de atenção da vaga.<br><br><span style='font-size:12px;'>Isso levará apenas alguns segundos...</span></div>";
+        // Novo visual com animação de pulsação e brilho
+        painelConteudo.innerHTML = `
+                <div style="text-align:center; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <div class="ai-loader-circle"></div>
+                    <div class="ai-loading-text">
+                        A Inteligência Artificial está calculando o seu Score e separando os pontos de atenção da vaga.
+                    </div>
+                    <span style="font-size:11px; color: var(--text-light); letter-spacing: 1px; opacity: 0.7;">PROCESSANDO DADOS...</span>
+                </div>
+            `;
     }
+
     if (detailsAts) {
         detailsAts.style.display = 'block';
         if (abrirPainel) detailsAts.setAttribute('open', 'true');
