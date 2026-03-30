@@ -31,14 +31,15 @@ jobs:
       - name: Update Files
         run: |
           NEW_VER=${{ steps.tag_version.outputs.new_tag }}
-          # Limpa o package.json
+          # Atualiza package.json
           sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VER\"/" package.json
-          # Limpa o rodapé (remove qualquer lixo anterior e coloca a versão limpa)
-          sed -i "s/CV Edi Pro v[0-9.]*/CV Edi Pro v$NEW_VER/g" public/index.html
-          # Gera um ID de cache curto e limpo
-          CACHE_ID=$(date +%s | cut -c 6-10)
-          sed -i "s/manifest\.json?v=[0-9.]*/manifest.json?v=$CACHE_ID/g" public/index.html
-          sed -i "s/sw\.js?v=[0-9.]*/sw.js?v=$CACHE_ID/g" public/index.html
+          # Atualiza o rodapé visual
+          sed -i "s|CV Edi Pro v[0-9.]*|CV Edi Pro v$NEW_VER|g" public/index.html
+          # Gera um cache ID curto (5 dígitos)
+          CACHE_ID=$(date +%s | tail -c 6)
+          # Atualiza os links de cache de forma limpa
+          sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
+          sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
           
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
