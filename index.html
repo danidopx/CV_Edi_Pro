@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=21">
+    <link rel="manifest" href="manifest.json?v=22">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=21'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=22'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -71,7 +71,7 @@
         /* EDITOR */
         #container-editor { display: flex; gap: 30px; width: 100%; align-items: flex-start; margin-top: 10px; scroll-behavior: smooth; }
         #editor { width: 460px; min-width: 460px; background: var(--bg-panel); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); position: sticky; top: 95px; max-height: calc(100vh - 110px); overflow-y: auto; border: 1px solid var(--border-color); scroll-behavior: smooth; }
-        #curriculo-wrapper { width: 100%; display: flex; justify-content: center; flex: 1; overflow: hidden; position: relative; }
+        #curriculo-wrapper { width: 100%; display: center; justify-content: center; flex: 1; overflow: hidden; position: relative; }
         #curriculo { background: var(--bg-paper); padding: 50px; width: 680px; min-width: 680px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-height: 950px; transform-origin: top center; color: var(--text-paper); border: 1px solid #d0d0d0; border-radius: 4px; margin: 0 auto; }
 
         details { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; padding: 15px; cursor: pointer; scroll-margin-top: 20px; }
@@ -236,7 +236,7 @@
             <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--danger);">🔴 Prompt - Ajuste Agressivo:</label>
             <textarea id="admin-prompt-agressivo" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
             
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: #f39c12;">📊 Prompt - Análise ATS (Vaga vs Currículo):</label>
+            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: #f39c12;">📊 Prompt - Análise de Vaga (ATS):</label>
             <textarea id="admin-prompt-ats" style="width: 100%; height: 200px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
             
             <div style="display: flex; gap: 10px;">
@@ -278,7 +278,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>CV Edi Pro v1.1.14</strong><br><br>
+            <strong>CV Edi Pro v1.1.15</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -333,7 +333,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>CV Edi Pro v1.1.14</strong><br><br>
+            <strong>CV Edi Pro v1.1.15</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -467,7 +467,19 @@
                 
                 <details><summary>💼 Experiência Profissional</summary><div class="input-group"><input id="expC" placeholder="Cargo"> <input id="expE" placeholder="Empresa"><div style="display:flex; gap:10px"><input id="expIni" placeholder="Início MM/AAAA" style="flex:1"><input id="expFim" placeholder="Fim MM/AAAA" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="expAtual" onchange="document.getElementById('expFim').disabled = this.checked"> Trabalho Atual</label><textarea id="expDes" placeholder="Atividades e conquistas principais..." style="height: 100px;"></textarea><button id="btn-add-exp" class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar Experiência</button></div></details>
                 
-                <details><summary>🎓 Formação Acadêmica</summary><div class="input-group"><input id="escC" placeholder="Curso/Nível"> <input id="escI" placeholder="Instituição"><div style="display:flex; gap:10px"><input id="escIni" placeholder="Início (Ano)" style="flex:1"><input id="escFim" placeholder="Fim (Ano)" style="flex:1"></div><label style="font-size:13px; display: flex; align-items: center; gap: 5px; cursor: pointer;"><input type="checkbox" id="escAtual" onchange="document.getElementById('escFim').disabled = this.checked"> Cursando Atualmente</label><button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button></div></details>
+                <details><summary>🎓 Formação Acadêmica</summary><div class="input-group">
+                    <input id="escC" placeholder="Curso/Nível"> 
+                    <input id="escI" placeholder="Instituição">
+                    <div style="display:flex; gap:10px">
+                        <input id="escIni" placeholder="Início (Ano)" style="flex:1">
+                        <select id="escStatus" style="flex:1">
+                            <option value="Concluído">Concluído</option>
+                            <option value="Cursando">Cursando</option>
+                            <option value="Trancado">Trancado</option>
+                        </select>
+                    </div>
+                    <button id="btn-add-esc" class="btn-base btn-primary btn-add-block" onclick="adicionarEscolaridade()">+ Adicionar Formação</button>
+                </div></details>
                 
                 <details><summary>🌐 Idiomas</summary><div class="input-group">
                     <input id="idiIn" placeholder="Ex: Inglês">
@@ -489,8 +501,14 @@
                 
                 <details><summary>🛠 Habilidades</summary><div class="input-group"><input id="habIn" placeholder="Ex: Gestão Ágil (Scrum/Kanban)"><button id="btn-add-hab" class="btn-base btn-primary btn-add-block" onclick="adicionarHabilidade()">+ Adicionar Habilidade</button></div></details>
 
-                <div id="painel-ats" style="display: none; margin-top: 20px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: var(--shadow);">
-                </div>
+                <details id="details-ats" style="display: none; margin-top: 20px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-panel); box-shadow: var(--shadow);">
+                    <summary style="font-weight: bold; padding: 15px; background: var(--bg-body); color: var(--text-main); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
+                        <span id="titulo-ats-lateral">📊 Análise da Vaga e Score (ATS)</span>
+                        <span id="badge-score-ats" style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: bold;"> Score: 0</span>
+                    </summary>
+                    <div id="painel-ats-conteudo" style="padding: 15px;">
+                        </div>
+                </details>
 
             </div>
             
@@ -598,18 +616,12 @@
 Sua tarefa é analisar a compatibilidade entre uma VAGA e o CURRÍCULO AJUSTADO.
 Considere critérios reais utilizados por plataformas como InfoJobs, Indeed e Glassdoor: Palavras-chave, Experiência relevante, Clareza e Aderência geral ao cargo.
 
-ETAPA 1 — Extração da vaga
-Identifique Cargo principal, responsabilidades, requisitos obrigatórios e palavras-chave.
-ETAPA 2 — Extração do currículo
-Identifique Experiências, tempo de exp, hard skills, soft skills.
-ETAPA 3 — Análise de compatibilidade
-Compare vaga vs currículo e defina Pontos Fortes, Pontos Médios e Pontos Fracos (Gaps).
-ETAPA 4 — Score geral
-Dê uma nota de 0 a 100 baseada na aderência.
-ETAPA 5 — Risco de eliminação automática
-Informe: Alto / Médio / Baixo.
-ETAPA 6 — Sugestões práticas de melhoria
-Diga exatamente o que ajustar no currículo (se necessário).
+ETAPA 1 — Extração da vaga Identifique Cargo principal, responsabilidades, requisitos obrigatórios e palavras-chave.
+ETAPA 2 — Extração do currículo Identifique Experiências, tempo de exp, hard skills, soft skills.
+ETAPA 3 — Análise de compatibilidade Compare vaga vs currículo e defina Pontos Fortes, Pontos Médios e Pontos Fracos (Gaps).
+ETAPA 4 — Score geral Dê uma nota de 0 a 100 baseada na aderência.
+ETAPA 5 — Risco de eliminação automática Informe: Alto / Médio / Baixo.
+ETAPA 6 — Sugestões práticas de melhoria Diga exatamente o que ajustar no currículo (se necessário).
 
 IMPORTANTE: Retorne APENAS um objeto JSON válido. NÃO use markdown ou blocos de código (\`\`\`json).
 Formato EXATO obrigatório:
@@ -618,17 +630,12 @@ Formato EXATO obrigatório:
   "pontos_medios": ["Ponto 1"],
   "pontos_fracos": ["Ponto 1"],
   "score": 85,
-  "motivo_score": "Breve explicação",
   "risco": "Baixo",
   "motivo_risco": "Breve explicação",
   "sugestoes": ["Sugestão 1"]
 }
 
-[VAGA]
-{{VAGA}}
-
-[CURRÍCULO]
-{{CURRICULO}}`;
+[VAGA] {{VAGA}} [CURRÍCULO] {{CURRICULO}}`;
 
     function verificarAdmin() {
         if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'flex'; if(u) u.style.display = 'flex'; } 
@@ -1019,43 +1026,44 @@ Formato EXATO obrigatório:
 
     // ==== RENDERIZAÇÃO DO PAINEL ATS ====
     function renderizarATS(dados) {
-        const painel = document.getElementById('painel-ats');
-        if (!dados) { painel.style.display = 'none'; return; }
+        const detailsAts = document.getElementById('details-ats');
+        const painelConteudo = document.getElementById('painel-ats-conteudo');
+        const badgeScore = document.getElementById('badge-score-ats');
+        
+        if (!dados || !painelConteudo || !badgeScore) { if(detailsAts) detailsAts.style.display = 'none'; return; }
 
         const pontuacao = dados.score || 0;
         let corScore = pontuacao >= 75 ? 'var(--accent)' : (pontuacao >= 50 ? '#f39c12' : 'var(--danger)');
         
+        badgeScore.innerText = ` Score: ${pontuacao}`;
+        badgeScore.style.background = corScore;
+
         let riscoTxt = (dados.risco || "").toLowerCase();
         let corRisco = riscoTxt.includes('baixo') ? 'var(--accent)' : (riscoTxt.includes('médio') || riscoTxt.includes('medio') ? '#f39c12' : 'var(--danger)');
 
         let html = `
-            <h3 style="margin-top:0; color:var(--primary); font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                📊 Análise ATS da Vaga
-                <span style="background: ${corScore}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Score: ${pontuacao}</span>
-            </h3>
-            
-            <div style="font-size: 13px; margin-bottom: 15px;">
+            <div style="font-size: 13px; margin-bottom: 15px; background: var(--bg-body); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
                 <strong>Risco de Eliminação:</strong> <span style="color: ${corRisco}; font-weight: bold;">${dados.risco || 'Não avaliado'}</span><br>
                 <span style="color: var(--text-light); font-size: 11px;">${dados.motivo_risco || ''}</span>
             </div>
         `;
 
         if (dados.pontos_fortes && dados.pontos_fortes.length > 0) {
-            html += `<div style="margin-bottom: 10px;"><strong style="color: var(--accent); font-size: 13px;">🔵 Pontos Fortes:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_fortes.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+            html += `<div style="margin-bottom: 10px;"><strong style="color: var(--accent); font-size: 13px;">🔵 Pontos Fortes (Match Alto):</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_fortes.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
         }
         if (dados.pontos_medios && dados.pontos_medios.length > 0) {
-            html += `<div style="margin-bottom: 10px;"><strong style="color: #f39c12; font-size: 13px;">🟡 Pontos Médios:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_medios.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+            html += `<div style="margin-bottom: 10px;"><strong style="color: #f39c12; font-size: 13px;">🟡 Pontos Médios (Parcial):</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_medios.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
         }
         if (dados.pontos_fracos && dados.pontos_fracos.length > 0) {
-            html += `<div style="margin-bottom: 10px;"><strong style="color: var(--danger); font-size: 13px;">🔴 Gaps / Faltam na Vaga:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_fracos.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+            html += `<div style="margin-bottom: 10px;"><strong style="color: var(--danger); font-size: 13px;">🔴 Pontos Ausentes ou Gaps (Gap):</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.pontos_fracos.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
         }
         if (dados.sugestoes && dados.sugestoes.length > 0) {
-            html += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);"><strong style="color: var(--primary); font-size: 13px;">💡 Dicas Práticas de Melhoria:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.sugestoes.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+            html += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);"><strong style="color: var(--primary); font-size: 13px;">💡 Sugestões Práticas de Melhoria:</strong><ul style="margin: 5px 0; padding-left: 20px; font-size: 12px; color: var(--text-main);">${dados.sugestoes.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
         }
 
-        painel.innerHTML = html;
-        painel.style.display = 'block';
-        painel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        painelConteudo.innerHTML = html;
+        detailsAts.style.display = 'block';
+        detailsAts.removeAttribute('open'); // Mantém fechado por padrão
     }
 
     function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if(dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
@@ -1184,7 +1192,7 @@ Formato EXATO obrigatório:
             
             if(c.resumo) c.resumo.forEach(r => adicionarResumo(r.replace(regexLimpa,''))); 
             if(c.experiencias) c.experiencias.forEach(e => { const dates = e.data ? e.data.split(' — ') : ["",""]; adicionarExperiencia({ cargo: e.cargo||"", empresa: e.empresa||"", ini: dates[0]||"", fim: dates[1]||"", desc: (e.desc||"").replace(regexLimpa,'') }); }); 
-            if(c.escolaridade) c.escolaridade.forEach(esc => adicionarEscolaridade({curso: esc.replace(regexLimpa, '')})); 
+            if(c.escolaridade) c.escolaridade.forEach(esc => { const raw = esc.replace(regexLimpa, ''); const p = raw.split(':'); adicionarEscolaridade({ curso: p[0]?p[0].trim():"", status: p[1]?p[1].trim():"" }); }); 
             if(c.idiomas) c.idiomas.forEach(i => { const p = i.replace(regexLimpa, '').split(':'); adicionarIdioma({nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}); }); 
             if(c.habilidades) c.habilidades.forEach(h => adicionarHabilidade(h.replace(regexLimpa, ''))); 
             
@@ -1194,7 +1202,7 @@ Formato EXATO obrigatório:
         } 
     }
     
-    async function deletar(id) { if(confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id); fluxoLista(); } }
+    async function deletar(id) { if(confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id).fluxoLista(); } }
     
     async function abrirTelaVaga() { 
         irPara('tela-vaga'); 
@@ -1267,7 +1275,7 @@ Formato EXATO obrigatório:
         mostrarCarregamento();
         document.getElementById('loading-text').innerText = "Processando Inteligência Artificial...";
         
-        const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } Texto: ${txt}`; 
+        const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "status":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } STATUS FORMAÇÃO: Obrigatório retornar um dos: "Concluído", "Cursando", "Trancado". Texto: ${txt}`; 
         
         try { 
             const extraido = await processarIA(prompt); 
@@ -1311,9 +1319,13 @@ Formato EXATO obrigatório:
             
             const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single(); 
             if (!data) throw new Error("Erro ao ler currículo base."); const c = data.conteudo; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g; 
-            const dadosDoCandidato = { nome: c.pessoais.nome, endereco: c.pessoais.end, cep: c.pessoais.cep, email: c.pessoais.email, whatsapp: c.pessoais.whats, linkedin: c.pessoais.linkedin, resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "", experiencias: c.experiencias ? c.experiencias.map(e => { const dates = e.data.split(' — '); return {cargo: e.cargo, empresa: e.empresa, ini: dates[0] || "", fim: dates[1] || "", desc: e.desc.replace(regexLimpa, '')}; }) : [], formacao: c.escolaridade ? c.escolaridade.map(esc => ({curso: esc.replace(regexLimpa, ''), inst: "", ini: "", fim: ""})) : [], idiomas: c.idiomas ? c.idiomas.map(i => { const p = i.replace(regexLimpa, '').split(':'); return {nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}; }) : [], habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : [] }; 
+            const dadosDoCandidato = { nome: c.pessoais.nome, endereco: c.pessoais.end, cep: c.pessoais.cep, email: c.pessoais.email, whatsapp: c.pessoais.whats, linkedin: c.pessoais.linkedin, resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "", experiencias: c.experiencias ? c.experiencias.map(e => { const dates = e.data.split(' — '); return {cargo: e.cargo, empresa: e.empresa, ini: dates[0] || "", fim: dates[1] || "", desc: e.desc.replace(regexLimpa, '')}; }) : [], formacao: c.escolaridade ? c.escolaridade.map(esc => { const p = esc.replace(regexLimpa, '').split(':'); return {curso: p[0]?p[0].trim():"", inst: "", ini: "", status: p[1]?p[1].trim():""}}) : [], idiomas: c.idiomas ? c.idiomas.map(i => { const p = i.replace(regexLimpa, '').split(':'); return {nome: p[0]?p[0].trim():"", nivel: p[1]?p[1].trim():""}; }) : [], habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : [] }; 
             const basePrompt = nivelAjuste === 'agressivo' ? (localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO) : (localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); 
-            const prompt = `${basePrompt} DADOS: ${JSON.stringify(dadosDoCandidato)} VAGA: ${textoVaga}`; 
+            
+            // Adicionando instrução para reescrever formatação mantendo status
+            const promptAjustado = basePrompt + ` STATUS FORMAÇÃO: Obrigatório manter/reescrever para um dos: "Concluído", "Cursando", "Trancado".`;
+
+            const prompt = `${promptAjustado} DADOS: ${JSON.stringify(dadosDoCandidato)} VAGA: ${textoVaga}`; 
             
             const extraido = await processarIA(prompt); 
             
@@ -1356,8 +1368,8 @@ Formato EXATO obrigatório:
             preencherEditor(extraido); 
             temAlteracoesNaoSalvas = true; 
 
-            // PASSO 3: GERAÇÃO DA ANÁLISE ATS
-            document.getElementById('loading-text').innerText = "Analisando compatibilidade ATS...";
+            // PASSO 3: GERAÇÃO DA ANÁLISE ATS (NOME ATUALIZADO)
+            document.getElementById('loading-text').innerText = "Analisando compatibilidade da Vaga e Score...";
             try {
                 const promptAtsBase = localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS;
                 const promptFinalAts = promptAtsBase.replace('{{VAGA}}', textoVaga).replace('{{CURRICULO}}', JSON.stringify(extraido));
@@ -1383,8 +1395,9 @@ Formato EXATO obrigatório:
     function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if(expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if(expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if(editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
     function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); temAlteracoesNaoSalvas = true; }
     
-    function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escFim', raw.fim === "Cursando" ? "" : raw.fim); const escAtual = document.getElementById('escAtual'); if(escAtual) escAtual.checked = raw.fim === "Cursando"; const escFim = document.getElementById('escFim'); if(escFim) escFim.disabled = raw.fim === "Cursando"; if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
-    function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); const escAtual = document.getElementById('escAtual'); let fim = dados?.fim || ((escAtual && escAtual.checked) ? "Cursando" : getValSafe('escFim')); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, fim}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; if (ini || fim) html += ` (${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni','escFim'].forEach(i => setValSafe(i,"")); if(escAtual) escAtual.checked = false; const eFim = document.getElementById('escFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); temAlteracoesNaoSalvas = true; }
+    // ATUALIZADA: Mapeamento de status e dropdown
+    function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escStatus', raw.status || "Concluído"); if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
+    function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); let status = dados?.status || getValSafe('escStatus'); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, status}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; let infoExtra = []; if(ini) infoExtra.push(ini); if(status) infoExtra.push(status); if(infoExtra.length > 0) html += ` (${infoExtra.join(' - ')})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni'].forEach(i => setValSafe(i,"")); setValSafe('escStatus', "Concluído"); const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); temAlteracoesNaoSalvas = true; }
     
     function editarIdioma(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
     function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('idiIn'); temAlteracoesNaoSalvas = true; }
@@ -1410,7 +1423,8 @@ Formato EXATO obrigatório:
         analiseAtsAtual = null;
         document.getElementById('btn-ver-alteracoes').style.display = 'none';
         document.getElementById('alerta-email-vaga').style.display = 'none';
-        document.getElementById('painel-ats').style.display = 'none';
+        document.getElementById('details-ats').style.display = 'none';
+        document.getElementById('painel-ats-conteudo').innerHTML = "";
         
         origemAtual = "Criado do zero";
         atualizarStatusOrigem();
