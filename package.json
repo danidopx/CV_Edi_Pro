@@ -3,7 +3,6 @@
   "version": "0.0.2",
   "private": true,
   "scripts": {
-    "start": "vercel dev",
-    "bump": "node bump.js"
+    "start": "vercel dev"
   }
 }
