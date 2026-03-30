@@ -3,13 +3,8 @@ const SUPABASE_KEY = 'sb_publishable_CPM-CH4JV3muBw_DrGk-zQ_Rii5iGU6';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let idAtual = null;
-let usuarioAtual = null;
-let editResumoNode = null,
-    editExpNode = null,
-    editEscNode = null,
-    editIdiNode = null,
-    editHabNode = null;
+let idAtual = null; let usuarioAtual = null;
+let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
 let modoCriarConta = false;
 let ultimasAlteracoesIA = "";
 let analiseAtsAtual = null;
@@ -28,7 +23,6 @@ function marcarAlteracao() {
     // Se existe uma análise ATS e uma vaga salva, mostra o botão de recalcular
     if (analiseAtsAtual && vagaOriginalAtual) {
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
-        // Alterado para 'flex' para manter o ícone centralizado no botão redondo
         if (btnRecalcular) btnRecalcular.style.display = 'flex';
     }
 }
@@ -41,47 +35,6 @@ window.addEventListener('beforeunload', function (e) {
         e.returnValue = 'Deseja seguir com a atualização da página? Todos seus dados não salvos serão perdidos!';
         return e.returnValue;
     }
-});
-
-// Configura as travas assim que a tela carrega
-document.addEventListener('DOMContentLoaded', () => {
-
-    // 1. Trava da Idade (Apenas números, máximo 3 caracteres)
-    const inIdade = document.getElementById('inIdade');
-    if (inIdade) {
-        inIdade.addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g, "").substring(0, 3);
-            syncContato();
-        });
-    }
-
-    // 2. Trava de E-mail (Verifica se tem '@' e '.' ao sair do campo)
-    const inEmail = document.getElementById('inEmail');
-    if (inEmail) {
-        inEmail.addEventListener('blur', function () {
-            const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (this.value && !regexEmail.test(this.value)) {
-                alert("⚠️ Por favor, insira um e-mail válido.");
-                this.value = ""; // Apaga se for falso
-                syncContato();
-            }
-        });
-    }
-
-    // 3. Forçar formato MM/AAAA nos campos de Experiência
-    ['expIni', 'expFim'].forEach(id => {
-        const inputData = document.getElementById(id);
-        if (inputData) {
-            inputData.addEventListener('input', function () {
-                let v = this.value.replace(/\D/g, "");
-                if (v.length >= 2) {
-                    v = v.replace(/^(\d{2})(\d)/, "$1/$2");
-                }
-                this.value = v.substring(0, 7); // Trava em 7 (MM/AAAA)
-            });
-        }
-    });
-
 });
 
 // Detectar qualquer digitação no editor para ativar a trava de segurança
@@ -99,56 +52,21 @@ const tourTextos = [
     "<b>2. Múltiplas Versões 📑</b><br><br>Para se candidatar a vagas diferentes, use o botão <b>Salvar Cópia</b> no topo da tela. Ele duplica o seu currículo atual, permitindo que você altere informações sem perder a versão original.",
     "<b>3. Gerenciar e Exportar 📄</b><br><br>Na tela inicial do sistema, em <b>Ver Salvos</b>, você gerencia todas as suas versões. Quando o currículo estiver perfeito, é só clicar em <b>Gerar PDF</b> no menu superior!"
 ];
-
-function iniciarTour() {
-    if (!localStorage.getItem('tourV1')) {
-        document.getElementById('tour-panel').style.display = 'block';
-        mostrarPassoTour();
-    }
-}
-
-function mostrarPassoTour() {
-    document.getElementById('tour-text').innerHTML = tourTextos[passoTour];
-}
-
-function proximoTour() {
-    passoTour++;
-    if (passoTour >= tourTextos.length) {
-        fecharTour();
-    } else {
-        mostrarPassoTour();
-    }
-}
-
-function fecharTour() {
-    document.getElementById('tour-panel').style.display = 'none';
-    localStorage.setItem('tourV1', 'concluido');
-}
+function iniciarTour() { if (!localStorage.getItem('tourV1')) { document.getElementById('tour-panel').style.display = 'block'; mostrarPassoTour(); } }
+function mostrarPassoTour() { document.getElementById('tour-text').innerHTML = tourTextos[passoTour]; }
+function proximoTour() { passoTour++; if (passoTour >= tourTextos.length) { fecharTour(); } else { mostrarPassoTour(); } }
+function fecharTour() { document.getElementById('tour-panel').style.display = 'none'; localStorage.setItem('tourV1', 'concluido'); }
 
 // === FUNÇÕES BLINDADAS DE DOM E NAVEGAÇÃO ===
-function setValSafe(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val || "";
-}
-
-function getValSafe(id) {
-    const el = document.getElementById(id);
-    return el ? el.value : "";
-}
+function setValSafe(id, val) { const el = document.getElementById(id); if (el) el.value = val || ""; }
+function getValSafe(id) { const el = document.getElementById(id); return el ? el.value : ""; }
 
 function fecharAbaPai(elementId) {
     const el = document.getElementById(elementId);
-    if (el) {
-        const details = el.closest('details');
-        if (details) details.removeAttribute('open');
-    }
+    if (el) { const details = el.closest('details'); if (details) details.removeAttribute('open'); }
 }
 
-function syncNome() {
-    const el = document.getElementById('inNome');
-    const prev = document.getElementById('nomePreview');
-    if (el && prev) prev.innerText = el.value || "NOME COMPLETO";
-}
+function syncNome() { const el = document.getElementById('inNome'); const prev = document.getElementById('nomePreview'); if (el && prev) prev.innerText = el.value || "NOME COMPLETO"; }
 
 function atualizarStatusOrigem() {
     const el = document.getElementById('status-origem');
@@ -156,23 +74,13 @@ function atualizarStatusOrigem() {
 }
 
 function syncContato() {
-    const idade = getValSafe('inIdade');
-    const end = getValSafe('inEnd');
-    const email = getValSafe('inEmail');
-    const whats = getValSafe('inWhats');
-    const linkedin = getValSafe('inLinkedin');
-    const pretensao = getValSafe('inPretensao');
-    const mostrarPretensao = document.getElementById('chkPretensao')?.checked;
+    const idade = getValSafe('inIdade'); const end = getValSafe('inEnd'); const email = getValSafe('inEmail'); const whats = getValSafe('inWhats'); const linkedin = getValSafe('inLinkedin'); const pretensao = getValSafe('inPretensao'); const mostrarPretensao = document.getElementById('chkPretensao')?.checked;
     let partes = [];
-    if (idade) partes.push(`${idade} anos`);
-    if (end) partes.push(end);
-    if (email) partes.push(email);
-    if (whats) partes.push(whats);
-    if (linkedin) partes.push(linkedin);
-    if (mostrarPretensao && pretensao) partes.push(`Pretensão: ${pretensao}`);
-    const prev = document.getElementById('contatoPreview');
-    if (prev) prev.innerText = partes.length > 0 ? partes.join(' | ') : "...";
+    if (idade) partes.push(`${idade} anos`); if (end) partes.push(end); if (email) partes.push(email); if (whats) partes.push(whats); if (linkedin) partes.push(linkedin); if (mostrarPretensao && pretensao) partes.push(`Pretensão: ${pretensao}`);
+    const prev = document.getElementById('contatoPreview'); if (prev) prev.innerText = partes.length > 0 ? partes.join(' | ') : "...";
 }
+
+function mascaraWhats(i) { if (!i) return; let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 15); syncContato(); }
 
 // Máscara Estrita de CEP
 function mascaraCep(i) {
@@ -183,7 +91,7 @@ function mascaraCep(i) {
     syncContato();
 }
 
-// Máscara Estrita de CPF (Caso você adicione o input no HTML)
+// Máscara Estrita de CPF (Caso adicionado no html futuramente)
 function mascaraCpf(i) {
     if (!i) return;
     let v = i.value.replace(/\D/g, "");
@@ -191,13 +99,6 @@ function mascaraCpf(i) {
     v = v.replace(/(\d{3})(\d)/, "$1.$2");
     v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     i.value = v.substring(0, 14);
-}
-
-function mascaraWhats(i) {
-    if (!i) return;
-    let v = i.value.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
-    i.value = v.substring(0, 15);
-    syncContato();
 }
 
 function showToast(msg) {
@@ -211,10 +112,7 @@ function showToast(msg) {
 }
 
 const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-
-function validarSenha(senha) {
-    return regexSenha.test(senha);
-}
+function validarSenha(senha) { return regexSenha.test(senha); }
 
 const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou e melhorou" }`;
 const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou, cortou ou adicionou" }`;
@@ -244,17 +142,8 @@ Formato EXATO obrigatório:
 [VAGA] {{VAGA}} [CURRÍCULO] {{CURRICULO}}`;
 
 function verificarAdmin() {
-    if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
-        if (c) c.style.display = 'flex';
-        if (u) u.style.display = 'flex';
-    } else {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
-        if (c) c.style.display = 'none';
-        if (u) u.style.display = 'none';
-    }
+    if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if (c) c.style.display = 'flex'; if (u) u.style.display = 'flex'; }
+    else { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if (c) c.style.display = 'none'; if (u) u.style.display = 'none'; }
 }
 
 function atualizarInfosUsuarioTopo() {
@@ -271,17 +160,9 @@ function atualizarInfosUsuarioTopo() {
 async function atualizarNomeConta() {
     const novoNome = getValSafe('novo-nome');
     if (!novoNome) return alert("Digite o nome desejado.");
-    const {
-        data,
-        error
-    } = await sb.auth.updateUser({
-        data: {
-            full_name: novoNome
-        }
-    });
-    if (error) {
-        alert("Erro ao atualizar nome: " + error.message);
-    } else {
+    const { data, error } = await sb.auth.updateUser({ data: { full_name: novoNome } });
+    if (error) { alert("Erro ao atualizar nome: " + error.message); }
+    else {
         usuarioAtual = data.user;
         atualizarInfosUsuarioTopo();
         showToast("Nome atualizado com sucesso!");
@@ -307,39 +188,22 @@ function salvarConfigAdmin() {
         localStorage.setItem('adminPromptAgressivo', pA);
         localStorage.setItem('adminPromptAts', pATS);
         if (emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
-        document.getElementById('modal-admin').style.display = 'none';
-        showToast();
-    } else {
-        alert("Os prompts não podem ficar vazios.");
-    }
+        document.getElementById('modal-admin').style.display = 'none'; showToast();
+    } else { alert("Os prompts não podem ficar vazios."); }
 }
 
 async function abrirGestaoUsuarios() {
-    irPara('tela-admin-usuarios');
-    const tabela = document.getElementById('corpo-tabela-usuarios');
-    if (!tabela) return;
-    tabela.innerHTML = `<tr><td colspan="3" style="text-align: center;">Buscando...</td></tr>`;
-    const {
-        data,
-        error
-    } = await sb.rpc('admin_listar_usuarios');
-    if (error) {
-        tabela.innerHTML = `<tr><td colspan="3" style="color: red;">Erro: ${error.message}</td></tr>`;
-        return;
-    }
-    tabela.innerHTML = "";
-    if (!data || data.length === 0) {
-        tabela.innerHTML = `<tr><td colspan="3">Nenhum usuário.</td></tr>`;
-        return;
-    }
+    irPara('tela-admin-usuarios'); const tabela = document.getElementById('corpo-tabela-usuarios'); if (!tabela) return; tabela.innerHTML = `<tr><td colspan="3" style="text-align: center;">Buscando...</td></tr>`;
+    const { data, error } = await sb.rpc('admin_listar_usuarios');
+    if (error) { tabela.innerHTML = `<tr><td colspan="3" style="color: red;">Erro: ${error.message}</td></tr>`; return; }
+    tabela.innerHTML = ""; if (!data || data.length === 0) { tabela.innerHTML = `<tr><td colspan="3">Nenhum usuário.</td></tr>`; return; }
     data.forEach(u => {
-        const ehAdmin = u.email === 'dop.jr82@gmail.com';
-        const inativo = u.email.includes('_inativo.local');
+        const ehAdmin = u.email === 'dop.jr82@gmail.com'; const inativo = u.email.includes('_inativo.local');
         let botoesAcao = '-';
         if (!ehAdmin) {
-            let btnStatus = inativo ?
-                `<button class="btn-base btn-primary" style="padding: 6px 12px; font-size: 11px;" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>` :
-                `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size: 11px;" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
+            let btnStatus = inativo
+                ? `<button class="btn-base btn-primary" style="padding: 6px 12px; font-size: 11px;" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>`
+                : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size: 11px;" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
 
             let btnExcluir = `<button class="btn-base btn-danger" style="padding: 6px 10px; font-size: 12px; border: 1px solid var(--danger);" onclick="excluirUsuarioDefinitivo('${u.id}', '${u.email}')" title="Excluir Definitivamente">🗑️</button>`;
 
@@ -351,46 +215,23 @@ async function abrirGestaoUsuarios() {
 
 async function deletarUsuarioAdmin(userId, userEmail) {
     if (confirm(`ATENÇÃO: Deseja suspender o acesso de ${userEmail}?`)) {
-        const {
-            error
-        } = await sb.rpc('admin_deletar_usuario', {
-            alvo_id: userId
-        });
-        if (error) alert("Erro: " + error.message);
-        else {
-            showToast("Usuário desativado!");
-            abrirGestaoUsuarios();
-        }
+        const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId });
+        if (error) alert("Erro: " + error.message); else { showToast("Usuário desativado!"); abrirGestaoUsuarios(); }
     }
 }
 
 async function reabilitarUsuarioAdmin(userId, userEmail) {
     if (confirm(`Deseja REABILITAR o acesso de ${userEmail}?`)) {
-        const {
-            error
-        } = await sb.rpc('admin_reabilitar_usuario', {
-            alvo_id: userId
-        });
-        if (error) alert("Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase.");
-        else {
-            showToast("Usuário reabilitado com sucesso!");
-            abrirGestaoUsuarios();
-        }
+        const { error } = await sb.rpc('admin_reabilitar_usuario', { alvo_id: userId });
+        if (error) alert("Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase."); else { showToast("Usuário reabilitado com sucesso!"); abrirGestaoUsuarios(); }
     }
 }
 
 async function excluirUsuarioDefinitivo(userId, userEmail) {
     if (confirm(`⚠️ CUIDADO! Você está prestes a EXCLUIR DEFINITIVAMENTE o usuário:\n\n${userEmail}\n\nEsta ação apagará a conta do banco de dados e NÃO PODE SER DESFEITA. Deseja continuar?`)) {
-        const {
-            error
-        } = await sb.rpc('admin_excluir_usuario_definitivo', {
-            alvo_id: userId
-        });
+        const { error } = await sb.rpc('admin_excluir_usuario_definitivo', { alvo_id: userId });
         if (error) alert("Erro ao excluir: " + error.message);
-        else {
-            showToast("Usuário excluído permanentemente do sistema!");
-            abrirGestaoUsuarios();
-        }
+        else { showToast("Usuário excluído permanentemente do sistema!"); abrirGestaoUsuarios(); }
     }
 }
 
@@ -440,13 +281,11 @@ function fecharFullscreenSeguro() {
 }
 
 // ==========================================
-// INICIALIZAÇÃO, BUSCA DE MODELOS E VAGAS
+// INICIALIZAÇÃO E INTEGRAÇÃO DE BACKEND
 // ==========================================
 
-// Função para buscar modelos disponíveis e salvar o melhor em background
 async function inicializarModeloIA() {
     try {
-        // Agora chama a sua Vercel Function!
         const modelResp = await fetch('/api/modelos');
         if (modelResp.ok) {
             const modelData = await modelResp.json();
@@ -465,55 +304,6 @@ async function inicializarModeloIA() {
         }
     } catch (e) {
         console.warn("Aviso: Falha ao pré-carregar os modelos da IA, será usado o modelo padrão fallback.");
-    }
-}
-
-// Substitua a antiga processarIA por esta:
-async function processarIA(promptContent) {
-    let respostaBruta = "";
-    try {
-        // Agora chama a sua Vercel Function enviando o prompt e o modelo!
-        const response = await fetch('/api/ia', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                prompt: promptContent,
-                modelo: modeloIAPreferido
-            })
-        });
-
-        if (!response.ok) throw new Error("Falha na API interna.");
-
-        const dataResp = await response.json();
-        respostaBruta = dataResp.candidates[0].content.parts[0].text;
-
-        const inicioJson = respostaBruta.indexOf('{');
-        const fimJson = respostaBruta.lastIndexOf('}');
-
-        if (inicioJson === -1 || fimJson === -1) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) {
-                terr.value = respostaBruta;
-                merr.style.display = 'flex';
-            }
-            throw new Error("Erro JSON.");
-        }
-        try {
-            return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
-        } catch (e) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) {
-                terr.value = respostaBruta;
-                merr.style.display = 'flex';
-            }
-            throw new Error("Erro JSON.");
-        }
-    } catch (err) {
-        throw err;
     }
 }
 
@@ -538,7 +328,6 @@ function recuperarEstadoTela() {
 window.addEventListener('load', async () => {
     applyTheme(localStorage.getItem('themePreference') || 'light');
 
-    // Chamada Assíncrona que não trava a tela (Busca os modelos pra ficar mais rápido depois)
     inicializarModeloIA();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -556,18 +345,8 @@ window.addEventListener('load', async () => {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    const ultimaAtividade = localStorage.getItem('ultima_atividade_app');
-    if (ultimaAtividade && (Date.now() - parseInt(ultimaAtividade) > 7200000)) {
-        await sb.auth.signOut();
-        localStorage.removeItem('ultima_atividade_app');
-        irPara('tela-landing');
-        return;
-    }
-    const {
-        data: {
-            session
-        }
-    } = await sb.auth.getSession();
+    const ultimaAtividade = localStorage.getItem('ultima_atividade_app'); if (ultimaAtividade && (Date.now() - parseInt(ultimaAtividade) > 7200000)) { await sb.auth.signOut(); localStorage.removeItem('ultima_atividade_app'); irPara('tela-landing'); return; }
+    const { data: { session } } = await sb.auth.getSession();
 
     if (session) {
         usuarioAtual = session.user;
@@ -588,9 +367,7 @@ window.addEventListener('load', async () => {
     } else {
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
-        if (idVagaPendente || textoMobilePendente) {
-            setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000);
-        }
+        if (idVagaPendente || textoMobilePendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
         irPara('tela-landing');
     }
 
@@ -609,58 +386,24 @@ window.addEventListener('load', async () => {
             } else if (textoMobilePendente) {
                 receberVagaMobile(textoMobilePendente);
             } else {
-                const tl = document.getElementById('tela-login');
-                const tld = document.getElementById('tela-landing');
-                if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) {
-                    recuperarEstadoTela();
-                }
-            }
-        } else if (event === 'SIGNED_OUT') {
-            usuarioAtual = null;
-            verificarAdmin();
-            irPara('tela-landing');
-        } else if (event === 'PASSWORD_RECOVERY') {
-            const novaSenha = prompt("Digite nova senha (mínimo 8 caracteres, 1 maiúscula, 1 número):");
-            if (!validarSenha(novaSenha)) {
-                alert("Senha fraca. Tente novamente o fluxo de recuperação.");
-                return;
-            }
-            const conf = prompt("Confirme a nova senha:");
-            if (novaSenha !== conf) {
-                alert("As senhas não coincidem.");
-                return;
-            }
-            const {
-                error
-            } = await sb.auth.updateUser({
-                password: novaSenha
-            });
-            if (!error) {
-                alert("Senha atualizada!");
-                irPara('tela-menu');
-            } else {
-                alert("Erro: " + error.message);
+                const tl = document.getElementById('tela-login'); const tld = document.getElementById('tela-landing');
+                if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) { recuperarEstadoTela(); }
             }
         }
+        else if (event === 'SIGNED_OUT') { usuarioAtual = null; verificarAdmin(); irPara('tela-landing'); }
+        else if (event === 'PASSWORD_RECOVERY') {
+            const novaSenha = prompt("Digite nova senha (mínimo 8 caracteres, 1 maiúscula, 1 número):");
+            if (!validarSenha(novaSenha)) { alert("Senha fraca. Tente novamente o fluxo de recuperação."); return; }
+            const conf = prompt("Confirme a nova senha:"); if (novaSenha !== conf) { alert("As senhas não coincidem."); return; }
+            const { error } = await sb.auth.updateUser({ password: novaSenha }); if (!error) { alert("Senha atualizada!"); irPara('tela-menu'); } else { alert("Erro: " + error.message); }
+        }
     });
-    const cv = document.getElementById('curriculo');
-    if (cv) {
-        const observer = new MutationObserver(ajustarZoomMobile);
-        observer.observe(cv, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    }
-    setTimeout(ajustarZoomMobile, 100);
+    const cv = document.getElementById('curriculo'); if (cv) { const observer = new MutationObserver(ajustarZoomMobile); observer.observe(cv, { childList: true, subtree: true, characterData: true }); } setTimeout(ajustarZoomMobile, 100);
 });
 
 async function receberVagaExterna(idTransferencia) {
     try {
-        const {
-            data,
-            error
-        } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
+        const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
         if (data && data.texto) {
             localStorage.removeItem('vaga_pendente_importacao');
             await abrirTelaVaga();
@@ -669,13 +412,10 @@ async function receberVagaExterna(idTransferencia) {
             showToast("✨ Vaga capturada com sucesso! Selecione seu currículo base e clique em Gerar.");
             await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
         } else {
-            localStorage.removeItem('vaga_pendente_importacao');
-            irPara('tela-menu');
+            localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
         }
     } catch (e) {
-        console.error("Erro ao importar", e);
-        localStorage.removeItem('vaga_pendente_importacao');
-        irPara('tela-menu');
+        console.error("Erro ao importar", e); localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
     }
 }
 
@@ -689,61 +429,25 @@ async function receberVagaMobile(textoCompleto) {
 
 function alternarModoLogin() {
     modoCriarConta = !modoCriarConta;
-    const bx = document.getElementById('box-confirma-senha');
-    if (bx) bx.style.display = modoCriarConta ? 'flex' : 'none';
-    const bt = document.getElementById('btn-acao-login');
-    if (bt) bt.innerText = modoCriarConta ? "Criar Conta Segura" : "Entrar no Sistema";
-    const tx = document.getElementById('txt-troca-login');
-    if (tx) tx.innerHTML = modoCriarConta ? `Já tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Entrar</a>` : `Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a>`;
+    const bx = document.getElementById('box-confirma-senha'); if (bx) bx.style.display = modoCriarConta ? 'flex' : 'none';
+    const bt = document.getElementById('btn-acao-login'); if (bt) bt.innerText = modoCriarConta ? "Criar Conta Segura" : "Entrar no Sistema";
+    const tx = document.getElementById('txt-troca-login'); if (tx) tx.innerHTML = modoCriarConta ? `Já tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Entrar</a>` : `Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a>`;
 }
 
 async function processarFormularioLogin() {
-    const email = getValSafe('login-email');
-    const password = getValSafe('login-senha');
+    const email = getValSafe('login-email'); const password = getValSafe('login-senha');
     if (!email || !password) return alert("Preencha e-mail e senha.");
-    const msgLog = document.getElementById('msg-login');
-    if (msgLog) msgLog.style.display = 'block';
+    const msgLog = document.getElementById('msg-login'); if (msgLog) msgLog.style.display = 'block';
 
     if (modoCriarConta) {
         const conf = getValSafe('login-senha-conf');
-        if (password !== conf) {
-            alert("As senhas não coincidem.");
-            if (msgLog) msgLog.style.display = 'none';
-            return;
-        }
-        if (!validarSenha(password)) {
-            alert("A senha deve ter no mínimo 8 caracteres, contendo pelo menos 1 número e 1 letra maiúscula.");
-            if (msgLog) msgLog.style.display = 'none';
-            return;
-        }
-        const {
-            data,
-            error
-        } = await sb.auth.signUp({
-            email,
-            password
-        });
-        if (error) {
-            alert("Erro: " + error.message);
-        } else {
-            if (data.user && data.user.identities && data.user.identities.length === 0) {
-                alert("E-mail já em uso.");
-            } else {
-                alert("✉️ Link de confirmação enviado! Verifique seu e-mail.");
-                setValSafe('login-email', "");
-                setValSafe('login-senha', "");
-                setValSafe('login-senha-conf', "");
-                alternarModoLogin();
-            }
-        }
+        if (password !== conf) { alert("As senhas não coincidem."); if (msgLog) msgLog.style.display = 'none'; return; }
+        if (!validarSenha(password)) { alert("A senha deve ter no mínimo 8 caracteres, contendo pelo menos 1 número e 1 letra maiúscula."); if (msgLog) msgLog.style.display = 'none'; return; }
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) { alert("Erro: " + error.message); }
+        else { if (data.user && data.user.identities && data.user.identities.length === 0) { alert("E-mail já em uso."); } else { alert("✉️ Link de confirmação enviado! Verifique seu e-mail."); setValSafe('login-email', ""); setValSafe('login-senha', ""); setValSafe('login-senha-conf', ""); alternarModoLogin(); } }
     } else {
-        const {
-            data,
-            error
-        } = await sb.auth.signInWithPassword({
-            email,
-            password
-        });
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
             if (msgLog) msgLog.style.display = 'none';
             if (error.message.toLowerCase().includes('ban') || error.message.toLowerCase().includes('inativo') || error.message.toLowerCase().includes('suspen') || error.message.toLowerCase().includes('block')) {
@@ -758,81 +462,25 @@ async function processarFormularioLogin() {
     if (msgLog) msgLog.style.display = 'none';
 }
 
-async function recuperarSenha() {
-    const email = prompt("E-mail para recuperação:");
-    if (!email) return;
-    const {
-        error
-    } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin
-    });
-    if (error) {
-        alert("Erro: " + error.message);
-    } else {
-        alert("✉️ Link enviado se o e-mail existir no sistema.");
-    }
-}
-async function atualizarEmail() {
-    const novoEmail = getValSafe('novo-email');
-    if (!novoEmail) return alert("Digite o novo e-mail.");
-    const {
-        error
-    } = await sb.auth.updateUser({
-        email: novoEmail
-    });
-    if (error) {
-        alert("Erro: " + error.message);
-    } else {
-        alert("✉️ Links enviados para confirmar a troca.");
-        setValSafe('novo-email', "");
-    }
-}
+async function recuperarSenha() { const email = prompt("E-mail para recuperação:"); if (!email) return; const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }); if (error) { alert("Erro: " + error.message); } else { alert("✉️ Link enviado se o e-mail existir no sistema."); } }
+async function atualizarEmail() { const novoEmail = getValSafe('novo-email'); if (!novoEmail) return alert("Digite o novo e-mail."); const { error } = await sb.auth.updateUser({ email: novoEmail }); if (error) { alert("Erro: " + error.message); } else { alert("✉️ Links enviados para confirmar a troca."); setValSafe('novo-email', ""); } }
 async function atualizarSenhaConta() {
-    const s1 = getValSafe('nova-senha');
-    const s2 = getValSafe('nova-senha-conf');
-    if (s1 !== s2) return alert("As senhas não coincidem.");
-    if (!validarSenha(s1)) return alert("A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.");
-    const {
-        error
-    } = await sb.auth.updateUser({
-        password: s1
-    });
-    if (error) {
-        alert("Erro: " + error.message);
-    } else {
-        alert("Senha atualizada!");
-        setValSafe('nova-senha', "");
-        setValSafe('nova-senha-conf', "");
-    }
+    const s1 = getValSafe('nova-senha'); const s2 = getValSafe('nova-senha-conf');
+    if (s1 !== s2) return alert("As senhas não coincidem."); if (!validarSenha(s1)) return alert("A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.");
+    const { error } = await sb.auth.updateUser({ password: s1 }); if (error) { alert("Erro: " + error.message); } else { alert("Senha atualizada!"); setValSafe('nova-senha', ""); setValSafe('nova-senha-conf', ""); }
 }
 async function solicitarExclusao() {
-    if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') {
-        return alert("A conta de administrador principal não pode ser excluída.");
-    }
+    if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { return alert("A conta de administrador principal não pode ser excluída."); }
     if (confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) {
-        const {
-            error
-        } = await sb.rpc('desativar_minha_conta');
-        if (error) alert("Erro ao desativar: " + error.message);
-        else {
-            await fazerLogout();
-            alert("Conta desativada com sucesso.");
-        }
+        const { error } = await sb.rpc('desativar_minha_conta');
+        if (error) alert("Erro ao desativar: " + error.message); else { await fazerLogout(); alert("Conta desativada com sucesso."); }
     }
 }
 
 async function fazerLoginGoogle() {
-    const msg = document.getElementById('msg-login');
-    if (msg) msg.style.display = 'block';
-    const {
-        error
-    } = await sb.auth.signInWithOAuth({
-        provider: 'google'
-    });
-    if (error) {
-        alert("Erro: " + error.message);
-        if (msg) msg.style.display = 'none';
-    }
+    const msg = document.getElementById('msg-login'); if (msg) msg.style.display = 'block';
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'google' });
+    if (error) { alert("Erro: " + error.message); if (msg) msg.style.display = 'none'; }
 }
 
 async function fazerLogout() {
@@ -842,32 +490,15 @@ async function fazerLogout() {
     localStorage.removeItem('cvRecuperacao');
 }
 
-function applyTheme(theme) {
-    if (theme === 'dark') {
-        document.body.classList.add('dark-mode');
-        const b = document.querySelector('.btn-luz');
-        if (b) b.innerText = '☀️';
-    } else {
-        document.body.classList.remove('dark-mode');
-        const b = document.querySelector('.btn-luz');
-        if (b) b.innerText = '💡';
-    }
-}
-
-function toggleTheme() {
-    const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-    localStorage.setItem('themePreference', newTheme);
-    applyTheme(newTheme);
-}
+function applyTheme(theme) { if (theme === 'dark') { document.body.classList.add('dark-mode'); const b = document.querySelector('.btn-luz'); if (b) b.innerText = '☀️'; } else { document.body.classList.remove('dark-mode'); const b = document.querySelector('.btn-luz'); if (b) b.innerText = '💡'; } }
+function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('themePreference', newTheme); applyTheme(newTheme); }
 
 function irPara(id) {
     const telaEditor = document.getElementById('tela-editor');
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa') && id !== 'tela-editor';
 
     if (saindoDoEditor && temAlteracoesNaoSalvas) {
-        if (!confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) {
-            return;
-        }
+        if (!confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
         temAlteracoesNaoSalvas = false;
     }
 
@@ -894,9 +525,7 @@ function voltarTela() {
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa');
 
     if (saindoDoEditor && temAlteracoesNaoSalvas) {
-        if (!confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) {
-            return;
-        }
+        if (!confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
         temAlteracoesNaoSalvas = false;
     }
 
@@ -917,14 +546,8 @@ function voltarTela() {
     }
 }
 
-function mostrarCarregamento() {
-    document.getElementById('loading-overlay').style.display = 'flex';
-}
-
-function ocultarCarregamento() {
-    document.getElementById('loading-overlay').style.display = 'none';
-}
-
+function mostrarCarregamento() { document.getElementById('loading-overlay').style.display = 'flex'; }
+function ocultarCarregamento() { document.getElementById('loading-overlay').style.display = 'none'; }
 function mostrarAlteracoes() {
     document.getElementById('texto-alteracoes-ia').innerText = ultimasAlteracoesIA || "Nenhum resumo de alteração foi gerado pela IA para este currículo.";
     document.getElementById('modal-alteracoes').style.display = 'flex';
@@ -939,7 +562,7 @@ function mostrarCarregamentoATS(abrirPainel = true) {
 
     if (titulo) titulo.innerText = "⏳ Analisando vaga...";
     if (badgeScore) {
-        badgeScore.innerText = " ... ";
+        badgeScore.innerHTML = " ... ";
         badgeScore.style.background = "var(--text-light)";
     }
     if (painelConteudo) {
@@ -957,17 +580,14 @@ function renderizarATS(dados) {
     const badgeScore = document.getElementById('badge-score-ats');
     const titulo = document.getElementById('titulo-ats-lateral');
 
-    if (!dados || !painelConteudo || !badgeScore) {
-        if (detailsAts) detailsAts.style.display = 'none';
-        return;
-    }
+    if (!dados || !painelConteudo || !badgeScore) { if (detailsAts) detailsAts.style.display = 'none'; return; }
 
     if (titulo) titulo.innerText = "📊 Análise da Vaga";
 
     const pontuacao = dados.score || 0;
     let corScore = pontuacao >= 75 ? 'var(--accent)' : (pontuacao >= 50 ? '#f39c12' : 'var(--danger)');
 
-    badgeScore.innerText = ` Score: ${pontuacao}`;
+    badgeScore.innerHTML = `<span style="font-size: 10px; font-weight: normal; opacity: 0.9; margin-right: 4px; letter-spacing: 0.5px;">SCORE</span>${pontuacao}`;
     badgeScore.style.background = corScore;
 
     let riscoTxt = (dados.risco || "").toLowerCase();
@@ -997,28 +617,11 @@ function renderizarATS(dados) {
     detailsAts.style.display = 'block';
 }
 
-function calcularIdadeOnboarding() {
-    const dateInput = getValSafe('onb-data');
-    if (dateInput) {
-        const diff = Date.now() - new Date(dateInput).getTime();
-        const age = new Date(diff);
-        setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970));
-    }
-}
-
-function calcularIdadeEditor() {
-    const dateInput = getValSafe('inData');
-    if (dateInput) {
-        const diff = Date.now() - new Date(dateInput).getTime();
-        const age = new Date(diff);
-        setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970));
-        syncContato();
-    }
-}
+function calcularIdadeOnboarding() { const dateInput = getValSafe('onb-data'); if (dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('onb-idade', Math.abs(age.getUTCFullYear() - 1970)); } }
+function calcularIdadeEditor() { const dateInput = getValSafe('inData'); if (dateInput) { const diff = Date.now() - new Date(dateInput).getTime(); const age = new Date(diff); setValSafe('inIdade', Math.abs(age.getUTCFullYear() - 1970)); syncContato(); } }
 
 function fecharOnboarding() {
-    const mod = document.getElementById('modal-onboarding');
-    if (mod) mod.style.display = 'none';
+    const mod = document.getElementById('modal-onboarding'); if (mod) mod.style.display = 'none';
     irPara('tela-menu');
 }
 
@@ -1026,8 +629,7 @@ function fluxoNovo() {
     idAtual = null;
     localStorage.removeItem('cvRecuperacao');
     limparTudo();
-    const st = document.getElementById('status-nome');
-    if (st) st.innerText = "📄 Currículo: NOVO";
+    const st = document.getElementById('status-nome'); if (st) st.innerText = "📄 Currículo: NOVO";
 
     // Auto preencher e-mail e nome (se vier do google)
     if (usuarioAtual) {
@@ -1037,35 +639,18 @@ function fluxoNovo() {
         }
     }
 
-    const mod = document.getElementById('modal-onboarding');
-    if (mod) mod.style.display = 'flex';
+    const mod = document.getElementById('modal-onboarding'); if (mod) mod.style.display = 'flex';
 }
 
 function salvarOnboardingEContinuar() {
-    const n = getValSafe('onb-nome');
-    const e = getValSafe('onb-email');
-    const w = getValSafe('onb-whats');
-    if (!n || !e || !w) return alert("Por favor, preencha o Nome, E-mail e WhatsApp para criar a base do seu currículo.");
+    const n = getValSafe('onb-nome'); const e = getValSafe('onb-email'); const w = getValSafe('onb-whats');
+    if (!n || !e || w === undefined) return alert("Por favor, preencha os campos obrigatórios para criar a base do seu currículo.");
 
-    setValSafe('inNome', n);
-    setValSafe('inEmail', e);
-    setValSafe('inWhats', w);
-    setValSafe('inData', getValSafe('onb-data'));
-    setValSafe('inIdade', getValSafe('onb-idade'));
-    setValSafe('inCep', getValSafe('onb-cep'));
-    setValSafe('inEnd', getValSafe('onb-end'));
-    setValSafe('inLinkedin', getValSafe('onb-linkedin'));
-    setValSafe('inVaga', getValSafe('onb-vaga'));
-    setValSafe('inStatus', getValSafe('onb-status'));
-    setValSafe('inPretensao', getValSafe('onb-pretensao'));
-    const whatsEl = document.getElementById('inWhats');
-    if (whatsEl) mascaraWhats(whatsEl);
-    const cepEl = document.getElementById('inCep');
-    if (cepEl) mascaraCep(cepEl);
-    syncNome();
-    syncContato();
-    const mod = document.getElementById('modal-onboarding');
-    if (mod) mod.style.display = 'none';
+    setValSafe('inNome', n); setValSafe('inEmail', e); setValSafe('inWhats', w); setValSafe('inData', getValSafe('onb-data')); setValSafe('inIdade', getValSafe('onb-idade')); setValSafe('inCep', getValSafe('onb-cep')); setValSafe('inEnd', getValSafe('onb-end')); setValSafe('inLinkedin', getValSafe('onb-linkedin')); setValSafe('inVaga', getValSafe('onb-vaga')); setValSafe('inStatus', getValSafe('onb-status')); setValSafe('inPretensao', getValSafe('onb-pretensao'));
+    const whatsEl = document.getElementById('inWhats'); if (whatsEl) mascaraWhats(whatsEl);
+    const cepEl = document.getElementById('inCep'); if (cepEl) mascaraCep(cepEl);
+    syncNome(); syncContato();
+    const mod = document.getElementById('modal-onboarding'); if (mod) mod.style.display = 'none';
 
     document.getElementById('panel-ia-extracao').style.display = 'block';
 
@@ -1073,8 +658,7 @@ function salvarOnboardingEContinuar() {
     atualizarStatusOrigem();
 
     marcarAlteracao(); // Aciona o bloqueio ao começar a criar
-    irPara('tela-editor');
-    iniciarTour();
+    irPara('tela-editor'); iniciarTour();
 }
 
 // ==== GESTÃO DE CURRÍCULO PADRÃO ====
@@ -1086,25 +670,14 @@ function definirPadrao(id) {
 }
 
 async function fluxoLista() {
-    irPara('tela-lista');
-    const grid = document.getElementById('grid-salvos');
-    if (!grid) return;
-    grid.innerHTML = "<p>Carregando...</p>";
+    irPara('tela-lista'); const grid = document.getElementById('grid-salvos'); if (!grid) return; grid.innerHTML = "<p>Carregando...</p>";
 
     const padraoId = localStorage.getItem('cv_padrao_' + usuarioAtual.id);
 
-    const {
-        data,
-        error
-    } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id).order('identificador', {
-        ascending: true
-    });
+    const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id).order('identificador', { ascending: true });
     grid.innerHTML = "";
 
-    if (!data || data.length === 0) {
-        grid.innerHTML = "<p>Nenhum currículo salvo.</p>";
-        return;
-    }
+    if (!data || data.length === 0) { grid.innerHTML = "<p>Nenhum currículo salvo.</p>"; return; }
 
     grid.innerHTML = `
             <div style="grid-column: 1 / -1; background: var(--primary-dim); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: var(--text-main);">
@@ -1114,12 +687,11 @@ async function fluxoLista() {
 
     data.forEach(item => {
         const isPadrao = item.identificador === padraoId;
-        const btnPadrao = isPadrao ?
-            `<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>` :
-            `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
+        const btnPadrao = isPadrao
+            ? `<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>`
+            : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
 
-        const card = document.createElement('div');
-        card.className = "card-salvo";
+        const card = document.createElement('div'); card.className = "card-salvo";
         card.innerHTML = `
                 <strong style="cursor:pointer; flex:1; min-width: 150px;" onclick="carregar('${item.identificador}')">${item.identificador}</strong>
                 <div style="display:flex; gap:10px; align-items: center; flex-wrap: wrap;">
@@ -1134,104 +706,52 @@ async function fluxoLista() {
 }
 
 async function duplicar(idOriginal) {
-    const novoId = prompt("Nome para a cópia (ex: Versão 2):", idOriginal + " - Cópia");
-    if (!novoId) return;
-    const {
-        data
-    } = await sb.from('curriculos_saas').select('*').eq('identificador', idOriginal).eq('user_id', usuarioAtual.id).single();
+    const novoId = prompt("Nome para a cópia (ex: Versão 2):", idOriginal + " - Cópia"); if (!novoId) return;
+    const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idOriginal).eq('user_id', usuarioAtual.id).single();
     if (data) {
-        const payload = {
-            identificador: novoId,
-            user_id: usuarioAtual.id,
-            conteudo: data.conteudo
-        };
-        const {
-            error
-        } = await sb.from('curriculos_saas').insert(payload);
-        if (error) alert("Erro ao duplicar: O nome já deve existir.");
-        else {
-            showToast();
-            fluxoLista();
-        }
+        const payload = { identificador: novoId, user_id: usuarioAtual.id, conteudo: data.conteudo };
+        const { error } = await sb.from('curriculos_saas').insert(payload);
+        if (error) alert("Erro ao duplicar: O nome já deve existir."); else { showToast(); fluxoLista(); }
     }
 }
 
-async function salvarComo() {
-    if (!idAtual) return alert("Por favor, guarde o currículo normalmente primeiro antes de criar uma cópia.");
-    const novoId = prompt("Guardar como nova versão. Escreva o novo nome:", idAtual + " - v2");
-    if (!novoId) return;
-    idAtual = novoId;
-    await salvar();
-}
+async function salvarComo() { if (!idAtual) return alert("Por favor, guarde o currículo normalmente primeiro antes de criar uma cópia."); const novoId = prompt("Guardar como nova versão. Escreva o novo nome:", idAtual + " - v2"); if (!novoId) return; idAtual = novoId; await salvar(); }
 
 async function salvar() {
-    const id = idAtual || prompt("Nome do currículo (ex: TI Banco Itaú):");
-    if (!id) return;
-    const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
+    const id = idAtual || prompt("Nome do currículo (ex: TI Banco Itaú):"); if (!id) return; const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
     const payload = {
-        identificador: id,
-        user_id: usuarioAtual.id,
+        identificador: id, user_id: usuarioAtual.id,
         conteudo: {
             origem: origemAtual,
             analise_ats: analiseAtsAtual, // Salva o resultado do ATS
             vaga_original: vagaOriginalAtual, // Guarda a vaga para recalcular no futuro
-            pessoais: {
-                nome: getValSafe('inNome'),
-                data: getValSafe('inData'),
-                idade: getValSafe('inIdade'),
-                cep: getValSafe('inCep'),
-                end: getValSafe('inEnd'),
-                email: getValSafe('inEmail'),
-                whats: getValSafe('inWhats'),
-                linkedin: getValSafe('inLinkedin'),
-                vaga: getValSafe('inVaga'),
-                status: getValSafe('inStatus'),
-                pretensao: getValSafe('inPretensao'),
-                mostrarPretensao: document.getElementById('chkPretensao')?.checked
-            },
+            pessoais: { nome: getValSafe('inNome'), data: getValSafe('inData'), idade: getValSafe('inIdade'), cep: getValSafe('inCep'), end: getValSafe('inEnd'), email: getValSafe('inEmail'), whats: getValSafe('inWhats'), linkedin: getValSafe('inLinkedin'), vaga: getValSafe('inVaga'), status: getValSafe('inStatus'), pretensao: getValSafe('inPretensao'), mostrarPretensao: document.getElementById('chkPretensao')?.checked },
             resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()),
-            experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({
-                cargo: el.querySelector('.exp-header span:first-child').innerText,
-                data: el.querySelector('.exp-header span:last-child').innerText,
-                empresa: el.querySelector('.exp-empresa').innerText,
-                desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim()
-            })),
+            experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ cargo: el.querySelector('.exp-header span:first-child').innerText, data: el.querySelector('.exp-header span:last-child').innerText, empresa: el.querySelector('.exp-empresa').innerText, desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() })),
             escolaridade: Array.from(document.querySelectorAll('#preEsc .item-lista')).map(el => el.innerText.replace(regexClean, '').trim()),
             idiomas: Array.from(document.querySelectorAll('#preIdi .item-lista')).map(el => el.innerText.replace(regexClean, '').trim()),
             habilidades: Array.from(document.querySelectorAll('#preHab .item-lista')).map(el => el.innerText.replace(regexClean, '').trim())
         }
     };
-    const {
-        error
-    } = await sb.from('curriculos_saas').upsert(payload, {
-        onConflict: 'identificador, user_id'
-    });
+    const { error } = await sb.from('curriculos_saas').upsert(payload, { onConflict: 'identificador, user_id' });
     if (!error) {
         idAtual = id;
         localStorage.setItem('cvRecuperacao', idAtual);
-        const sn = document.getElementById('status-nome');
-        if (sn) sn.innerText = "📄 Currículo: " + id;
+        const sn = document.getElementById('status-nome'); if (sn) sn.innerText = "📄 Currículo: " + id;
 
         temAlteracoesNaoSalvas = false; // Desbloqueia fechamento seguro
 
         showToast();
-    } else {
-        alert("Erro ao salvar.");
-    }
+    } else { alert("Erro ao salvar."); }
 }
 
 async function carregar(id) {
-    const {
-        data
-    } = await sb.from('curriculos_saas').select('*').eq('identificador', id).eq('user_id', usuarioAtual.id).single();
+    const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', id).eq('user_id', usuarioAtual.id).single();
     if (data) {
-        limparTudo();
-        idAtual = id;
+        limparTudo(); idAtual = id;
         localStorage.setItem('cvRecuperacao', idAtual);
-        const sn = document.getElementById('status-nome');
-        if (sn) sn.innerText = "📄 Currículo: " + id;
-        const c = data.conteudo || {};
-        const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g;
+        const sn = document.getElementById('status-nome'); if (sn) sn.innerText = "📄 Currículo: " + id;
+        const c = data.conteudo || {}; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g;
 
         origemAtual = c.origem || "Não identificada";
         atualizarStatusOrigem();
@@ -1246,61 +766,21 @@ async function carregar(id) {
             if (atsPainel) atsPainel.removeAttribute('open'); // Mantém fechado se for carregamento antigo
         }
 
-        if (c.dados_mercado) {
-            setValSafe('inData', c.dados_mercado.data || "");
-            setValSafe('inIdade', c.dados_mercado.idade || "");
-            setValSafe('inVaga', c.dados_mercado.vaga || "");
-            setValSafe('inStatus', c.dados_mercado.status || "Ativo (Empregado)");
-            setValSafe('inPretensao', c.dados_mercado.pretensao || "");
-        }
+        if (c.dados_mercado) { setValSafe('inData', c.dados_mercado.data || ""); setValSafe('inIdade', c.dados_mercado.idade || ""); setValSafe('inVaga', c.dados_mercado.vaga || ""); setValSafe('inStatus', c.dados_mercado.status || "Ativo (Empregado)"); setValSafe('inPretensao', c.dados_mercado.pretensao || ""); }
         if (c.pessoais) {
             setValSafe('inNome', c.pessoais.nome || "");
             if (c.pessoais.data) setValSafe('inData', c.pessoais.data);
             if (c.pessoais.idade) setValSafe('inIdade', c.pessoais.idade);
-            setValSafe('inEnd', c.pessoais.end || "");
-            setValSafe('inCep', c.pessoais.cep || "");
-            setValSafe('inEmail', c.pessoais.email || "");
-            setValSafe('inLinkedin', c.pessoais.linkedin || "");
-            setValSafe('inVaga', c.pessoais.vaga || c.dados_mercado?.vaga || "");
-            setValSafe('inStatus', c.pessoais.status || c.dados_mercado?.status || "Ativo (Empregado)");
-            setValSafe('inPretensao', c.pessoais.pretensao || c.dados_mercado?.pretensao || "");
-            const chk = document.getElementById('chkPretensao');
-            if (chk) chk.checked = !!c.pessoais.mostrarPretensao;
-            const inputWhats = document.getElementById('inWhats');
-            if (inputWhats && c.pessoais.whats) {
-                inputWhats.value = c.pessoais.whats;
-                mascaraWhats(inputWhats);
-            }
+            setValSafe('inEnd', c.pessoais.end || ""); setValSafe('inCep', c.pessoais.cep || ""); setValSafe('inEmail', c.pessoais.email || ""); setValSafe('inLinkedin', c.pessoais.linkedin || ""); setValSafe('inVaga', c.pessoais.vaga || c.dados_mercado?.vaga || ""); setValSafe('inStatus', c.pessoais.status || c.dados_mercado?.status || "Ativo (Empregado)"); setValSafe('inPretensao', c.pessoais.pretensao || c.dados_mercado?.pretensao || "");
+            const chk = document.getElementById('chkPretensao'); if (chk) chk.checked = !!c.pessoais.mostrarPretensao;
+            const inputWhats = document.getElementById('inWhats'); if (inputWhats && c.pessoais.whats) { inputWhats.value = c.pessoais.whats; mascaraWhats(inputWhats); }
         }
-        syncNome();
-        syncContato();
+        syncNome(); syncContato();
 
         if (c.resumo) c.resumo.forEach(r => adicionarResumo(r.replace(regexLimpa, '')));
-        if (c.experiencias) c.experiencias.forEach(e => {
-            const dates = e.data ? e.data.split(' — ') : ["", ""];
-            adicionarExperiencia({
-                cargo: e.cargo || "",
-                empresa: e.empresa || "",
-                ini: dates[0] || "",
-                fim: dates[1] || "",
-                desc: (e.desc || "").replace(regexLimpa, '')
-            });
-        });
-        if (c.escolaridade) c.escolaridade.forEach(esc => {
-            const raw = esc.replace(regexLimpa, '');
-            const p = raw.split(':');
-            adicionarEscolaridade({
-                curso: p[0] ? p[0].trim() : "",
-                status: p[1] ? p[1].trim() : ""
-            });
-        });
-        if (c.idiomas) c.idiomas.forEach(i => {
-            const p = i.replace(regexLimpa, '').split(':');
-            adicionarIdioma({
-                nome: p[0] ? p[0].trim() : "",
-                nivel: p[1] ? p[1].trim() : ""
-            });
-        });
+        if (c.experiencias) c.experiencias.forEach(e => { const dates = e.data ? e.data.split(' — ') : ["", ""]; adicionarExperiencia({ cargo: e.cargo || "", empresa: e.empresa || "", ini: dates[0] || "", fim: dates[1] || "", desc: (e.desc || "").replace(regexLimpa, '') }); });
+        if (c.escolaridade) c.escolaridade.forEach(esc => { const raw = esc.replace(regexLimpa, ''); const p = raw.split(':'); adicionarEscolaridade({ curso: p[0] ? p[0].trim() : "", status: p[1] ? p[1].trim() : "" }); });
+        if (c.idiomas) c.idiomas.forEach(i => { const p = i.replace(regexLimpa, '').split(':'); adicionarIdioma({ nome: p[0] ? p[0].trim() : "", nivel: p[1] ? p[1].trim() : "" }); });
         if (c.habilidades) c.habilidades.forEach(h => adicionarHabilidade(h.replace(regexLimpa, '')));
 
         document.getElementById('panel-ia-extracao').style.display = 'none';
@@ -1309,33 +789,20 @@ async function carregar(id) {
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
         if (btnRecalcular) btnRecalcular.style.display = 'none';
 
-        irPara('tela-editor');
-        iniciarTour();
+        irPara('tela-editor'); iniciarTour();
     }
 }
 
-async function deletar(id) {
-    if (confirm(`Apagar definitivamente?`)) {
-        await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id).fluxoLista();
-    }
-}
+async function deletar(id) { if (confirm(`Apagar definitivamente?`)) { await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', usuarioAtual.id).fluxoLista(); } }
 
 async function abrirTelaVaga() {
     irPara('tela-vaga');
-    const select = document.getElementById('select-curriculo-base');
-    if (!select) return;
+    const select = document.getElementById('select-curriculo-base'); if (!select) return;
     select.innerHTML = "<option>Carregando...</option>";
-    const aviso = document.getElementById('aviso-cv-incompleto');
-    if (aviso) aviso.style.display = 'none';
+    const aviso = document.getElementById('aviso-cv-incompleto'); if (aviso) aviso.style.display = 'none';
 
-    const {
-        data,
-        error
-    } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id);
-    if (error || !data || data.length === 0) {
-        select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>";
-        return;
-    }
+    const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id);
+    if (error || !data || data.length === 0) { select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>"; return; }
 
     const padraoId = localStorage.getItem('cv_padrao_' + usuarioAtual.id);
 
@@ -1352,15 +819,10 @@ async function abrirTelaVaga() {
 async function verificarCurriculoBase() {
     const idBase = getValSafe('select-curriculo-base');
     const aviso = document.getElementById('aviso-cv-incompleto');
-    if (!idBase || !aviso) {
-        aviso.style.display = 'none';
-        return;
-    }
+    if (!idBase || !aviso) { aviso.style.display = 'none'; return; }
 
     try {
-        const {
-            data
-        } = await sb.from('curriculos_saas').select('conteudo').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single();
+        const { data } = await sb.from('curriculos_saas').select('conteudo').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single();
         if (data && data.conteudo) {
             const c = data.conteudo;
             let valido = true;
@@ -1370,36 +832,21 @@ async function verificarCurriculoBase() {
             if (!c.experiencias || c.experiencias.length === 0) valido = false;
             if (!c.habilidades || c.habilidades.length === 0) valido = false;
 
-            if (!valido) {
-                aviso.style.display = 'block';
-            } else {
-                aviso.style.display = 'none';
-            }
+            if (!valido) { aviso.style.display = 'block'; } else { aviso.style.display = 'none'; }
         }
-    } catch (e) {
-        console.error("Erro validação base", e);
-    }
+    } catch (e) { console.error("Erro validação base", e); }
 }
 
-// Processamento otimizado usando a variável global
 async function processarIA(promptContent) {
     let respostaBruta = "";
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modeloIAPreferido}:generateContent?key=${GEMINI_KEY}`, {
+        const response = await fetch('/api/ia', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: promptContent
-                    }]
-                }]
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptContent, modelo: modeloIAPreferido })
         });
 
-        if (!response.ok) throw new Error("Falha na API da IA.");
+        if (!response.ok) throw new Error("Falha na API interna.");
 
         const dataResp = await response.json();
         respostaBruta = dataResp.candidates[0].content.parts[0].text;
@@ -1408,23 +855,14 @@ async function processarIA(promptContent) {
         const fimJson = respostaBruta.lastIndexOf('}');
 
         if (inicioJson === -1 || fimJson === -1) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) {
-                terr.value = respostaBruta;
-                merr.style.display = 'flex';
-            }
+            const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia');
+            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
             throw new Error("Erro JSON.");
         }
-        try {
-            return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
-        } catch (e) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) {
-                terr.value = respostaBruta;
-                merr.style.display = 'flex';
-            }
+        try { return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1)); }
+        catch (e) {
+            const terr = document.getElementById('texto-bruto-erro'); const merr = document.getElementById('modal-erro-ia');
+            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
             throw new Error("Erro JSON.");
         }
     } catch (err) {
@@ -1446,8 +884,7 @@ async function extrairDadosIA() {
         limparTudo();
         idAtual = null;
         localStorage.removeItem('cvRecuperacao');
-        const sn = document.getElementById('status-nome');
-        if (sn) sn.innerText = "📄 Currículo: NOVO";
+        const sn = document.getElementById('status-nome'); if (sn) sn.innerText = "📄 Currículo: NOVO";
 
         origemAtual = "Extraído via IA (Texto colado)";
         atualizarStatusOrigem();
@@ -1502,14 +939,9 @@ async function acionarRecalculoATS(e) {
         })),
         formacao: Array.from(document.querySelectorAll('#preEsc .item-lista')).map(el => {
             const raw = el.dataset.raw ? JSON.parse(el.dataset.raw) : {};
-            return {
-                curso: raw.curso || el.innerText.replace(regexClean, '').trim(),
-                status: raw.status || ""
-            };
+            return { curso: raw.curso || el.innerText.replace(regexClean, '').trim(), status: raw.status || "" };
         }),
-        idiomas: Array.from(document.querySelectorAll('#preIdi .item-lista')).map(el => ({
-            nome: el.innerText.replace(regexClean, '').trim()
-        })),
+        idiomas: Array.from(document.querySelectorAll('#preIdi .item-lista')).map(el => ({ nome: el.innerText.replace(regexClean, '').trim() })),
         habilidades: Array.from(document.querySelectorAll('#preHab .item-lista')).map(el => el.innerText.replace(regexClean, '').trim())
     };
 
@@ -1525,9 +957,7 @@ async function acionarRecalculoATS(e) {
 }
 
 async function ajustarCurriculoVaga() {
-    const idBase = getValSafe('select-curriculo-base');
-    const textoVaga = getValSafe('texto-vaga');
-    const nivelAjuste = getValSafe('nivel-ajuste');
+    const idBase = getValSafe('select-curriculo-base'); const textoVaga = getValSafe('texto-vaga'); const nivelAjuste = getValSafe('nivel-ajuste');
     if (!idBase || !textoVaga) return alert("Preencha todos os campos da tela.");
 
     mostrarCarregamento();
@@ -1547,48 +977,9 @@ async function ajustarCurriculoVaga() {
         // PASSO 2: CRUZAMENTO DOS DADOS (SE PASSOU PELA VALIDAÇÃO)
         document.getElementById('loading-text').innerText = "Reescrevendo o seu currículo...";
 
-        const {
-            data
-        } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single();
-        if (!data) throw new Error("Erro ao ler currículo base.");
-        const c = data.conteudo;
-        const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g;
-        const dadosDoCandidato = {
-            nome: c.pessoais.nome,
-            endereco: c.pessoais.end,
-            cep: c.pessoais.cep,
-            email: c.pessoais.email,
-            whatsapp: c.pessoais.whats,
-            linkedin: c.pessoais.linkedin,
-            resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "",
-            experiencias: c.experiencias ? c.experiencias.map(e => {
-                const dates = e.data.split(' — ');
-                return {
-                    cargo: e.cargo,
-                    empresa: e.empresa,
-                    ini: dates[0] || "",
-                    fim: dates[1] || "",
-                    desc: e.desc.replace(regexLimpa, '')
-                };
-            }) : [],
-            formacao: c.escolaridade ? c.escolaridade.map(esc => {
-                const p = esc.replace(regexLimpa, '').split(':');
-                return {
-                    curso: p[0] ? p[0].trim() : "",
-                    inst: "",
-                    ini: "",
-                    status: p[1] ? p[1].trim() : ""
-                }
-            }) : [],
-            idiomas: c.idiomas ? c.idiomas.map(i => {
-                const p = i.replace(regexLimpa, '').split(':');
-                return {
-                    nome: p[0] ? p[0].trim() : "",
-                    nivel: p[1] ? p[1].trim() : ""
-                };
-            }) : [],
-            habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : []
-        };
+        const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', usuarioAtual.id).single();
+        if (!data) throw new Error("Erro ao ler currículo base."); const c = data.conteudo; const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g;
+        const dadosDoCandidato = { nome: c.pessoais.nome, endereco: c.pessoais.end, cep: c.pessoais.cep, email: c.pessoais.email, whatsapp: c.pessoais.whats, linkedin: c.pessoais.linkedin, resumo: c.resumo ? c.resumo.join("\n").replace(regexLimpa, '') : "", experiencias: c.experiencias ? c.experiencias.map(e => { const dates = e.data.split(' — '); return { cargo: e.cargo, empresa: e.empresa, ini: dates[0] || "", fim: dates[1] || "", desc: e.desc.replace(regexLimpa, '') }; }) : [], formacao: c.escolaridade ? c.escolaridade.map(esc => { const p = esc.replace(regexLimpa, '').split(':'); return { curso: p[0] ? p[0].trim() : "", inst: "", ini: "", status: p[1] ? p[1].trim() : "" } }) : [], idiomas: c.idiomas ? c.idiomas.map(i => { const p = i.replace(regexLimpa, '').split(':'); return { nome: p[0] ? p[0].trim() : "", nivel: p[1] ? p[1].trim() : "" }; }) : [], habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : [] };
         const basePrompt = nivelAjuste === 'agressivo' ? (localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO) : (localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
 
         // Adicionando instrução para reescrever formatação mantendo status
@@ -1623,22 +1014,16 @@ async function ajustarCurriculoVaga() {
         }
         atualizarStatusOrigem();
 
-        const primeiroNome = (extraido.nome || "Candidato").split(" ")[0];
-        const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada";
-        idAtual = `${primeiroNome} - ${tituloVagaFormatado}`;
+        const primeiroNome = (extraido.nome || "Candidato").split(" ")[0]; const tituloVagaFormatado = extraido.titulo_vaga || "Vaga Ajustada"; idAtual = `${primeiroNome} - ${tituloVagaFormatado}`;
 
         localStorage.setItem('cvRecuperacao', idAtual);
-        const sn = document.getElementById('status-nome');
-        if (sn) sn.innerText = "📄 Currículo: " + idAtual;
+        const sn = document.getElementById('status-nome'); if (sn) sn.innerText = "📄 Currículo: " + idAtual;
 
         if (c.pessoais) {
-            setValSafe('inData', c.pessoais.data || "");
-            setValSafe('inIdade', c.pessoais.idade || "");
-            setValSafe('inVaga', c.pessoais.vaga || "");
-            setValSafe('inStatus', c.pessoais.status || "Ativo (Empregado)");
+            setValSafe('inData', c.pessoais.data || ""); setValSafe('inIdade', c.pessoais.idade || "");
+            setValSafe('inVaga', c.pessoais.vaga || ""); setValSafe('inStatus', c.pessoais.status || "Ativo (Empregado)");
             setValSafe('inPretensao', c.pessoais.pretensao || "");
-            const chk = document.getElementById('chkPretensao');
-            if (chk) chk.checked = !!c.pessoais.mostrarPretensao;
+            const chk = document.getElementById('chkPretensao'); if (chk) chk.checked = !!c.pessoais.mostrarPretensao;
         }
 
         document.getElementById('panel-ia-extracao').style.display = 'none';
@@ -1663,112 +1048,18 @@ async function ajustarCurriculoVaga() {
     }
 }
 
-function editarResumo(btn) {
-    fecharFullscreenSeguro();
-    const div = btn.parentElement.parentElement;
-    const raw = JSON.parse(div.dataset.raw);
-    setValSafe('resIn', raw.texto);
-    if (editResumoNode) {
-        editResumoNode.style.borderLeft = "none";
-        editResumoNode.style.paddingLeft = "0";
-    }
-    editResumoNode = div;
-    div.style.borderLeft = "3px solid var(--primary)";
-    div.style.paddingLeft = "10px";
-    const inputEdit = document.getElementById('resIn');
-    if (inputEdit) {
-        inputEdit.closest('details').open = true;
-        inputEdit.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-        inputEdit.focus();
-    }
-    const btnAdd = document.getElementById('btn-add-res');
-    if (btnAdd) {
-        btnAdd.innerText = "💾 Salvar Edição";
-        btnAdd.classList.replace('btn-primary', 'btn-accent');
-    }
-}
+function editarResumo(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if (editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
+function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if (!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ texto: val }); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`; if (!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if (pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('resIn'); marcarAlteracao(); }
 
-function adicionarResumo(txt = null) {
-    let val = txt || getValSafe('resIn');
-    if (!val) return;
-    val = val.replace(/^[•\-\*\s]+/, '');
-    const rawStr = JSON.stringify({
-        texto: val
-    });
-    const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`;
-    if (!txt && editResumoNode) {
-        editResumoNode.dataset.raw = rawStr;
-        editResumoNode.innerHTML = htmlStr;
-        editResumoNode.style.borderLeft = "none";
-        editResumoNode.style.paddingLeft = "0";
-        editResumoNode = null;
-    } else {
-        const div = document.createElement('div');
-        div.className = 'texto-justificado';
-        div.dataset.raw = rawStr;
-        div.innerHTML = htmlStr;
-        const pr = document.getElementById('preRes');
-        if (pr) pr.appendChild(div);
-    }
-    setValSafe('resIn', "");
-    const btnAdd = document.getElementById('btn-add-res');
-    if (btnAdd) {
-        btnAdd.innerText = "+ Adicionar Resumo";
-        btnAdd.classList.replace('btn-accent', 'btn-primary');
-    }
-    fecharAbaPai('resIn');
-    marcarAlteracao();
-}
-
-function editarExperiencia(btn) {
-    fecharFullscreenSeguro();
-    const div = btn.parentElement.parentElement;
-    const raw = JSON.parse(div.dataset.raw);
-    setValSafe('expC', raw.cargo);
-    setValSafe('expE', raw.empresa);
-    setValSafe('expIni', raw.ini);
-    setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim);
-    const expAtual = document.getElementById('expAtual');
-    if (expAtual) expAtual.checked = raw.fim === "Até o momento";
-    const expFim = document.getElementById('expFim');
-    if (expFim) expFim.disabled = raw.fim === "Até o momento";
-    setValSafe('expDes', raw.desc);
-    if (editExpNode) {
-        editExpNode.style.borderLeft = "none";
-        editExpNode.style.paddingLeft = "0";
-    }
-    editExpNode = div;
-    div.style.borderLeft = "3px solid var(--primary)";
-    div.style.paddingLeft = "10px";
-    const inputEdit = document.getElementById('expC');
-    if (inputEdit) {
-        inputEdit.closest('details').open = true;
-        inputEdit.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-        inputEdit.focus();
-    }
-    const btnAdd = document.getElementById('btn-add-exp');
-    if (btnAdd) {
-        btnAdd.innerText = "💾 Salvar Experiência";
-        btnAdd.classList.replace('btn-primary', 'btn-accent');
-    }
-}
 // Função auxiliar para converter "MM/AAAA" ou "Atual" em números para ordenação
 function parseDataParaSort(dataStr) {
     if (!dataStr) return 0;
     const str = dataStr.toLowerCase().trim();
-    if (str === "até o momento" || str === "atual") return 999999; // Mantém no topo
+    if (str === "até o momento" || str === "atual") return 999999;
 
-    // Tenta achar formato MM/AAAA
     const matchMMAAAA = str.match(/(\d{1,2})\/(\d{4})/);
     if (matchMMAAAA) return parseInt(matchMMAAAA[2]) * 100 + parseInt(matchMMAAAA[1]);
 
-    // Tenta achar formato AAAA
     const matchAAAA = str.match(/(\d{4})/);
     if (matchAAAA) return parseInt(matchAAAA[1]) * 100;
 
@@ -1785,286 +1076,38 @@ function reordenarExperienciasDOM() {
         const textoDataA = a.querySelector('.exp-header span:last-child')?.innerText || "";
         const textoDataB = b.querySelector('.exp-header span:last-child')?.innerText || "";
 
-        // Pega sempre a data final (lado direito do "—") para comparar
         const fimA = textoDataA.split('—')[1] || textoDataA.split('—')[0];
         const fimB = textoDataB.split('—')[1] || textoDataB.split('—')[0];
 
-        return parseDataParaSort(fimB) - parseDataParaSort(fimA); // Ordem decrescente
+        return parseDataParaSort(fimB) - parseDataParaSort(fimA);
     });
 
-    // Reanexa os blocos na ordem correta
     blocos.forEach(bloco => container.appendChild(bloco));
 }
 
-function adicionarExperiencia(dados = null) {
-    let cargo = dados?.cargo || getValSafe('expC');
-    let emp = dados?.empresa || getValSafe('expE');
-    let ini = dados?.ini || getValSafe('expIni');
-    const expAtual = document.getElementById('expAtual');
-    let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim'));
-    let des = dados?.desc || getValSafe('expDes');
-    if (!cargo || !emp) return;
-    cargo = cargo.replace(/^[•\-\*\s]+/, '');
-    const rawStr = JSON.stringify({
-        cargo,
-        empresa: emp,
-        ini,
-        fim,
-        desc: des
-    });
-    let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : '';
-    const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`;
-    if (!dados && editExpNode) {
-        editExpNode.dataset.raw = rawStr;
-        editExpNode.innerHTML = htmlStr;
-        editExpNode.style.borderLeft = "none";
-        editExpNode.style.paddingLeft = "0";
-        editExpNode = null;
-    } else {
-        const div = document.createElement('div');
-        div.className = "bloco-exp";
-        div.style.marginBottom = "15px";
-        div.dataset.raw = rawStr;
-        div.innerHTML = htmlStr;
-        const pe = document.getElementById('preExp');
-        if (pe) pe.appendChild(div);
-    } ['expC', 'expE', 'expIni', 'expFim', 'expDes'].forEach(i => setValSafe(i, ""));
-    if (expAtual) expAtual.checked = false;
-    const eFim = document.getElementById('expFim');
-    if (eFim) eFim.disabled = false;
-    const btnAdd = document.getElementById('btn-add-exp');
-    if (btnAdd) {
-        btnAdd.innerText = "+ Adicionar Experiência";
-        btnAdd.classList.replace('btn-accent', 'btn-primary');
-    }
-    fecharAbaPai('expC');
-    reordenarExperienciasDOM();
-    marcarAlteracao();
-}
+function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if (expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if (expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if (editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
+function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if (!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ cargo, empresa: emp, ini, fim, desc: des }); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove(); marcarAlteracao();">[remover]</small></div>`; if (!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if (pe) pe.appendChild(div); } ['expC', 'expE', 'expIni', 'expFim', 'expDes'].forEach(i => setValSafe(i, "")); if (expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if (eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); reordenarExperienciasDOM(); marcarAlteracao(); }
 
-function editarEscolaridade(btn) {
-    fecharFullscreenSeguro();
-    const div = btn.parentElement;
-    const raw = JSON.parse(div.dataset.raw);
-    setValSafe('escC', raw.curso);
-    setValSafe('escI', raw.inst);
-    setValSafe('escIni', raw.ini);
-    setValSafe('escStatus', raw.status || "Concluído");
-    if (editEscNode) {
-        editEscNode.style.borderLeft = "none";
-        editEscNode.style.paddingLeft = "0";
-    }
-    editEscNode = div;
-    div.style.borderLeft = "3px solid var(--primary)";
-    div.style.paddingLeft = "10px";
-    const inputEdit = document.getElementById('escC');
-    if (inputEdit) {
-        inputEdit.closest('details').open = true;
-        inputEdit.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-        inputEdit.focus();
-    }
-    const btnAdd = document.getElementById('btn-add-esc');
-    if (btnAdd) {
-        btnAdd.innerText = "💾 Salvar Formação";
-        btnAdd.classList.replace('btn-primary', 'btn-accent');
-    }
-}
+function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escStatus', raw.status || "Concluído"); if (editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
+function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); let status = dados?.status || getValSafe('escStatus'); if (!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ curso: cur, inst: ins, ini, status }); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; let infoExtra = []; if (ini) infoExtra.push(ini); if (status) infoExtra.push(status); if (infoExtra.length > 0) html += ` (${infoExtra.join(' - ')})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if (!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if (pe) pe.appendChild(div); } ['escC', 'escI', 'escIni'].forEach(i => setValSafe(i, "")); setValSafe('escStatus', "Concluído"); const btnAdd = document.getElementById('btn-add-esc'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); marcarAlteracao(); }
 
-function adicionarEscolaridade(dados = null) {
-    let cur = dados?.curso || getValSafe('escC');
-    let ins = dados?.inst || getValSafe('escI');
-    let ini = dados?.ini || getValSafe('escIni');
-    let status = dados?.status || getValSafe('escStatus');
-    if (!cur) return;
-    cur = cur.replace(/^[•\-\*\s]+/, '');
-    const rawStr = JSON.stringify({
-        curso: cur,
-        inst: ins,
-        ini,
-        status
-    });
-    let html = `• <strong>${cur}</strong>`;
-    if (ins) html += ` — ${ins}`;
-    let infoExtra = [];
-    if (ini) infoExtra.push(ini);
-    if (status) infoExtra.push(status);
-    if (infoExtra.length > 0) html += ` (${infoExtra.join(' - ')})`;
-    const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`;
-    if (!dados && editEscNode) {
-        editEscNode.dataset.raw = rawStr;
-        editEscNode.innerHTML = htmlStr;
-        editEscNode.style.borderLeft = "none";
-        editEscNode.style.paddingLeft = "0";
-        editEscNode = null;
-    } else {
-        const div = document.createElement('div');
-        div.className = "item-lista";
-        div.dataset.raw = rawStr;
-        div.innerHTML = htmlStr;
-        const pe = document.getElementById('preEsc');
-        if (pe) pe.appendChild(div);
-    } ['escC', 'escI', 'escIni'].forEach(i => setValSafe(i, ""));
-    setValSafe('escStatus', "Concluído");
-    const btnAdd = document.getElementById('btn-add-esc');
-    if (btnAdd) {
-        btnAdd.innerText = "+ Adicionar Formação";
-        btnAdd.classList.replace('btn-accent', 'btn-primary');
-    }
-    fecharAbaPai('escC');
-    marcarAlteracao();
-}
+function editarIdioma(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if (editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
+function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if (!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ nome, nivel }); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if (!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if (pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('idiIn'); marcarAlteracao(); }
 
-function editarIdioma(btn) {
-    fecharFullscreenSeguro();
-    const div = btn.parentElement;
-    const raw = JSON.parse(div.dataset.raw);
-    setValSafe('idiIn', raw.nome);
-    setValSafe('idiNivel', raw.nivel);
-    if (editIdiNode) {
-        editIdiNode.style.borderLeft = "none";
-        editIdiNode.style.paddingLeft = "0";
-    }
-    editIdiNode = div;
-    div.style.borderLeft = "3px solid var(--primary)";
-    div.style.paddingLeft = "10px";
-    const inputEdit = document.getElementById('idiIn');
-    if (inputEdit) {
-        inputEdit.closest('details').open = true;
-        inputEdit.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-        inputEdit.focus();
-    }
-    const btnAdd = document.getElementById('btn-add-idi');
-    if (btnAdd) {
-        btnAdd.innerText = "💾 Salvar Idioma";
-        btnAdd.classList.replace('btn-primary', 'btn-accent');
-    }
-}
-
-function adicionarIdioma(d = null) {
-    let nome = d?.nome || getValSafe('idiIn');
-    let nivel = d?.nivel || getValSafe('idiNivel');
-    if (!nome) return;
-    nome = nome.replace(/^[•\-\*\s]+/, '');
-    const rawStr = JSON.stringify({
-        nome,
-        nivel
-    });
-    let html = `• <strong>${nome}</strong>`;
-    if (nivel) html += `: ${nivel}`;
-    const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`;
-    if (!d && editIdiNode) {
-        editIdiNode.dataset.raw = rawStr;
-        editIdiNode.innerHTML = htmlStr;
-        editIdiNode.style.borderLeft = "none";
-        editIdiNode.style.paddingLeft = "0";
-        editIdiNode = null;
-    } else {
-        const div = document.createElement('div');
-        div.className = "item-lista";
-        div.dataset.raw = rawStr;
-        div.innerHTML = htmlStr;
-        const pi = document.getElementById('preIdi');
-        if (pi) pi.appendChild(div);
-    }
-    setValSafe('idiIn', "");
-    const btnAdd = document.getElementById('btn-add-idi');
-    if (btnAdd) {
-        btnAdd.innerText = "+ Adicionar Idioma";
-        btnAdd.classList.replace('btn-accent', 'btn-primary');
-    }
-    fecharAbaPai('idiIn');
-    marcarAlteracao();
-}
-
-function editarHabilidade(btn) {
-    fecharFullscreenSeguro();
-    const div = btn.parentElement;
-    const raw = JSON.parse(div.dataset.raw);
-    setValSafe('habIn', raw.hab);
-    if (editHabNode) {
-        editHabNode.style.borderLeft = "none";
-        editHabNode.style.paddingLeft = "0";
-    }
-    editHabNode = div;
-    div.style.borderLeft = "3px solid var(--primary)";
-    div.style.paddingLeft = "10px";
-    const inputEdit = document.getElementById('habIn');
-    if (inputEdit) {
-        inputEdit.closest('details').open = true;
-        inputEdit.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-        inputEdit.focus();
-    }
-    const btnAdd = document.getElementById('btn-add-hab');
-    if (btnAdd) {
-        btnAdd.innerText = "💾 Salvar Edição";
-        btnAdd.classList.replace('btn-primary', 'btn-accent');
-    }
-}
-
-function adicionarHabilidade(h = null) {
-    let v = h || getValSafe('habIn');
-    if (!v) return;
-    v = v.replace(/^[•\-\*\s]+/, '');
-    const rawStr = JSON.stringify({
-        hab: v
-    });
-    const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`;
-    if (!h && editHabNode) {
-        editHabNode.dataset.raw = rawStr;
-        editHabNode.innerHTML = htmlStr;
-        editHabNode.style.borderLeft = "none";
-        editHabNode.style.paddingLeft = "0";
-        editHabNode = null;
-    } else {
-        const div = document.createElement('div');
-        div.className = 'item-lista';
-        div.dataset.raw = rawStr;
-        div.innerHTML = htmlStr;
-        const ph = document.getElementById('preHab');
-        if (ph) ph.appendChild(div);
-    }
-    setValSafe('habIn', "");
-    const btnAdd = document.getElementById('btn-add-hab');
-    if (btnAdd) {
-        btnAdd.innerText = "+ Adicionar Habilidade";
-        btnAdd.classList.replace('btn-accent', 'btn-primary');
-    }
-    fecharAbaPai('habIn');
-    marcarAlteracao();
-}
+function editarHabilidade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if (editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if (inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if (btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } }
+function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if (!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({ hab: v }); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove(); marcarAlteracao();">[x]</small>`; if (!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if (ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if (btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('habIn'); marcarAlteracao(); }
 
 function preencherEditor(extraido) {
-    setValSafe('inNome', extraido.nome || "");
-    setValSafe('inEnd', extraido.endereco || "");
-    setValSafe('inCep', extraido.cep || "");
-    setValSafe('inEmail', extraido.email || "");
-    setValSafe('inLinkedin', extraido.linkedin || "");
-    const inputWhats = document.getElementById('inWhats');
-    if (inputWhats && extraido.whatsapp) {
-        inputWhats.value = extraido.whatsapp;
-        mascaraWhats(inputWhats);
-    }
-    syncNome();
-    syncContato();
-    if (extraido.resumo) {
-        setValSafe('resIn', extraido.resumo);
-        adicionarResumo();
-    }
+    setValSafe('inNome', extraido.nome || ""); setValSafe('inEnd', extraido.endereco || ""); setValSafe('inCep', extraido.cep || "");
+    setValSafe('inEmail', extraido.email || ""); setValSafe('inLinkedin', extraido.linkedin || "");
+    const inputWhats = document.getElementById('inWhats'); if (inputWhats && extraido.whatsapp) { inputWhats.value = extraido.whatsapp; mascaraWhats(inputWhats); }
+    syncNome(); syncContato();
+    if (extraido.resumo) { setValSafe('resIn', extraido.resumo); adicionarResumo(); }
     if (extraido.experiencias) extraido.experiencias.forEach(e => adicionarExperiencia(e));
     if (extraido.formacao) extraido.formacao.forEach(f => adicionarEscolaridade(f));
     if (extraido.idiomas) extraido.idiomas.forEach(i => adicionarIdioma(i));
     if (extraido.habilidades) extraido.habilidades.forEach(h => adicionarHabilidade(h));
-    showToast();
-    setTimeout(ajustarZoomMobile, 100);
+    showToast(); setTimeout(ajustarZoomMobile, 100);
 }
 
 function limparTudo() {
@@ -2080,30 +1123,16 @@ function limparTudo() {
     origemAtual = "Criado do zero";
     atualizarStatusOrigem();
 
-    editResumoNode = null;
-    editExpNode = null;
-    editEscNode = null;
-    editIdiNode = null;
-    editHabNode = null;
-    ['preRes', 'preExp', 'preEsc', 'preIdi', 'preHab'].forEach(i => {
-        const el = document.getElementById(i);
-        if (el) el.innerHTML = "";
-    });
+    editResumoNode = null; editExpNode = null; editEscNode = null; editIdiNode = null; editHabNode = null;
+    ['preRes', 'preExp', 'preEsc', 'preIdi', 'preHab'].forEach(i => { const el = document.getElementById(i); if (el) el.innerHTML = ""; });
     ['inNome', 'inData', 'inIdade', 'inEnd', 'inCep', 'inEmail', 'inWhats', 'inLinkedin', 'inPretensao', 'texto-ia'].forEach(i => setValSafe(i, ""));
-    const chk = document.getElementById('chkPretensao');
-    if (chk) chk.checked = false;
-    const np = document.getElementById('nomePreview');
-    if (np) np.innerText = "NOME COMPLETO";
-    const prev = document.getElementById('contatoPreview');
-    if (prev) prev.innerText = "...";
+    const chk = document.getElementById('chkPretensao'); if (chk) chk.checked = false;
+    const np = document.getElementById('nomePreview'); if (np) np.innerText = "NOME COMPLETO";
+    const prev = document.getElementById('contatoPreview'); if (prev) prev.innerText = "...";
 
     document.querySelectorAll('#editor details').forEach(d => d.removeAttribute('open'));
 
-    document.querySelectorAll('.btn-add-block').forEach(btn => {
-        btn.innerText = btn.innerText.replace('💾 Salvar Edição', '+ Adicionar').replace('💾 Salvar Experiência', '+ Adicionar Experiência').replace('💾 Salvar Formação', '+ Adicionar Formação').replace('💾 Salvar Idioma', '+ Adicionar Idioma');
-        btn.classList.remove('btn-accent');
-        btn.classList.add('btn-primary');
-    });
+    document.querySelectorAll('.btn-add-block').forEach(btn => { btn.innerText = btn.innerText.replace('💾 Salvar Edição', '+ Adicionar').replace('💾 Salvar Experiência', '+ Adicionar Experiência').replace('💾 Salvar Formação', '+ Adicionar Formação').replace('💾 Salvar Idioma', '+ Adicionar Idioma'); btn.classList.remove('btn-accent'); btn.classList.add('btn-primary'); });
 
     const btnRecalcular = document.getElementById('btn-recalcular-ats');
     if (btnRecalcular) btnRecalcular.style.display = 'none';
@@ -2112,157 +1141,117 @@ function limparTudo() {
 }
 
 function gerarPDF() {
-    const {
-        jsPDF
-    } = window.jspdf;
-    const doc = new jsPDF({
-        unit: "mm",
-        format: "a4"
-    });
-    doc.setLineHeightFactor(1.4);
-    const margin = 20;
-    let y = 20;
-    const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
+    const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit: "mm", format: "a4" }); doc.setLineHeightFactor(1.4); const margin = 20; let y = 20; const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
+    function checarQuebra(espaco) { if (y + espaco > 280) { doc.addPage(); y = 20; } }
+    const nome = getValSafe("inNome") || "Candidato"; const arquivo = `CV_${nome.replace(/\s+/g, '_')}.pdf`;
 
-    function checarQuebra(espaco) {
-        if (y + espaco > 280) {
-            doc.addPage();
-            y = 20;
-        }
-    }
-    const nome = getValSafe("inNome") || "Candidato";
-    const arquivo = `CV_${nome.replace(/\s+/g, '_')}.pdf`;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(26); doc.setTextColor(30, 30, 30); checarQuebra(15);
+    const nomePrev = document.getElementById("nomePreview"); doc.text(nomePrev ? nomePrev.innerText : "", 105, y, { align: "center" }); y += 10;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(26);
-    doc.setTextColor(30, 30, 30);
-    checarQuebra(15);
-    const nomePrev = document.getElementById("nomePreview");
-    doc.text(nomePrev ? nomePrev.innerText : "", 105, y, {
-        align: "center"
-    });
-    y += 10;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(100, 100, 100); checarQuebra(10);
+    const contatoP = document.getElementById('contatoPreview'); const contatoTxt = contatoP ? contatoP.innerText : ""; const linhasContato = doc.splitTextToSize(contatoTxt, 170);
+    doc.text(linhasContato, 105, y, { align: "center" }); y += (linhasContato.length * 5) + 3;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    checarQuebra(10);
-    const contatoP = document.getElementById('contatoPreview');
-    const contatoTxt = contatoP ? contatoP.innerText : "";
-    const linhasContato = doc.splitTextToSize(contatoTxt, 170);
-    doc.text(linhasContato, 105, y, {
-        align: "center"
-    });
-    y += (linhasContato.length * 5) + 3;
+    doc.setDrawColor(200, 200, 200); doc.line(margin, y, 190, y); y += 10;
 
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, y, 190, y);
-    y += 10;
-
-    const secoes = [{
-        t: "RESUMO PROFISSIONAL",
-        id: "preRes",
-        type: "text"
-    }, {
-        t: "EXPERIÊNCIA PROFISSIONAL",
-        id: "preExp",
-        type: "exp"
-    },
-    {
-        t: "FORMAÇÃO ACADÊMICA",
-        id: "preEsc",
-        type: "list"
-    }, {
-        t: "IDIOMAS",
-        id: "preIdi",
-        type: "list"
-    },
-    {
-        t: "HABILIDADES",
-        id: "preHab",
-        type: "grid"
-    }
+    const secoes = [
+        { t: "RESUMO PROFISSIONAL", id: "preRes", type: "text" }, { t: "EXPERIÊNCIA PROFISSIONAL", id: "preExp", type: "exp" },
+        { t: "FORMAÇÃO ACADÊMICA", id: "preEsc", type: "list" }, { t: "IDIOMAS", id: "preIdi", type: "list" },
+        { t: "HABILIDADES", id: "preHab", type: "grid" }
     ];
 
     secoes.forEach(s => {
-        const el = document.getElementById(s.id);
-        if (!el || el.innerHTML.trim() === "") return;
+        const el = document.getElementById(s.id); if (!el || el.innerHTML.trim() === "") return;
         checarQuebra(18);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(13);
-        doc.setTextColor(30, 30, 30);
-        doc.text(s.t, margin, y);
-        y += 2.5;
-        doc.setDrawColor(30, 30, 30);
-        doc.setLineWidth(0.6);
-        doc.line(margin, y, 190, y);
-        y += 7;
-        doc.setLineWidth(0.2);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(50, 50, 50);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(30, 30, 30); doc.text(s.t, margin, y); y += 2.5;
+        doc.setDrawColor(30, 30, 30); doc.setLineWidth(0.6); doc.line(margin, y, 190, y); y += 7;
+        doc.setLineWidth(0.2); doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(50, 50, 50);
 
         if (s.type === "text") {
-            Array.from(el.querySelectorAll('.texto-justificado')).forEach(it => {
-                const txt = it.innerText.replace(regexClean, '').trim();
-                const dim = doc.getTextDimensions(txt, {
-                    maxWidth: 170
-                });
-                checarQuebra(dim.h + 5);
-                doc.text(txt, margin, y, {
-                    maxWidth: 170,
-                    align: "justify"
-                });
-                y += dim.h + 4;
-            });
+            Array.from(el.querySelectorAll('.texto-justificado')).forEach(it => { const txt = it.innerText.replace(regexClean, '').trim(); const dim = doc.getTextDimensions(txt, { maxWidth: 170 }); checarQuebra(dim.h + 5); doc.text(txt, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 4; });
         } else if (s.type === "exp") {
             Array.from(el.querySelectorAll('.bloco-exp')).forEach(b => {
-                const cargo = b.querySelector('.exp-header span:first-child').innerText;
-                const periodo = b.querySelector('.exp-header span:last-child').innerText;
-                const emp = b.querySelector('.exp-empresa').innerText;
-                const desc = b.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim();
-                const dim = doc.getTextDimensions(desc, {
-                    maxWidth: 170
-                });
-                checarQuebra(dim.h + 16);
-                doc.setFont("helvetica", "bold");
-                doc.setTextColor(30, 30, 30);
-                doc.text(cargo, margin, y);
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(100, 100, 100);
-                doc.text(periodo, 190, y, {
-                    align: "right"
-                });
-                y += 5.5;
-                doc.setFont("helvetica", "italic");
-                doc.setTextColor(80, 80, 80);
-                doc.text(emp, margin, y);
-                y += 5.5;
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(50, 50, 50);
-                doc.text(desc, margin, y, {
-                    maxWidth: 170,
-                    align: "justify"
-                });
-                y += dim.h + 7;
+                const cargo = b.querySelector('.exp-header span:first-child').innerText; const periodo = b.querySelector('.exp-header span:last-child').innerText; const emp = b.querySelector('.exp-empresa').innerText; const desc = b.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim();
+                const dim = doc.getTextDimensions(desc, { maxWidth: 170 }); checarQuebra(dim.h + 16);
+                doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30); doc.text(cargo, margin, y); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100); doc.text(periodo, 190, y, { align: "right" }); y += 5.5;
+                doc.setFont("helvetica", "italic"); doc.setTextColor(80, 80, 80); doc.text(emp, margin, y); y += 5.5;
+                doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); doc.text(desc, margin, y, { maxWidth: 170, align: "justify" }); y += dim.h + 7;
             });
         } else if (s.type === "list") {
-            Array.from(el.querySelectorAll('.item-lista')).forEach(it => {
-                checarQuebra(8);
-                doc.text(it.innerText.replace(regexClean, '').trim(), margin, y);
-                y += 6;
-            });
+            Array.from(el.querySelectorAll('.item-lista')).forEach(it => { checarQuebra(8); doc.text(it.innerText.replace(regexClean, '').trim(), margin, y); y += 6; });
         } else if (s.type === "grid") {
             const habs = Array.from(el.querySelectorAll('.item-lista')).map(el => el.querySelector('.hab-text') ? el.querySelector('.hab-text').innerText.replace(regexClean, '').trim() : "");
             const habString = habs.filter(h => h).join("   •   ");
             const linhasHab = doc.splitTextToSize(habString, 170);
             checarQuebra((linhasHab.length * 5) + 5);
-            doc.text(linhasHab, margin, y, {
-                align: "left"
-            });
+            doc.text(linhasHab, margin, y, { align: "left" });
             y += (linhasHab.length * 5) + 5;
         }
         y += 7;
     });
     doc.save(arquivo);
 }
+
+// Configura as travas assim que a tela carrega
+document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Trava da Idade (Apenas números, máximo 3 caracteres)
+    const inIdade = document.getElementById('inIdade');
+    if (inIdade) {
+        inIdade.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, "").substring(0, 3);
+            syncContato();
+        });
+    }
+
+    // 2. Trava de E-mail (Verifica se tem '@' e '.' ao sair do campo)
+    const inEmail = document.getElementById('inEmail');
+    if (inEmail) {
+        inEmail.addEventListener('blur', function () {
+            const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value && !regexEmail.test(this.value)) {
+                alert("⚠️ Por favor, insira um e-mail válido.");
+                this.value = "";
+                syncContato();
+            }
+        });
+    }
+
+    // 3. Forçar formato MM/AAAA (Experiência e Formação) e trava Mês Inválido
+    ['expIni', 'expFim', 'escIni'].forEach(id => {
+        const inputData = document.getElementById(id);
+        if (inputData) {
+            inputData.addEventListener('input', function () {
+                let v = this.value.replace(/\D/g, "");
+                if (v.length >= 2) {
+                    // Impede mês maior que 12 ou igual a 00
+                    let mes = parseInt(v.substring(0, 2));
+                    if (mes > 12) v = "12" + v.substring(2);
+                    if (mes === 0 && v.length >= 2) v = "01" + v.substring(2);
+
+                    v = v.replace(/^(\d{2})(\d)/, "$1/$2");
+                }
+                this.value = v.substring(0, 7); // Trava em 7 (MM/AAAA)
+            });
+        }
+    });
+
+    // 4. Máscara de Moeda (Pretensão Salarial em R$)
+    const inPretensao = document.getElementById('inPretensao');
+    if (inPretensao) {
+        inPretensao.addEventListener('input', function () {
+            let v = this.value.replace(/\D/g, "");
+            if (v) {
+                v = (parseInt(v) / 100).toFixed(2) + '';
+                v = v.replace(".", ",");
+                v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+                v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+                this.value = "R$ " + v;
+            } else {
+                this.value = "";
+            }
+            syncContato();
+        });
+    }
+
+});
