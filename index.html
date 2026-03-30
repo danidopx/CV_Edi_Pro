@@ -8,13 +8,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
     
-    <link rel="manifest" href="manifest.json?v=18">
+    <link rel="manifest" href="manifest.json?v=19">
     <meta name="theme-color" content="#6c5ce7">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=18'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=19'); }</script>
 
     <style>
         :root { --bg-body: #f4f7f6; --bg-panel: #ffffff; --text-main: #2c3e50; --text-light: #7f8c8d; --primary: #6c5ce7; --primary-dim: #f3f0ff; --accent: #2ecc71; --accent-dim: #e8fdf0; --border-color: #e0e6ed; --danger: #ff7675; --ia: #a29bfe; --shadow: 0 4px 6px rgba(0,0,0,0.05); --shadow-hover: 0 8px 15px rgba(0,0,0,0.1); --bg-paper: #ffffff; --text-paper: #333333; }
@@ -152,6 +152,21 @@
         </div>
     </div>
 
+    <div id="modal-bloqueado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10004; justify-content: center; align-items: center; padding: 15px;">
+        <div style="background: var(--bg-panel); padding: 35px; border-radius: 16px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color);">
+            <div style="font-size: 50px; margin-bottom: 15px;">🔒</div>
+            <h2 style="color: var(--primary); margin-top: 0; margin-bottom: 10px;">Acesso Suspenso</h2>
+            <p style="font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 25px;">
+                Ops! Parece que o acesso para esta conta foi temporariamente desativado no nosso sistema.<br><br>
+                Para recuperar o seu acesso ou entender o que aconteceu, por favor, entre em contato com a nossa equipe amigável de suporte:
+            </p>
+            <div style="background: var(--primary-dim); color: var(--primary); font-weight: bold; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px dashed var(--primary);">
+                <span id="texto-email-suporte">suporte@edipro.com</span>
+            </div>
+            <button class="btn-base btn-neutral" onclick="document.getElementById('modal-bloqueado').style.display='none'" style="width: 100%;">Voltar para Login</button>
+        </div>
+    </div>
+
     <div id="tour-panel" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--primary); color:white; padding:20px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.3); z-index:10001; max-width:320px; border: 1px solid rgba(255,255,255,0.2);">
         <h3 style="margin-top:0; font-size:16px; margin-bottom:10px;">💡 Dicas do Editor</h3>
         <p id="tour-text" style="font-size:13.5px; line-height:1.5; margin-bottom:15px;"></p>
@@ -199,11 +214,15 @@
     <div id="modal-admin" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
         <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 800px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
             <h2 style="color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">⚙️ Configuração da IA</h2>
-            <p style="font-size: 14px; color: var(--text-light); margin-bottom: 15px;">Configure as duas forças de inteligência artificial. <b>Não quebre a estrutura JSON.</b></p>
+            
+            <label style="font-weight: bold; margin-bottom: 8px; margin-top: 15px; display: block;">📧 E-mail de Suporte (Mostrado em bloqueios):</label>
+            <input type="email" id="admin-email-suporte" placeholder="Ex: suporte@meusite.com" style="margin-bottom: 15px;">
+
             <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--accent);">🟢 Prompt - Ajuste Simples:</label>
             <textarea id="admin-prompt-simples" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
             <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--danger);">🔴 Prompt - Ajuste Agressivo:</label>
             <textarea id="admin-prompt-agressivo" style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
+            
             <div style="display: flex; gap: 10px;">
                 <button class="btn-base btn-neutral" onclick="document.getElementById('modal-admin').style.display='none'" style="flex: 1;">Cancelar</button>
                 <button class="btn-base btn-accent" onclick="salvarConfigAdmin()" style="flex: 1;">💾 Salvar Configurações</button>
@@ -243,7 +262,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.11</strong><br><br>
+            <strong>Edi Pro v1.1.12</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -295,7 +314,7 @@
         </div>
         
         <div class="footer-info">
-            <strong>Edi Pro v1.1.11</strong><br><br>
+            <strong>Edi Pro v1.1.12</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -365,6 +384,10 @@
         </div>
         <div id="container-editor">
             <div id="editor">
+
+                <div id="alerta-email-vaga" style="display:none; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--text-main); padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;">
+                    <strong style="color: var(--accent); font-size: 14px;">💡 Dica da IA:</strong> A descrição desta vaga pede que o currículo seja enviado para o e-mail: <br><strong id="texto-email-vaga" style="font-size: 15px; display: inline-block; margin-top: 5px;"></strong>
+                </div>
                 
                 <details id="panel-ia-extracao" style="border: 2px solid var(--ia); background: var(--primary-dim); margin-bottom: 15px;">
                     <summary style="color: var(--primary); font-weight: bold;">✨ IA - Extração Rápida de Texto</summary>
@@ -462,16 +485,25 @@
     let ultimasAlteracoesIA = ""; 
     let origemAtual = "Criado do zero"; 
     let historicoTelas = [];
+    
+    // VARIÁVEL DE PROTEÇÃO CONTRA PERDA DE DADOS
+    let temAlteracoesNaoSalvas = false;
 
     // === PREVENÇÃO DE PERDA DE DADOS (F5 ou fechar aba) ===
     window.addEventListener('beforeunload', function (e) {
         const telaEditor = document.getElementById('tela-editor');
-        // Se estiver no editor e for um currículo não salvo (idAtual nulo)
-        if (telaEditor && telaEditor.classList.contains('ativa') && idAtual === null) {
+        if (telaEditor && telaEditor.classList.contains('ativa') && temAlteracoesNaoSalvas) {
             e.preventDefault();
-            // A mensagem exata abaixo é requerida pelo código, mas navegadores modernos a substituem por um alerta padrão de segurança.
-            e.returnValue = 'Deseja seguir com a atualização da pagina? Todos seus dados não salvos serão perdidos!';
+            e.returnValue = 'Deseja seguir com a atualização da página? Todos seus dados não salvos serão perdidos!';
             return e.returnValue;
+        }
+    });
+
+    // Detectar qualquer digitação no editor para ativar a trava de segurança
+    document.addEventListener('DOMContentLoaded', () => {
+        const editorPanel = document.getElementById('editor');
+        if (editorPanel) {
+            editorPanel.addEventListener('input', () => { temAlteracoesNaoSalvas = true; });
         }
     });
 
@@ -487,9 +519,14 @@
     function proximoTour() { passoTour++; if(passoTour >= tourTextos.length) { fecharTour(); } else { mostrarPassoTour(); } }
     function fecharTour() { document.getElementById('tour-panel').style.display = 'none'; localStorage.setItem('tourV1', 'concluido'); }
 
-    // === FUNÇÕES BLINDADAS DE DOM (EVITAR NULL ERRORS) ===
+    // === FUNÇÕES BLINDADAS DE DOM E NAVEGAÇÃO ===
     function setValSafe(id, val) { const el = document.getElementById(id); if(el) el.value = val || ""; }
     function getValSafe(id) { const el = document.getElementById(id); return el ? el.value : ""; }
+
+    function fecharAbaPai(elementId) {
+        const el = document.getElementById(elementId);
+        if (el) { const details = el.closest('details'); if (details) details.removeAttribute('open'); }
+    }
 
     function syncNome() { const el = document.getElementById('inNome'); const prev = document.getElementById('nomePreview'); if(el && prev) prev.innerText = el.value || "NOME COMPLETO"; }
     
@@ -521,15 +558,30 @@
     const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
     function validarSenha(senha) { return regexSenha.test(senha); }
 
-    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou e melhorou neste currículo para o deixar aderente a esta vaga específica." }`;
-    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo e descrição das experiências. Retorne APENAS um objeto JSON válido, sem texto antes ou depois. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "resumo_alteracoes": "Explique de forma direta o que você focou, cortou ou adicionou neste currículo para o deixar 100% aderente a esta vaga específica." }`;
+    const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou e melhorou" }`;
+    const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou, cortou ou adicionou" }`;
 
     function verificarAdmin() {
         if (usuarioAtual && usuarioAtual.email === 'dop.jr82@gmail.com') { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'flex'; if(u) u.style.display = 'flex'; } 
         else { const c = document.getElementById('btn-admin-config'); const u = document.getElementById('btn-admin-users'); if(c) c.style.display = 'none'; if(u) u.style.display = 'none'; }
     }
-    function abrirConfigAdmin() { setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO); document.getElementById('modal-admin').style.display = 'flex'; }
-    function salvarConfigAdmin() { const pS = getValSafe('admin-prompt-simples').trim(); const pA = getValSafe('admin-prompt-agressivo').trim(); if(pS && pA) { localStorage.setItem('adminPromptSimples', pS); localStorage.setItem('adminPromptAgressivo', pA); document.getElementById('modal-admin').style.display = 'none'; showToast(); } else { alert("Os prompts não podem ficar vazios."); } }
+    
+    function abrirConfigAdmin() { 
+        setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES); 
+        setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO); 
+        setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@edipro.com');
+        document.getElementById('modal-admin').style.display = 'flex'; 
+    }
+    
+    function salvarConfigAdmin() { 
+        const pS = getValSafe('admin-prompt-simples').trim(); const pA = getValSafe('admin-prompt-agressivo').trim(); 
+        const emailSuporte = getValSafe('admin-email-suporte').trim();
+        if(pS && pA) { 
+            localStorage.setItem('adminPromptSimples', pS); localStorage.setItem('adminPromptAgressivo', pA); 
+            if(emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
+            document.getElementById('modal-admin').style.display = 'none'; showToast(); 
+        } else { alert("Os prompts não podem ficar vazios."); } 
+    }
 
     async function abrirGestaoUsuarios() {
         irPara('tela-admin-usuarios'); const tabela = document.getElementById('corpo-tabela-usuarios'); if(!tabela) return; tabela.innerHTML = `<tr><td colspan="3" style="text-align: center;">Buscando...</td></tr>`;
@@ -538,10 +590,31 @@
         tabela.innerHTML = ""; if (!data || data.length === 0) { tabela.innerHTML = `<tr><td colspan="3">Nenhum usuário.</td></tr>`; return; }
         data.forEach(u => {
             const ehAdmin = u.email === 'dop.jr82@gmail.com'; const inativo = u.email.includes('_inativo.local');
-            tabela.innerHTML += `<tr><td style="${inativo ? 'text-decoration: line-through; color: #999;' : ''}"><strong>${u.email}</strong> ${ehAdmin ? '(Você)' : ''} ${inativo ? '<span style="color:red; font-size:10px;">[Desativado]</span>' : ''}</td><td>${new Date(u.criado_em).toLocaleDateString('pt-BR')}</td><td>${(!ehAdmin && !inativo) ? `<button class="btn-base btn-danger" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>` : '-'}</td></tr>`;
+            let botoesAcao = '-';
+            if (!ehAdmin) {
+                if (inativo) {
+                    botoesAcao = `<button class="btn-base btn-primary" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>`;
+                } else {
+                    botoesAcao = `<button class="btn-base btn-danger" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
+                }
+            }
+            tabela.innerHTML += `<tr><td style="${inativo ? 'text-decoration: line-through; color: #999;' : ''}"><strong>${u.email}</strong> ${ehAdmin ? '(Você)' : ''} ${inativo ? '<span style="color:red; font-size:10px;">[Desativado]</span>' : ''}</td><td>${new Date(u.criado_em).toLocaleDateString('pt-BR')}</td><td>${botoesAcao}</td></tr>`;
         });
     }
-    async function deletarUsuarioAdmin(userId, userEmail) { if(confirm(`ATENÇÃO: Deseja desativar ${userEmail}?`)) { const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId }); if(error) alert("Erro: " + error.message); else { showToast(); abrirGestaoUsuarios(); } } }
+
+    async function deletarUsuarioAdmin(userId, userEmail) { 
+        if(confirm(`ATENÇÃO: Deseja desativar ${userEmail}?`)) { 
+            const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId }); 
+            if(error) alert("Erro: " + error.message); else { showToast("Usuário desativado!"); abrirGestaoUsuarios(); } 
+        } 
+    }
+
+    async function reabilitarUsuarioAdmin(userId, userEmail) { 
+        if(confirm(`Deseja REABILITAR o acesso de ${userEmail}?`)) { 
+            const { error } = await sb.rpc('admin_reabilitar_usuario', { alvo_id: userId }); 
+            if(error) alert("Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase."); else { showToast("Usuário reabilitado com sucesso!"); abrirGestaoUsuarios(); } 
+        } 
+    }
 
     function ajustarZoomMobile() { 
         const wrapper = document.getElementById('curriculo-wrapper'); 
@@ -730,7 +803,19 @@
             if (error) { alert("Erro: " + error.message); } 
             else { if (data.user && data.user.identities && data.user.identities.length === 0) { alert("E-mail já em uso."); } else { alert("✉️ Link de confirmação enviado! Verifique seu e-mail."); setValSafe('login-email', ""); setValSafe('login-senha', ""); setValSafe('login-senha-conf', ""); alternarModoLogin(); } }
         } else {
-            const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) { alert("Erro: E-mail ou senha incorretos."); }
+            const { data, error } = await sb.auth.signInWithPassword({ email, password }); 
+            if (error) { 
+                if(msgLog) msgLog.style.display = 'none';
+                // Detecta se é um bloqueio ou inatividade
+                if (error.message.toLowerCase().includes('ban') || error.message.toLowerCase().includes('inativo') || error.message.toLowerCase().includes('suspen') || error.message.toLowerCase().includes('block')) {
+                    const emailSuporte = localStorage.getItem('adminEmailSuporte') || 'suporte@edipro.com';
+                    document.getElementById('texto-email-suporte').innerText = emailSuporte;
+                    document.getElementById('modal-bloqueado').style.display = 'flex';
+                } else {
+                    // Erro genérico
+                    alert("Erro: E-mail ou senha incorretos.");
+                }
+            }
         }
         if(msgLog) msgLog.style.display = 'none';
     }
@@ -743,7 +828,13 @@
         const { error } = await sb.auth.updateUser({ password: s1 }); if (error) { alert("Erro: " + error.message); } else { alert("Senha atualizada!"); setValSafe('nova-senha', ""); setValSafe('nova-senha-conf', ""); } 
     }
     async function solicitarExclusao() { if(confirm("TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.")) { const { error } = await sb.rpc('desativar_minha_conta'); if(error) alert("Erro ao desativar: " + error.message); else { await fazerLogout(); alert("Conta desativada com sucesso."); } } }
-    async function fazerLoginGoogle() { const msg = document.getElementById('msg-login'); if(msg) msg.style.display = 'block'; const { error } = await sb.auth.signInWithOAuth({ provider: 'google' }); if (error) { alert("Erro: " + error.message); if(msg) msg.style.display = 'none'; } }
+    
+    async function fazerLoginGoogle() { 
+        const msg = document.getElementById('msg-login'); if(msg) msg.style.display = 'block'; 
+        const { error } = await sb.auth.signInWithOAuth({ provider: 'google' }); 
+        if (error) { alert("Erro: " + error.message); if(msg) msg.style.display = 'none'; } 
+    }
+    
     async function fazerLogout() { 
         await sb.auth.signOut(); 
         localStorage.removeItem('ultima_atividade_app'); 
@@ -755,6 +846,8 @@
     function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('themePreference', newTheme); applyTheme(newTheme); }
     
     function irPara(id) { 
+        if (temAlteracoesNaoSalvas && !confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
+
         const telaAtiva = document.querySelector('.tela.ativa');
         if (telaAtiva && telaAtiva.id !== id && telaAtiva.id !== 'tela-landing' && telaAtiva.id !== 'tela-login') {
             historicoTelas.push(telaAtiva.id);
@@ -774,6 +867,8 @@
     }
 
     function voltarTela() {
+        if (temAlteracoesNaoSalvas && !confirm("Existem alterações não salvas. Deseja sair desta tela mesmo assim?")) { return; }
+
         if (historicoTelas.length > 0) {
             const id = historicoTelas.pop();
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa')); 
@@ -820,7 +915,8 @@
         
         origemAtual = "Criado do zero";
         atualizarStatusOrigem();
-
+        
+        temAlteracoesNaoSalvas = true; // Aciona o bloqueio ao começar a criar
         irPara('tela-editor'); iniciarTour();
     }
 
@@ -868,7 +964,13 @@
             } 
         }; 
         const { error } = await sb.from('curriculos_saas').upsert(payload, { onConflict: 'identificador, user_id' }); 
-        if(!error) { idAtual = id; localStorage.setItem('cvRecuperacao', idAtual); const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; showToast(); } else { alert("Erro ao salvar."); } 
+        if(!error) { 
+            idAtual = id; 
+            localStorage.setItem('cvRecuperacao', idAtual); 
+            const sn = document.getElementById('status-nome'); if(sn) sn.innerText = "📄 Currículo: " + id; 
+            temAlteracoesNaoSalvas = false; // Desbloqueia fechamento seguro
+            showToast(); 
+        } else { alert("Erro ao salvar."); } 
     }
     
     async function carregar(id) { 
@@ -900,6 +1002,7 @@
             if(c.habilidades) c.habilidades.forEach(h => adicionarHabilidade(h.replace(regexLimpa, ''))); 
             
             document.getElementById('panel-ia-extracao').style.display = 'none';
+            temAlteracoesNaoSalvas = false; // Acabou de carregar, não há alterações
             irPara('tela-editor'); iniciarTour();
         } 
     }
@@ -990,6 +1093,7 @@
             atualizarStatusOrigem();
 
             preencherEditor(extraido); 
+            temAlteracoesNaoSalvas = true; // Aciona trava de F5
         } catch (err) { 
             if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
         } finally {
@@ -1028,6 +1132,13 @@
             
             limparTudo(); 
             
+            // VERIFICAR E-MAIL DE ENVIO DA VAGA
+            const alertaMail = document.getElementById('alerta-email-vaga');
+            if(extraido.email_envio_vaga && extraido.email_envio_vaga.includes('@')) {
+                document.getElementById('texto-email-vaga').innerText = extraido.email_envio_vaga;
+                alertaMail.style.display = 'block';
+            }
+
             if(extraido.resumo_alteracoes) {
                 ultimasAlteracoesIA = extraido.resumo_alteracoes;
                 document.getElementById('btn-ver-alteracoes').style.display = 'inline-flex';
@@ -1055,7 +1166,9 @@
             
             document.getElementById('panel-ia-extracao').style.display = 'none';
 
-            preencherEditor(extraido); irPara('tela-editor'); 
+            preencherEditor(extraido); 
+            temAlteracoesNaoSalvas = true; // Aciona trava de F5
+            irPara('tela-editor'); 
         } catch (err) { 
             if(err.message !== "Erro JSON.") alert("Erro: " + err.message); 
         } finally {
@@ -1063,11 +1176,20 @@
         }
     }
     
-    function editarResumo(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if(editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if(!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({texto: val}); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if(pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if(expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if(expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if(editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escFim', raw.fim === "Cursando" ? "" : raw.fim); const escAtual = document.getElementById('escAtual'); if(escAtual) escAtual.checked = raw.fim === "Cursando"; const escFim = document.getElementById('escFim'); if(escFim) escFim.disabled = raw.fim === "Cursando"; if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); const escAtual = document.getElementById('escAtual'); let fim = dados?.fim || ((escAtual && escAtual.checked) ? "Cursando" : getValSafe('escFim')); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, fim}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; if (ini || fim) html += ` (${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni','escFim'].forEach(i => setValSafe(i,"")); if(escAtual) escAtual.checked = false; const eFim = document.getElementById('escFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarIdioma(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
-    function editarHabilidade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if(editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } }
+    function editarResumo(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('resIn', raw.texto); if(editResumoNode) { editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; } editResumoNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('resIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
+    function adicionarResumo(txt = null) { let val = txt || getValSafe('resIn'); if(!val) return; val = val.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({texto: val}); const htmlStr = `${val} <div style="text-align:right; margin-top:5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarResumo(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!txt && editResumoNode) { editResumoNode.dataset.raw = rawStr; editResumoNode.innerHTML = htmlStr; editResumoNode.style.borderLeft = "none"; editResumoNode.style.paddingLeft = "0"; editResumoNode = null; } else { const div = document.createElement('div'); div.className = 'texto-justificado'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pr = document.getElementById('preRes'); if(pr) pr.appendChild(div); } setValSafe('resIn', ""); const btnAdd = document.getElementById('btn-add-res'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Resumo"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('resIn'); temAlteracoesNaoSalvas = true; }
+    
+    function editarExperiencia(btn) { fecharFullscreenSeguro(); const div = btn.parentElement.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('expC', raw.cargo); setValSafe('expE', raw.empresa); setValSafe('expIni', raw.ini); setValSafe('expFim', raw.fim === "Até o momento" ? "" : raw.fim); const expAtual = document.getElementById('expAtual'); if(expAtual) expAtual.checked = raw.fim === "Até o momento"; const expFim = document.getElementById('expFim'); if(expFim) expFim.disabled = raw.fim === "Até o momento"; setValSafe('expDes', raw.desc); if(editExpNode) { editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; } editExpNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('expC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Experiência"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
+    function adicionarExperiencia(dados = null) { let cargo = dados?.cargo || getValSafe('expC'); let emp = dados?.empresa || getValSafe('expE'); let ini = dados?.ini || getValSafe('expIni'); const expAtual = document.getElementById('expAtual'); let fim = dados?.fim || ((expAtual && expAtual.checked) ? "Até o momento" : getValSafe('expFim')); let des = dados?.desc || getValSafe('expDes'); if(!cargo || !emp) return; cargo = cargo.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({cargo, empresa: emp, ini, fim, desc: des}); let headerData = (ini || fim) ? `<span>${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''}</span>` : ''; const htmlStr = `<div class="exp-header"><span>${cargo}</span>${headerData}</div><div class="exp-empresa">${emp}</div><div class="texto-justificado">${des}</div><div style="text-align:right; margin-top:-5px"><small style="color:var(--primary);cursor:pointer;padding:5px;" onclick="editarExperiencia(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:8px;padding:5px;" onclick="this.parentElement.parentElement.remove()">[remover]</small></div>`; if(!dados && editExpNode) { editExpNode.dataset.raw = rawStr; editExpNode.innerHTML = htmlStr; editExpNode.style.borderLeft = "none"; editExpNode.style.paddingLeft = "0"; editExpNode = null; } else { const div = document.createElement('div'); div.className = "bloco-exp"; div.style.marginBottom = "15px"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preExp'); if(pe) pe.appendChild(div); } ['expC','expE','expIni','expFim','expDes'].forEach(i => setValSafe(i,"")); if(expAtual) expAtual.checked = false; const eFim = document.getElementById('expFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-exp'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Experiência"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('expC'); temAlteracoesNaoSalvas = true; }
+    
+    function editarEscolaridade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('escC', raw.curso); setValSafe('escI', raw.inst); setValSafe('escIni', raw.ini); setValSafe('escFim', raw.fim === "Cursando" ? "" : raw.fim); const escAtual = document.getElementById('escAtual'); if(escAtual) escAtual.checked = raw.fim === "Cursando"; const escFim = document.getElementById('escFim'); if(escFim) escFim.disabled = raw.fim === "Cursando"; if(editEscNode) { editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; } editEscNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('escC'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Formação"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
+    function adicionarEscolaridade(dados = null) { let cur = dados?.curso || getValSafe('escC'); let ins = dados?.inst || getValSafe('escI'); let ini = dados?.ini || getValSafe('escIni'); const escAtual = document.getElementById('escAtual'); let fim = dados?.fim || ((escAtual && escAtual.checked) ? "Cursando" : getValSafe('escFim')); if(!cur) return; cur = cur.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({curso: cur, inst: ins, ini, fim}); let html = `• <strong>${cur}</strong>`; if (ins) html += ` — ${ins}`; if (ini || fim) html += ` (${ini || ''}${ini && fim ? ' — ' : ''}${fim || ''})`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarEscolaridade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!dados && editEscNode) { editEscNode.dataset.raw = rawStr; editEscNode.innerHTML = htmlStr; editEscNode.style.borderLeft = "none"; editEscNode.style.paddingLeft = "0"; editEscNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pe = document.getElementById('preEsc'); if(pe) pe.appendChild(div); } ['escC','escI','escIni','escFim'].forEach(i => setValSafe(i,"")); if(escAtual) escAtual.checked = false; const eFim = document.getElementById('escFim'); if(eFim) eFim.disabled = false; const btnAdd = document.getElementById('btn-add-esc'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Formação"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('escC'); temAlteracoesNaoSalvas = true; }
+    
+    function editarIdioma(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('idiIn', raw.nome); setValSafe('idiNivel', raw.nivel); if(editIdiNode) { editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; } editIdiNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('idiIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Idioma"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
+    function adicionarIdioma(d = null) { let nome = d?.nome || getValSafe('idiIn'); let nivel = d?.nivel || getValSafe('idiNivel'); if(!nome) return; nome = nome.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({nome, nivel}); let html = `• <strong>${nome}</strong>`; if (nivel) html += `: ${nivel}`; const htmlStr = `${html} <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarIdioma(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!d && editIdiNode) { editIdiNode.dataset.raw = rawStr; editIdiNode.innerHTML = htmlStr; editIdiNode.style.borderLeft = "none"; editIdiNode.style.paddingLeft = "0"; editIdiNode = null; } else { const div = document.createElement('div'); div.className = "item-lista"; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const pi = document.getElementById('preIdi'); if(pi) pi.appendChild(div); } setValSafe('idiIn', ""); const btnAdd = document.getElementById('btn-add-idi'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Idioma"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('idiIn'); temAlteracoesNaoSalvas = true; }
+    
+    function editarHabilidade(btn) { fecharFullscreenSeguro(); const div = btn.parentElement; const raw = JSON.parse(div.dataset.raw); setValSafe('habIn', raw.hab); if(editHabNode) { editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; } editHabNode = div; div.style.borderLeft = "3px solid var(--primary)"; div.style.paddingLeft = "10px"; const inputEdit = document.getElementById('habIn'); if(inputEdit) { inputEdit.closest('details').open = true; inputEdit.scrollIntoView({ behavior: 'smooth', block: 'center' }); inputEdit.focus(); } const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "💾 Salvar Edição"; btnAdd.classList.replace('btn-primary', 'btn-accent'); } } 
+    function adicionarHabilidade(h = null) { let v = h || getValSafe('habIn'); if(!v) return; v = v.replace(/^[•\-\*\s]+/, ''); const rawStr = JSON.stringify({hab: v}); const htmlStr = `• <span class="hab-text">${v}</span> <small style="color:var(--primary);cursor:pointer;margin-left:10px;padding:5px;" onclick="editarHabilidade(this)">[editar]</small><small style="color:var(--danger);cursor:pointer;margin-left:5px;padding:5px;" onclick="this.parentElement.remove()">[x]</small>`; if(!h && editHabNode) { editHabNode.dataset.raw = rawStr; editHabNode.innerHTML = htmlStr; editHabNode.style.borderLeft = "none"; editHabNode.style.paddingLeft = "0"; editHabNode = null; } else { const div = document.createElement('div'); div.className = 'item-lista'; div.dataset.raw = rawStr; div.innerHTML = htmlStr; const ph = document.getElementById('preHab'); if(ph) ph.appendChild(div); } setValSafe('habIn', ""); const btnAdd = document.getElementById('btn-add-hab'); if(btnAdd) { btnAdd.innerText = "+ Adicionar Habilidade"; btnAdd.classList.replace('btn-accent', 'btn-primary'); } fecharAbaPai('habIn'); temAlteracoesNaoSalvas = true; }
     
     function preencherEditor(extraido) { 
         setValSafe('inNome', extraido.nome || ""); setValSafe('inEnd', extraido.endereco || ""); setValSafe('inCep', extraido.cep || ""); 
@@ -1085,6 +1207,7 @@
     function limparTudo() { 
         ultimasAlteracoesIA = "";
         document.getElementById('btn-ver-alteracoes').style.display = 'none';
+        document.getElementById('alerta-email-vaga').style.display = 'none';
         
         origemAtual = "Criado do zero";
         atualizarStatusOrigem();
