@@ -410,19 +410,55 @@ window.addEventListener('load', async () => {
 
 async function receberVagaExterna(idTransferencia) {
     try {
+        exibirLoading(true, "Buscando dados da vaga...");
+
         const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
+
         if (data && data.texto) {
+            const textoCapturado = data.texto;
+
+            // 1. VALIDAÇÃO DE CONTEÚDO COM IA
+            exibirLoading(true, "Validando se o conteúdo é uma vaga...");
+
+            const promptValidacao = `Analise o texto abaixo. Se ele descrever uma vaga de emprego (cargo, requisitos ou atividades), responda apenas "SIM". Se for erro, página inicial de site ou texto aleatório, responda apenas "NAO".\n\nTexto: ${textoCapturado.substring(0, 1000)}`;
+
+            // Aqui usamos a sua função de chamada de IA existente
+            const resultado = await chamarIA(promptValidacao);
+
+            if (resultado.includes("NAO")) {
+                exibirLoading(false);
+                showToast("⚠️ O conteúdo capturado não parece ser uma vaga válida. Tente selecionar o texto da vaga antes de capturar.");
+                localStorage.removeItem('vaga_pendente_importacao');
+                irPara('tela-menu');
+                return;
+            }
+
+            // 2. TUDO OK: SEGUE O FLUXO
             localStorage.removeItem('vaga_pendente_importacao');
             await abrirTelaVaga();
+
             const txtEl = document.getElementById('texto-vaga');
-            if (txtEl) txtEl.value = data.texto;
-            showToast("✨ Vaga capturada com sucesso! Selecione seu currículo base e clique em Gerar.");
+            if (txtEl) {
+                txtEl.value = textoCapturado;
+                // Dispara o evento de input para o sistema entender que o texto mudou
+                txtEl.dispatchEvent(new Event('input'));
+            }
+
+            showToast("✨ Vaga validada e capturada! Agora selecione seu currículo base.");
+
+            // 3. LIMPEZA (Só deleta se deu tudo certo)
             await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
+
         } else {
-            localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
+            localStorage.removeItem('vaga_pendente_importacao');
+            irPara('tela-menu');
         }
     } catch (e) {
-        console.error("Erro ao importar", e); localStorage.removeItem('vaga_pendente_importacao'); irPara('tela-menu');
+        console.error("Erro ao importar", e);
+        localStorage.removeItem('vaga_pendente_importacao');
+        irPara('tela-menu');
+    } finally {
+        exibirLoading(false);
     }
 }
 
