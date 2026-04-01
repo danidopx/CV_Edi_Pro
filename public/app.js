@@ -365,9 +365,16 @@ window.addEventListener('load', async () => {
             recuperarEstadoTela();
         }
     } else {
+        // SE NÃO ESTIVER LOGADO:
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
-        if (idVagaPendente || textoMobilePendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
+
+        if (idVagaPendente || textoMobilePendente) {
+            // Mensagem amigável informando a necessidade de login
+            setTimeout(() => {
+                showToast("🚀 Vaga capturada com sucesso! Faça login ou crie sua conta para gerar seu currículo otimizado.");
+            }, 2500);
+        }
         irPara('tela-landing');
     }
 
