@@ -3,6 +3,7 @@ const SUPABASE_KEY = 'sb_publishable_CPM-CH4JV3muBw_DrGk-zQ_Rii5iGU6';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Mantendo TODAS as suas variáveis globais intactas
 let idAtual = null; let usuarioAtual = null;
 let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
 let modoCriarConta = false;
@@ -22,17 +23,18 @@ function marcarAlteracao() {
     }
 }
 
-// --- INÍCIO DA LÓGICA DE CARREGAMENTO (LOAD) ---
+// --- LOGICA DE LOAD CONSOLIDADA ---
 window.addEventListener('load', async () => {
     applyTheme(localStorage.getItem('themePreference') || 'light');
     inicializarModeloIA();
 
-    // 1. CAPTURA DE PARÂMETROS DA EXTENSÃO (vaga_id)
+    // 1. CAPTURA O ID DA EXTENSÃO SE EXISTIR NA URL
     const urlParams = new URLSearchParams(window.location.search);
     const vaga_id = urlParams.get('vaga_id');
 
     if (vaga_id) {
         localStorage.setItem('vaga_pendente_importacao', vaga_id);
+        // Limpa a URL imediatamente
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -44,7 +46,7 @@ window.addEventListener('load', async () => {
         atualizarInfosUsuarioTopo();
         verificarAdmin();
 
-        // 2. TENTA IMPORTAR SE HOUVER VAGA NO "BAÚ"
+        // 2. VERIFICA SE TEM VAGA PENDENTE NO LOCALSTORAGE
         const idNoBau = localStorage.getItem('vaga_pendente_importacao');
         if (idNoBau) {
             receberVagaExterna(idNoBau);
@@ -52,6 +54,7 @@ window.addEventListener('load', async () => {
             recuperarEstadoTela();
         }
     } else {
+        // Se tem vaga mas não tem login, avisa
         if (localStorage.getItem('vaga_pendente_importacao')) {
             setTimeout(() => {
                 showToast("🚀 Vaga capturada! Faça login para concluir a importação.");
@@ -60,7 +63,7 @@ window.addEventListener('load', async () => {
         irPara('tela-landing');
     }
 
-    // --- MÁSCARAS DE ENTRADA (MANTIDAS DO SEU ORIGINAL) ---
+    // --- MANTENDO SUAS MÁSCARAS DE ENTRADA ORIGINAIS ---
     ['expIni', 'expFim', 'escIni'].forEach(id => {
         const inputData = document.getElementById(id);
         if (inputData) {
@@ -93,6 +96,7 @@ window.addEventListener('load', async () => {
     sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
             usuarioAtual = session.user;
+            atualizarInfosUsuarioTopo();
             const idNoBau = localStorage.getItem('vaga_pendente_importacao');
             if (idNoBau) receberVagaExterna(idNoBau);
         } else if (event === 'SIGNED_OUT') {
@@ -102,10 +106,10 @@ window.addEventListener('load', async () => {
     });
 });
 
-// --- FUNÇÃO DE IMPORTAÇÃO COM VALIDAÇÃO IA ---
+// --- FUNÇÃO DE IMPORTAÇÃO COM VALIDAÇÃO (ÚLTIMA VERSÃO) ---
 async function receberVagaExterna(idTransferencia) {
     try {
-        exibirLoading(true, "Validando vaga capturada...");
+        exibirLoading(true, "Validando conteúdo da vaga...");
 
         const { data, error } = await sb.from('transferencias_vagas')
             .select('texto')
@@ -119,17 +123,18 @@ async function receberVagaExterna(idTransferencia) {
 
         const textoVaga = data.texto;
 
-        // VALIDAÇÃO COM IA
-        const promptValidacao = `Responda apenas SIM se o texto abaixo for uma vaga de emprego ou NAO se não for: ${textoVaga.substring(0, 500)}`;
-        const ehVaga = await chamarIA(promptValidacao); // Ajuste se sua função for diferente
+        // VALIDAÇÃO RÁPIDA COM IA
+        const promptValidacao = `Responda apenas SIM se o texto for uma vaga de emprego ou NAO se não for: ${textoVaga.substring(0, 600)}`;
+        const validacao = await chamarIA(promptValidacao);
 
-        if (ehVaga.includes("NAO")) {
-            showToast("⚠️ O conteúdo não parece ser uma vaga válida.");
+        if (validacao.includes("NAO")) {
+            showToast("⚠️ O conteúdo capturado não parece ser uma vaga.");
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
         }
 
+        // Sucesso: Preenche e limpa
         localStorage.removeItem('vaga_pendente_importacao');
         await abrirTelaVaga();
 
@@ -142,9 +147,11 @@ async function receberVagaExterna(idTransferencia) {
         await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
 
     } catch (e) {
-        console.error(e);
+        console.error("Erro na importação:", e);
         localStorage.removeItem('vaga_pendente_importacao');
     } finally {
         exibirLoading(false);
     }
 }
+
+// ... Restante das suas funções (abrirTelaVaga, chamarIA, etc.) seguem abaixo ...
