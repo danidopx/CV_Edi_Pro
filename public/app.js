@@ -3,7 +3,6 @@ const SUPABASE_KEY = 'sb_publishable_CPM-CH4JV3muBw_DrGk-zQ_Rii5iGU6';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Mantendo TODAS as suas variáveis globais intactas
 let idAtual = null; let usuarioAtual = null;
 let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
 let modoCriarConta = false;
@@ -23,18 +22,16 @@ function marcarAlteracao() {
     }
 }
 
-// --- LOGICA DE LOAD CONSOLIDADA ---
+// --- INICIALIZAÇÃO E CONTROLE DE FLUXO (LOAD) ---
 window.addEventListener('load', async () => {
     applyTheme(localStorage.getItem('themePreference') || 'light');
     inicializarModeloIA();
 
-    // 1. CAPTURA O ID DA EXTENSÃO SE EXISTIR NA URL
     const urlParams = new URLSearchParams(window.location.search);
     const vaga_id = urlParams.get('vaga_id');
 
     if (vaga_id) {
         localStorage.setItem('vaga_pendente_importacao', vaga_id);
-        // Limpa a URL imediatamente
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -46,7 +43,6 @@ window.addEventListener('load', async () => {
         atualizarInfosUsuarioTopo();
         verificarAdmin();
 
-        // 2. VERIFICA SE TEM VAGA PENDENTE NO LOCALSTORAGE
         const idNoBau = localStorage.getItem('vaga_pendente_importacao');
         if (idNoBau) {
             receberVagaExterna(idNoBau);
@@ -54,7 +50,6 @@ window.addEventListener('load', async () => {
             recuperarEstadoTela();
         }
     } else {
-        // Se tem vaga mas não tem login, avisa
         if (localStorage.getItem('vaga_pendente_importacao')) {
             setTimeout(() => {
                 showToast("🚀 Vaga capturada! Faça login para concluir a importação.");
@@ -63,7 +58,7 @@ window.addEventListener('load', async () => {
         irPara('tela-landing');
     }
 
-    // --- MANTENDO SUAS MÁSCARAS DE ENTRADA ORIGINAIS ---
+    // MÁSCARAS DE ENTRADA
     ['expIni', 'expFim', 'escIni'].forEach(id => {
         const inputData = document.getElementById(id);
         if (inputData) {
@@ -92,7 +87,6 @@ window.addEventListener('load', async () => {
         });
     }
 
-    // --- MONITORAMENTO DE AUTH ---
     sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
             usuarioAtual = session.user;
@@ -106,52 +100,142 @@ window.addEventListener('load', async () => {
     });
 });
 
-// --- FUNÇÃO DE IMPORTAÇÃO COM VALIDAÇÃO (ÚLTIMA VERSÃO) ---
 async function receberVagaExterna(idTransferencia) {
     try {
-        exibirLoading(true, "Validando conteúdo da vaga...");
-
-        const { data, error } = await sb.from('transferencias_vagas')
-            .select('texto')
-            .eq('id', idTransferencia)
-            .single();
+        exibirLoading(true, "Validando conteúdo da vaga com IA...");
+        const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
 
         if (error || !data) {
             localStorage.removeItem('vaga_pendente_importacao');
-            throw new Error("Vaga não encontrada.");
+            throw new Error("Vaga não encontrada ou link expirado.");
         }
 
         const textoVaga = data.texto;
-
-        // VALIDAÇÃO RÁPIDA COM IA
-        const promptValidacao = `Responda apenas SIM se o texto for uma vaga de emprego ou NAO se não for: ${textoVaga.substring(0, 600)}`;
+        const promptValidacao = `Responda apenas "SIM" se o texto abaixo for uma descrição de vaga de emprego ou "NAO" se for texto aleatório ou erro: ${textoVaga.substring(0, 600)}`;
         const validacao = await chamarIA(promptValidacao);
 
         if (validacao.includes("NAO")) {
-            showToast("⚠️ O conteúdo capturado não parece ser uma vaga.");
+            showToast("⚠️ O conteúdo capturado não parece ser uma vaga válida.");
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
         }
 
-        // Sucesso: Preenche e limpa
         localStorage.removeItem('vaga_pendente_importacao');
         await abrirTelaVaga();
-
         const txtEl = document.getElementById('texto-vaga');
         if (txtEl) {
             txtEl.value = textoVaga;
             txtEl.dispatchEvent(new Event('input'));
         }
-        showToast("✨ Vaga importada com sucesso!");
+        showToast("✨ Vaga importada e validada com sucesso!");
         await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
-
     } catch (e) {
         console.error("Erro na importação:", e);
         localStorage.removeItem('vaga_pendente_importacao');
+        irPara('tela-menu');
     } finally {
         exibirLoading(false);
     }
 }
 
-// ... Restante das suas funções (abrirTelaVaga, chamarIA, etc.) seguem abaixo ...
+async function inicializarModeloIA() {
+    try {
+        const res = await fetch('/api/modelos');
+        const data = await res.json();
+        if (data && data.models) {
+            const preferidos = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"];
+            for (let p of preferidos) {
+                if (data.models.some(m => m.name.includes(p))) {
+                    modeloIAPreferido = data.models.find(m => m.name.includes(p)).name.split('/').pop();
+                    break;
+                }
+            }
+        }
+    } catch (e) { console.error("Erro ao buscar modelos", e); }
+}
+
+async function chamarIA(prompt) {
+    const res = await fetch('/api/ia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, modelo: modeloIAPreferido })
+    });
+    const data = await res.json();
+    if (data && data.candidates && data.candidates[0].content.parts[0].text) {
+        return data.candidates[0].content.parts[0].text;
+    }
+    throw new Error("Erro na resposta da IA");
+}
+
+function irPara(telaId) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    const tela = document.getElementById(telaId);
+    if (tela) {
+        tela.classList.add('ativa');
+        historicoTelas.push(telaId);
+        window.scrollTo(0, 0);
+    }
+}
+
+function voltarTela() {
+    if (historicoTelas.length > 1) {
+        historicoTelas.pop();
+        const anterior = historicoTelas[historicoTelas.length - 1];
+        document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+        document.getElementById(anterior).classList.add('ativa');
+    }
+}
+
+async function abrirTelaVaga() {
+    irPara('tela-vaga');
+}
+
+function exibirLoading(show, texto = "") {
+    const overlay = document.getElementById('loading-overlay');
+    const txt = document.getElementById('loading-text');
+    if (overlay) {
+        overlay.style.display = show ? 'flex' : 'none';
+        if (txt && texto) txt.innerText = texto;
+    }
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+
+function applyTheme(theme) {
+    if (theme === 'dark') document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+    localStorage.setItem('themePreference', theme);
+}
+
+async function verificarAdmin() {
+    if (!usuarioAtual) return;
+    const { data } = await sb.from('perfil_usuario').select('is_admin').eq('id', usuarioAtual.id).single();
+    if (data && data.is_admin) {
+        const btn = document.getElementById('btn-admin-painel');
+        if (btn) btn.style.display = 'block';
+    }
+}
+
+function atualizarInfosUsuarioTopo() {
+    const el = document.getElementById('user-info-topo');
+    if (el && usuarioAtual) {
+        el.innerText = `Olá, ${usuarioAtual.email}`;
+    }
+}
+
+async function recuperarEstadoTela() {
+    const logado = !!usuarioAtual;
+    if (logado) irPara('tela-menu');
+    else irPara('tela-landing');
+}
