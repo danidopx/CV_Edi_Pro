@@ -402,50 +402,58 @@ window.addEventListener('load', async () => {
 });
 
 async function receberVagaExterna(idTransferencia) {
+    // TRAVA ANTI-COLISÃO: Impede dupla execução ao carregar a página
+    if (window.isImportingVaga) return;
+    window.isImportingVaga = true;
+
     try {
         mostrarCarregamento();
         document.getElementById('loading-text').innerText = "Validando conteúdo da vaga importada...";
 
         const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
 
+        // Se o banco bloquear ou a vaga não existir
         if (error || !data || !data.texto) {
+            console.error("Vaga não encontrada ou bloqueada:", error);
             localStorage.removeItem('vaga_pendente_importacao');
-            ocultarCarregamento();
             irPara('tela-menu');
             return;
         }
 
         const textoVaga = data.texto;
 
-        // VALIDAÇÃO EM JSON: Usa a mesma estrutura segura da IA que já existe no seu app
+        // VALIDAÇÃO EM JSON COM IA
         const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ou requisitos de uma posição? Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Não é uma vaga de emprego válida"}. Texto: ${textoVaga.substring(0, 1000)}`;
         const validacao = await processarIA(promptValidacao);
 
         if (validacao && validacao.valida === false) {
-            ocultarCarregamento();
-            showToast("⚠️ O conteúdo capturado não parece ser uma vaga válida. Tente selecionar o texto da vaga antes de capturar.");
+            showToast("⚠️ O conteúdo capturado não parece ser uma vaga válida.");
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
         }
 
+        // SUCESSO!
         localStorage.removeItem('vaga_pendente_importacao');
         await abrirTelaVaga();
 
         const txtEl = document.getElementById('texto-vaga');
         if (txtEl) {
             txtEl.value = textoVaga;
-            txtEl.dispatchEvent(new Event('input')); // Garante que o app entenda o preenchimento
+            txtEl.dispatchEvent(new Event('input')); // Força o app a reconhecer o preenchimento
         }
 
-        showToast("✨ Vaga validada e capturada com sucesso! Selecione seu currículo base e clique em Gerar.");
+        showToast("✨ Vaga capturada com sucesso! Selecione seu currículo base.");
+
+        // Deleta do banco para não acumular lixo
         await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
 
     } catch (e) {
-        console.error("Erro ao importar ou validar", e);
+        console.error("Erro fatal ao importar", e);
         localStorage.removeItem('vaga_pendente_importacao');
         irPara('tela-menu');
     } finally {
+        window.isImportingVaga = false; // Libera a trava
         ocultarCarregamento();
     }
 }
