@@ -3,6 +3,45 @@ const SUPABASE_KEY = 'sb_publishable_CPM-CH4JV3muBw_DrGk-zQ_Rii5iGU6';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ==========================================
+// SISTEMA DE MONITORAMENTO DE DEBUG (LOGS)
+// ==========================================
+function logDebug(mensagem, erro = false) {
+    const timestamp = new Date().toLocaleTimeString();
+    const msgFormatada = `[${timestamp}] ${mensagem}`;
+
+    if (erro) console.error(msgFormatada);
+    else console.log(msgFormatada);
+
+    let logs = JSON.parse(localStorage.getItem('edi_logs') || '[]');
+    logs.push(msgFormatada);
+    if (logs.length > 50) logs.shift(); // Limita a 50 linhas para não pesar
+    localStorage.setItem('edi_logs', JSON.stringify(logs));
+
+    // Exibe no painel flutuante se ele já existir
+    const painel = document.getElementById('painel-debug-edi');
+    if (painel) {
+        painel.innerHTML += `<div style="color: ${erro ? '#ff7675' : '#a29bfe'}; margin-bottom: 4px;">${msgFormatada}</div>`;
+        painel.scrollTop = painel.scrollHeight;
+    }
+}
+
+// Cria a caixinha preta de log no canto da tela automaticamente
+document.addEventListener('DOMContentLoaded', () => {
+    const painel = document.createElement('div');
+    painel.id = 'painel-debug-edi';
+    painel.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 350px; height: 250px; background: rgba(0,0,0,0.85); color: #fff; font-family: monospace; font-size: 11px; padding: 10px; overflow-y: auto; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
+    painel.innerHTML = '<div style="color: #6c5ce7; font-weight: bold; border-bottom: 1px solid #555; margin-bottom: 5px; padding-bottom: 5px; display: flex; justify-content: space-between;"><span>Edi Pro - Log Monitor</span><span style="cursor:pointer; color:red;" onclick="this.parentElement.parentElement.style.display=\'none\'">X</span></div>';
+    document.body.appendChild(painel);
+
+    // Mostra os logs antigos ao carregar a página
+    const logs = JSON.parse(localStorage.getItem('edi_logs') || '[]');
+    logs.forEach(l => {
+        painel.innerHTML += `<div style="color: #a29bfe; margin-bottom: 4px;">${l}</div>`;
+    });
+    painel.scrollTop = painel.scrollHeight;
+});
+
 let idAtual = null; let usuarioAtual = null;
 let editResumoNode = null, editExpNode = null, editEscNode = null, editIdiNode = null, editHabNode = null;
 let modoCriarConta = false;
@@ -326,29 +365,37 @@ function recuperarEstadoTela() {
 }
 
 window.addEventListener('load', async () => {
+    logDebug("=== PÁGINA CARREGADA ===");
     applyTheme(localStorage.getItem('themePreference') || 'light');
-
     inicializarModeloIA();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const vagaPendenteUrl = urlParams.get('vaga_id');
+    const vaga_id = urlParams.get('vaga_id');
     const tituloMobile = urlParams.get('titulo_vaga');
     const textoMobile = urlParams.get('texto_vaga');
     const linkMobile = urlParams.get('link_vaga');
 
-    if (vagaPendenteUrl) {
-        localStorage.setItem('vaga_pendente_importacao', vagaPendenteUrl);
+    if (vaga_id) {
+        logDebug(`ID da Extensão recebido na URL: ${vaga_id}`);
+        localStorage.setItem('vaga_pendente_importacao', vaga_id);
         window.history.replaceState({}, document.title, window.location.pathname);
     } else if (tituloMobile || textoMobile || linkMobile) {
+        logDebug("Vaga Mobile recebida via Share.");
         const conteudoMontado = `[ORIGEM DA VAGA: Celular]\n\n${tituloMobile || ''}\n${textoMobile || ''}\n${linkMobile || ''}`.trim();
         localStorage.setItem('vaga_mobile_pendente', conteudoMontado);
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    const ultimaAtividade = localStorage.getItem('ultima_atividade_app'); if (ultimaAtividade && (Date.now() - parseInt(ultimaAtividade) > 7200000)) { await sb.auth.signOut(); localStorage.removeItem('ultima_atividade_app'); irPara('tela-landing'); return; }
+    const ultimaAtividade = localStorage.getItem('ultima_atividade_app');
+    if (ultimaAtividade && (Date.now() - parseInt(ultimaAtividade) > 7200000)) {
+        logDebug("Sessão expirada por inatividade.");
+        await sb.auth.signOut(); localStorage.removeItem('ultima_atividade_app'); irPara('tela-landing'); return;
+    }
+
     const { data: { session } } = await sb.auth.getSession();
 
     if (session) {
+        logDebug("Usuário LOGADO detectado.");
         usuarioAtual = session.user;
         localStorage.setItem('ultima_atividade_app', Date.now());
         atualizarInfosUsuarioTopo();
@@ -358,20 +405,28 @@ window.addEventListener('load', async () => {
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
 
         if (idVagaPendente) {
+            logDebug(`Chamando receberVagaExterna() com ID: ${idVagaPendente}`);
             receberVagaExterna(idVagaPendente);
         } else if (textoMobilePendente) {
+            logDebug("Processando vaga mobile pendente.");
             receberVagaMobile(textoMobilePendente);
         } else {
+            logDebug("Sem vaga pendente. Recuperando estado da tela.");
             recuperarEstadoTela();
         }
     } else {
+        logDebug("Usuário DESLOGADO.");
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
-        if (idVagaPendente || textoMobilePendente) { setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000); }
+        if (idVagaPendente || textoMobilePendente) {
+            setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000);
+        }
         irPara('tela-landing');
     }
 
+    // Monitoramento de login em tempo real
     sb.auth.onAuthStateChange(async (event, session) => {
+        logDebug(`Auth State Alterado: ${event}`);
         if (event === 'SIGNED_IN' && session) {
             usuarioAtual = session.user;
             localStorage.setItem('ultima_atividade_app', Date.now());
@@ -382,6 +437,7 @@ window.addEventListener('load', async () => {
             const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
 
             if (idVagaPendente) {
+                logDebug(`Pós-login: Vaga pendente encontrada. Chamando receberVagaExterna()`);
                 receberVagaExterna(idVagaPendente);
             } else if (textoMobilePendente) {
                 receberVagaMobile(textoMobilePendente);
@@ -391,69 +447,79 @@ window.addEventListener('load', async () => {
             }
         }
         else if (event === 'SIGNED_OUT') { usuarioAtual = null; verificarAdmin(); irPara('tela-landing'); }
-        else if (event === 'PASSWORD_RECOVERY') {
-            const novaSenha = prompt("Digite nova senha (mínimo 8 caracteres, 1 maiúscula, 1 número):");
-            if (!validarSenha(novaSenha)) { alert("Senha fraca. Tente novamente o fluxo de recuperação."); return; }
-            const conf = prompt("Confirme a nova senha:"); if (novaSenha !== conf) { alert("As senhas não coincidem."); return; }
-            const { error } = await sb.auth.updateUser({ password: novaSenha }); if (!error) { alert("Senha atualizada!"); irPara('tela-menu'); } else { alert("Erro: " + error.message); }
-        }
     });
     const cv = document.getElementById('curriculo'); if (cv) { const observer = new MutationObserver(ajustarZoomMobile); observer.observe(cv, { childList: true, subtree: true, characterData: true }); } setTimeout(ajustarZoomMobile, 100);
 });
 
 async function receberVagaExterna(idTransferencia) {
-    // TRAVA ANTI-COLISÃO: Impede dupla execução ao carregar a página
-    if (window.isImportingVaga) return;
+    logDebug(`=== Início: receberVagaExterna (${idTransferencia}) ===`);
+    if (window.isImportingVaga) {
+        logDebug("⛔ Execução bloqueada: Trava anti-colisão ativa (window.isImportingVaga = true).");
+        return;
+    }
     window.isImportingVaga = true;
+    logDebug("Trava anti-colisão ativada.");
 
     try {
         mostrarCarregamento();
         document.getElementById('loading-text').innerText = "Validando conteúdo da vaga importada...";
 
+        logDebug("Buscando vaga no Supabase...");
         const { data, error } = await sb.from('transferencias_vagas').select('texto').eq('id', idTransferencia).single();
 
-        // Se o banco bloquear ou a vaga não existir
-        if (error || !data || !data.texto) {
-            console.error("Vaga não encontrada ou bloqueada:", error);
+        if (error) {
+            logDebug(`❌ ERRO BANCO (Supabase): ${error.message} (Code: ${error.code})`, true);
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
         }
 
+        if (!data || !data.texto) {
+            logDebug("❌ ERRO: Dados vieram em branco do Supabase.", true);
+            localStorage.removeItem('vaga_pendente_importacao');
+            irPara('tela-menu');
+            return;
+        }
+
+        logDebug("✅ Vaga encontrada no banco. Acionando a IA para validação...");
         const textoVaga = data.texto;
 
-        // VALIDAÇÃO EM JSON COM IA
         const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ou requisitos de uma posição? Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Não é uma vaga de emprego válida"}. Texto: ${textoVaga.substring(0, 1000)}`;
+
         const validacao = await processarIA(promptValidacao);
+        logDebug(`Resposta da IA recebida: ${JSON.stringify(validacao)}`);
 
         if (validacao && validacao.valida === false) {
+            logDebug("⛔ IA reprovou o conteúdo da vaga.", true);
             showToast("⚠️ O conteúdo capturado não parece ser uma vaga válida.");
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
         }
 
-        // SUCESSO!
+        logDebug("✅ Vaga Aprovada. Preenchendo a tela...");
         localStorage.removeItem('vaga_pendente_importacao');
         await abrirTelaVaga();
 
         const txtEl = document.getElementById('texto-vaga');
         if (txtEl) {
             txtEl.value = textoVaga;
-            txtEl.dispatchEvent(new Event('input')); // Força o app a reconhecer o preenchimento
+            txtEl.dispatchEvent(new Event('input'));
         }
 
         showToast("✨ Vaga capturada com sucesso! Selecione seu currículo base.");
-
-        // Deleta do banco para não acumular lixo
+        logDebug("Deletando vaga temporária do banco...");
         await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
+        logDebug("=== Processo Finalizado com Sucesso ===");
 
     } catch (e) {
-        console.error("Erro fatal ao importar", e);
+        logDebug(`❌ ERRO FATAL no Try/Catch: ${e.message}`, true);
+        console.error(e);
         localStorage.removeItem('vaga_pendente_importacao');
         irPara('tela-menu');
     } finally {
-        window.isImportingVaga = false; // Libera a trava
+        window.isImportingVaga = false;
+        logDebug("Trava anti-colisão liberada.");
         ocultarCarregamento();
     }
 }
