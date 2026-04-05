@@ -206,130 +206,57 @@
         </div>
     </div>
 
-    <div id="modal-admin"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
-        <div
-            style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 800px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;">
-
-
-
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="color: var(--primary); margin: 0; font-size: 22px;">⚙️ Configurações do Admin</h2>
-
-
-
-                <button class="btn-base btn-neutral"
-                    onclick="document.getElementById('modal-admin').style.display='none'"
-                    style="padding: 5px 10px;">X</button>
+    <div id="modal-admin" class="modal-overlay" style="display:none; z-index: 9999;">
+        <div class="modal-content admin-panel" style="width: 90%; max-width: 600px;">
+            <div class="modal-header">
+                <h2>⚙️ Configurações da IA</h2>
+                <button class="btn-fechar" onclick="this.closest('.modal-overlay').style.display='none'">×</button>
             </div>
 
-            <!-- Navegação por Abas -->
-
-
-
-
-
-
-
-            <div
-                style="display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">
-                <button class="tab-btn active" onclick="alternarAbasAdmin(event, 'tab-prompts')">Prompts</button>
-                <button class="tab-btn" onclick="alternarAbasAdmin(event, 'tab-modelos')">Modelos & IA</button>
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="alternarAbasAdmin('tab-modelos')">🤖 Modelos</button>
+                <button class="tab-btn" onclick="alternarAbasAdmin('tab-prompts-geracao')">📄 Geração</button>
+                <button class="tab-btn" onclick="alternarAbasAdmin('tab-prompts-ats')">🎯 ATS/Valid</button>
             </div>
 
-            <!-- Aba 1: Prompts -->
+            <div class="tabs-body" style="max-height: 65vh; overflow-y: auto; padding: 15px;">
 
-
-
-            <div id="tab-prompts" class="tab-content active">
-                <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--accent);">🔍 Validação
-                    de Vaga:</label>
-                <textarea id="admin-prompt-validacao"
-                    style="width: 100%; height: 120px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-
-
-
-                <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--primary);">📄
-                    Adaptação de Currículo (Simples):</label>
-                <textarea id="admin-prompt-simples"
-                    style="width: 100%; height: 120px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-
-
-
-                <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--danger);">🔥 Adaptação
-                    de Currículo (Agressivo):</label>
-                <textarea id="admin-prompt-agressivo"
-                    style="width: 100%; height: 120px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-
-
-
-                <label style="font-weight: bold; margin-bottom: 8px; display: block; color: #f39c12;">📊 Análise
-                    ATS:</label>
-                <textarea id="admin-prompt-ats"
-                    style="width: 100%; height: 120px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
-
-
-
-                <div
-                    style="margin-top: 10px; padding: 10px; background: var(--primary-dim); border-radius: 8px; margin-bottom: 15px;">
-                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">📧 E-mail de Suporte:</label>
-
-
-                    <input type="email" id="admin-email-suporte" placeholder="suporte@cvedipro.com"
-                        style="width: 100%;">
-                </div>
-
-
-
-                <button class="btn-base btn-accent" onclick="salvarConfigAdmin()" style="width: 100%; padding: 15px;">💾
-                    Salvar Todos os Prompts</button>
-            </div>
-
-            <!-- Aba 2: Modelos -->
-
-
-
-
-
-
-
-            <div id="tab-modelos" class="tab-content">
-                <div
-                    style="background: var(--bg-body); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
-                    <label style="font-weight: bold; margin-bottom: 10px; display: block;">Modelo Ativo no
-                        Sistema:</label>
-                    <select id="admin-modelo-select" style="margin-bottom: 20px; width: 100%; font-size: 16px;"
-                        onchange="salvarSelecaoModelo(this.value)">
-                        <option value="gemini-1.5-flash-latest">gemini-1.5-flash-latest (Padrão)</option>
-                    </select>
-
-
-
-
-
-
-
-
-                    <div
-                        style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                        <button class="btn-base btn-primary" onclick="atualizarModelosDisponiveis()"
-                            style="width: 100%;">🔄 Atualizar Modelos Disponíveis</button>
-                        <div id="admin-lista-modelos"
-                            style="font-size: 13px; color: var(--text-main); background: var(--bg-panel); padding: 15px; border-radius: 8px; min-height: 50px; border: 1px dashed var(--border-color);">
-                            Carregando lista...
-                        </div>
-
-
-
-
-                        <p id="admin-ultima-atualizacao"
-                            style="font-size: 11px; color: var(--text-light); margin: 0; text-align: right;">Última
-                            atualização: --</p>
+                <div id="tab-modelos" class="tab-content active" style="display: block;">
+                    <div style="background: var(--bg-card); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                        <small>Última Sincronização:</small><br>
+                        <strong id="sync-data-hora">--/--/---- --:--</strong>
+                    </div>
+                    <div id="historico-modelos-ia" class="model-list-cache">
                     </div>
                 </div>
+
+                <div id="tab-prompts-geracao" class="tab-content" style="display: none;">
+                    <label>Prompt Adaptação Simples:</label>
+                    <textarea id="cfg-prompt-simples" class="input-base" rows="4"
+                        placeholder="Defina como a IA deve ajustar o CV..."></textarea>
+
+                    <label style="margin-top:15px; display:block;">Prompt Adaptação Agressiva:</label>
+                    <textarea id="cfg-prompt-agressivo" class="input-base" rows="4"
+                        placeholder="Foco total em palavras-chave..."></textarea>
+                </div>
+
+                <div id="tab-prompts-ats" class="tab-content" style="display: none;">
+                    <label>Motor de Análise ATS (Score):</label>
+                    <textarea id="cfg-prompt-ats" class="input-base" rows="5"
+                        placeholder="Regras para calcular o score..."></textarea>
+
+                    <label style="margin-top:15px; display:block;">Prompt de Validação de Vaga:</label>
+                    <textarea id="cfg-prompt-validacao" class="input-base" rows="3"
+                        placeholder="Critérios para aceitar uma vaga..."></textarea>
+                </div>
+
             </div>
 
+            <div class="modal-footer" style="padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <button class="btn-base btn-primary" style="width: 100%;" onclick="salvarConfigAdmin()">
+                    💾 Salvar Todas as Configurações
+                </button>
+            </div>
         </div>
     </div>
 

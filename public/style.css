@@ -842,3 +842,69 @@ table.tabela-admin th {
         transform: scale(0.98);
     }
 }
+
+/* Layout das Abas no Painel Admin */
+.tabs-header {
+    display: flex;
+    gap: 5px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.tab-btn {
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    color: var(--text-main);
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.6;
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    opacity: 1;
+    border-bottom: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+    /* Escondido por padrão */
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block !important;
+}
+
+/* Estilo para os Textareas de Prompt */
+.tabs-body label {
+    display: block;
+    margin: 10px 0 5px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.model-item-badge {
+    background: var(--bg-card);
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin: 5px 0;
+    font-family: monospace;
+    font-size: 0.85rem;
+    border-left: 3px solid var(--primary);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
