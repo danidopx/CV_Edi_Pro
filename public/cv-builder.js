@@ -80,14 +80,14 @@ export async function receberVagaExterna(idTransferencia) {
         logDebug('✅ Vaga encontrada no banco. Acionando a IA para validação...');
         const textoVaga = data.texto;
 
-        const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ou requisitos de uma posição? Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Não é uma vaga de emprego válida"}. Texto: ${textoVaga.substring(0, 1000)}`;
+        const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego or requisitos de uma posição? Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Não é uma vaga de emprego válida"}. Texto: ${textoVaga.substring(0, 1000)}`;
 
         const validacao = await processarIA(promptValidacao);
         logDebug(`Resposta da IA recebida: ${JSON.stringify(validacao)}`);
 
         if (validacao && validacao.valida === false) {
             logDebug('⛔ IA reprovou o conteúdo da vaga.', true);
-            showToast('⚠️ O conteúdo capturado não parece ser uma vaga válida.');
+            alert("⚠️ Ops! Não foi possível importar esta vaga.\n\nMotivo apontado pela IA: " + (validacao.motivo || "Conteúdo não reconhecido como vaga de emprego.") + "\n\nSe a vaga for real, tente copiar e colar o texto manualmente.");
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
@@ -569,7 +569,7 @@ export async function ajustarCurriculoVaga() {
 
         if (validacao && validacao.valida === false) {
             ocultarCarregamento();
-            alert('⚠️ Aviso da IA: ' + (validacao.motivo || 'O texto inserido não parece conter os dados de uma vaga de emprego.'));
+            alert("⚠️ Aviso da IA sobre a vaga:\n\n" + (validacao.motivo || "O texto inserido não parece conter os dados de uma vaga de emprego."));
             return;
         }
 
@@ -1152,3 +1152,4 @@ export function initEditorFieldGuards() {
         });
     }
 }
+
