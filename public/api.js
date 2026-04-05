@@ -42,12 +42,24 @@ export async function inicializarModeloIA() {
                 .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
                 .map(m => m.name.split('/')[1]);
 
-            if (modelosDisponiveis.includes('gemini-1.5-flash')) {
-                appState.modeloIAPreferido = 'gemini-1.5-flash';
-            } else if (modelosDisponiveis.includes('gemini-1.5-pro')) {
-                appState.modeloIAPreferido = 'gemini-1.5-pro';
-            } else if (modelosDisponiveis.length > 0) {
-                appState.modeloIAPreferido = modelosDisponiveis[0];
+            const ordemPreferencia = [
+                'gemini-1.5-flash-latest',
+                'gemini-1.5-pro-latest',
+                'gemini-1.5-flash',
+                'gemini-pro'
+            ];
+            let escolhido = null;
+            for (const id of ordemPreferencia) {
+                if (modelosDisponiveis.includes(id)) {
+                    escolhido = id;
+                    break;
+                }
+            }
+            if (!escolhido && modelosDisponiveis.length > 0) {
+                escolhido = modelosDisponiveis[0];
+            }
+            if (escolhido) {
+                appState.modeloIAPreferido = escolhido;
             }
             console.log('IA Configurada para modelo rápido:', appState.modeloIAPreferido);
         }
