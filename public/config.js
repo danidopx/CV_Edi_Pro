@@ -58,6 +58,8 @@ Formato EXATO obrigatório:
 
 [VAGA] {{VAGA}} [CURRÍCULO] {{CURRICULO}}`;
 
+export const DEFAULT_PROMPT_VALIDACAO = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}.`;
+
 export const tourTextos = [
     '<b>1. Extração Mágica (IA) ✨</b><br><br>Cole todo o texto do seu LinkedIn ou de um currículo antigo no primeiro menu. A nossa Inteligência Artificial vai ler tudo e preencher todos os campos do editor de forma automática para você!',
     '<b>2. Múltiplas Versões 📑</b><br><br>Para se candidatar a vagas diferentes, use o botão <b>Salvar Cópia</b> no topo da tela. Ele duplica o seu currículo atual, permitindo que você altere informações sem perder a versão original.',

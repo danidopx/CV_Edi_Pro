@@ -4,11 +4,13 @@ import {
     regexSenha,
     DEFAULT_PROMPT_SIMPLES,
     DEFAULT_PROMPT_AGRESSIVO,
-    DEFAULT_PROMPT_ATS
+    DEFAULT_PROMPT_ATS,
+    DEFAULT_PROMPT_VALIDACAO
 } from './config.js';
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
 
 export function validarSenha(senha) {
+
     return regexSenha.test(senha);
 }
 
@@ -51,6 +53,7 @@ export async function atualizarNomeConta() {
 }
 
 export function abrirConfigAdmin() {
+    setValSafe('admin-prompt-validacao', localStorage.getItem('adminPromptValidacao') || DEFAULT_PROMPT_VALIDACAO);
     setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
     setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO);
     setValSafe('admin-prompt-ats', localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS);
@@ -58,23 +61,43 @@ export function abrirConfigAdmin() {
     document.getElementById('modal-admin').style.display = 'flex';
 }
 
+export function alternarAbasAdmin(e, tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
+
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'var(--bg-body)';
+        b.style.color = 'var(--text-main)';
+        b.style.border = '1px solid var(--border-color)';
+        b.style.borderBottom = 'none';
+    });
+
+    e.currentTarget.classList.add('active');
+    e.currentTarget.style.background = 'var(--primary)';
+    e.currentTarget.style.color = 'white';
+    e.currentTarget.style.border = 'none';
+}
+
 export function salvarConfigAdmin() {
+    const pV = getValSafe('admin-prompt-validacao').trim();
     const pS = getValSafe('admin-prompt-simples').trim();
     const pA = getValSafe('admin-prompt-agressivo').trim();
     const pATS = getValSafe('admin-prompt-ats').trim();
     const emailSuporte = getValSafe('admin-email-suporte').trim();
 
-    if (pS && pA && pATS) {
+    if (pV && pS && pA && pATS) {
+        localStorage.setItem('adminPromptValidacao', pV);
         localStorage.setItem('adminPromptSimples', pS);
         localStorage.setItem('adminPromptAgressivo', pA);
         localStorage.setItem('adminPromptAts', pATS);
         if (emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
-        document.getElementById('modal-admin').style.display = 'none';
-        showToast();
+        showToast('Configurações salvas!');
     } else {
         alert('Os prompts não podem ficar vazios.');
     }
 }
+
 
 export async function abrirGestaoUsuarios() {
     irPara('tela-admin-usuarios');

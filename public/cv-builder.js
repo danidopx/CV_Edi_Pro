@@ -80,9 +80,11 @@ export async function receberVagaExterna(idTransferencia) {
         logDebug('✅ Vaga encontrada no banco. Acionando a IA para validação...');
         const textoVaga = data.texto;
 
-        const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}. Texto: ${textoVaga.substring(0, 1000)}`;
+        const promptValidacaoBase = localStorage.getItem('adminPromptValidacao') || `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}.`;
+        const promptValidacao = `${promptValidacaoBase} Texto: ${textoVaga.substring(0, 1000)}`;
 
         const validacao = await processarIA(promptValidacao);
+
         logDebug(`Resposta da IA recebida: ${JSON.stringify(validacao)}`);
 
         if (validacao && validacao.valida === false) {
@@ -564,8 +566,10 @@ export async function ajustarCurriculoVaga() {
 
     try {
         document.getElementById('loading-text').innerText = 'Analisando a vaga...';
-        const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: ${textoVaga.substring(0, 1500)}`;
+        const promptValidacaoBase = localStorage.getItem('adminPromptValidacao') || `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}.`;
+        const promptValidacao = `${promptValidacaoBase} Texto: ${textoVaga.substring(0, 1500)}`;
         const validacao = await processarIA(promptValidacao);
+
 
         if (validacao && validacao.valida === false) {
             ocultarCarregamento();
