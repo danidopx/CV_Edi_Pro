@@ -8,6 +8,7 @@ import {
     DEFAULT_PROMPT_VALIDACAO
 } from './config.js';
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
+import { atualizarModelosDisponiveis } from './api.js';
 
 export function validarSenha(senha) {
 
@@ -59,26 +60,42 @@ export function abrirConfigAdmin() {
     setValSafe('admin-prompt-ats', localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS);
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
     document.getElementById('modal-admin').style.display = 'flex';
+
+    // Garantir que a aba de prompts seja a primeira a ser exibida e ativa ao abrir o modal
+    const defaultTabButton = document.querySelector('.tab-btn[onclick*="tab-prompts"]');
+    if (defaultTabButton) {
+        alternarAbasAdmin({ currentTarget: defaultTabButton }, 'tab-prompts');
+    }
+    atualizarModelosDisponiveis(false); // Carrega os modelos sem exibir o toast de atualização
 }
 
 export function alternarAbasAdmin(e, tabId) {
-    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
 
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-        b.style.background = 'var(--bg-body)';
-        b.style.color = 'var(--text-main)';
-        b.style.border = '1px solid var(--border-color)';
-        b.style.borderBottom = 'none';
-    });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Esconder todo o conteúdo das abas e remover a classe 'active' de todos os botões
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    // Adicionar a classe 'active' ao botão clicado
     e.currentTarget.classList.add('active');
-    e.currentTarget.style.background = 'var(--primary)';
-    e.currentTarget.style.color = 'white';
-    e.currentTarget.style.border = 'none';
+    // Exibir o conteúdo da aba correspondente
+    document.getElementById(tabId).classList.add('active');
 }
-
 export function salvarConfigAdmin() {
     const pV = getValSafe('admin-prompt-validacao').trim();
     const pS = getValSafe('admin-prompt-simples').trim();
