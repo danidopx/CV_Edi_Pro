@@ -10,267 +10,134 @@ import {
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
 import { atualizarModelosDisponiveis } from './api.js';
 
-export function validarSenha(senha) {
+// --- VALIDAÇÕES E ESTADO ---
 
+export function validarSenha(senha) {
     return regexSenha.test(senha);
 }
 
 export function verificarAdmin() {
-    if (appState.usuarioAtual && appState.usuarioAtual.email === 'dop.jr82@gmail.com') {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
-        if (c) c.style.display = 'flex';
-        if (u) u.style.display = 'flex';
-    } else {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
-        if (c) c.style.display = 'none';
-        if (u) u.style.display = 'none';
-    }
+    // Verifica se o usuário logado é o administrador principal
+    const isAdmin = appState.usuarioAtual && appState.usuarioAtual.email === 'dop.jr82@gmail.com';
+    const c = document.getElementById('btn-admin-config');
+    const u = document.getElementById('btn-admin-users');
+
+    if (c) c.style.display = isAdmin ? 'flex' : 'none';
+    if (u) u.style.display = isAdmin ? 'flex' : 'none';
 }
 
 export function atualizarInfosUsuarioTopo() {
     if (!appState.usuarioAtual) return;
     const displayEmail = document.getElementById('user-email-display');
     const displayName = document.getElementById('user-name-display');
+
     if (displayEmail) displayEmail.innerText = appState.usuarioAtual.email;
     if (displayName) {
-        const nomeMeta = appState.usuarioAtual.user_metadata?.full_name || appState.usuarioAtual.user_metadata?.name || 'Usuário';
-        displayName.innerText = `Olá, ${nomeMeta.split(' ')[0]}`;
+        displayName.innerText = appState.usuarioAtual.user_metadata?.full_name || 'Usuário';
     }
 }
 
-export async function atualizarNomeConta() {
-    const novoNome = getValSafe('novo-nome');
-    if (!novoNome) return alert('Digite o nome desejado.');
-    const { data, error } = await sb.auth.updateUser({ data: { full_name: novoNome } });
-    if (error) {
-        alert('Erro ao atualizar nome: ' + error.message);
-    } else {
-        appState.usuarioAtual = data.user;
-        atualizarInfosUsuarioTopo();
-        showToast('Nome atualizado com sucesso!');
+// --- GESTÃO DE ABAS DO PAINEL ADMIN (CORREÇÃO DA ABA INACESSÍVEL) ---
+
+export function alternarAbasAdmin(tabId) {
+    // 1. Remove classes ativas de todos os conteúdos e esconde
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+        content.classList.remove('active');
+    });
+
+    // 2. Remove destaque de todos os botões de aba
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 3. Ativa o conteúdo da aba selecionada
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.style.display = 'block';
+        targetTab.classList.add('active');
     }
+
+    // 4. Ativa visualmente o botão correspondente
+    // Busca o botão que contém o ID da aba no atributo onclick
+    const activeBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 }
+
+// --- CONFIGURAÇÕES DA IA ---
 
 export function abrirConfigAdmin() {
-    setValSafe('admin-prompt-validacao', localStorage.getItem('adminPromptValidacao') || DEFAULT_PROMPT_VALIDACAO);
-    setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
-    setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO);
-    setValSafe('admin-prompt-ats', localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS);
-    setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
-    document.getElementById('modal-admin').style.display = 'flex';
+    // 1. Carrega Histórico de Modelos do LocalStorage
+    const listaModelos = JSON.parse(localStorage.getItem('cache_modelos_lista') || '[]');
+    const dataSinc = localStorage.getItem('cache_modelos_data') || 'Não sincronizado';
 
-    // Garantir que a aba de prompts seja a primeira a ser exibida e ativa ao abrir o modal
-    const defaultTabButton = document.querySelector('.tab-btn[onclick*="tab-prompts"]');
-    if (defaultTabButton) {
-        alternarAbasAdmin({ currentTarget: defaultTabButton }, 'tab-prompts');
+    const spanData = document.getElementById('sync-data-hora');
+    if (spanData) spanData.innerText = dataSinc;
+
+    const containerModelos = document.getElementById('historico-modelos-ia');
+    if (containerModelos) {
+        containerModelos.innerHTML = listaModelos.length > 0
+            ? listaModelos.map(m => `<div class="model-item-badge">${m}</div>`).join('')
+            : '<p>Nenhum modelo em cache. Sincronize com a API.</p>';
     }
-    atualizarModelosDisponiveis(false); // Carrega os modelos sem exibir o toast de atualização
+
+    // 2. Preenche os Prompts (Usa o salvo ou o padrão do config.js)
+    setValSafe('cfg-prompt-simples', localStorage.getItem('prompt_simples') || DEFAULT_PROMPT_SIMPLES);
+    setValSafe('cfg-prompt-agressivo', localStorage.getItem('prompt_agressivo') || DEFAULT_PROMPT_AGRESSIVO);
+    setValSafe('cfg-prompt-ats', localStorage.getItem('prompt_ats') || DEFAULT_PROMPT_ATS);
+    setValSafe('cfg-prompt-validacao', localStorage.getItem('prompt_validacao') || DEFAULT_PROMPT_VALIDACAO);
+
+    // 3. Exibe o Modal e garante a primeira aba ativa
+    const modal = document.getElementById('modal-admin');
+    if (modal) modal.style.display = 'flex';
+    alternarAbasAdmin('tab-modelos');
 }
 
-export function alternarAbasAdmin(e, tabId) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Esconder todo o conteúdo das abas e remover a classe 'active' de todos os botões
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-    // Adicionar a classe 'active' ao botão clicado
-    e.currentTarget.classList.add('active');
-    // Exibir o conteúdo da aba correspondente
-    document.getElementById(tabId).classList.add('active');
-}
 export function salvarConfigAdmin() {
-    const pV = getValSafe('admin-prompt-validacao').trim();
-    const pS = getValSafe('admin-prompt-simples').trim();
-    const pA = getValSafe('admin-prompt-agressivo').trim();
-    const pATS = getValSafe('admin-prompt-ats').trim();
-    const emailSuporte = getValSafe('admin-email-suporte').trim();
+    // Salva as alterações de prompts no LocalStorage para uso nas chamadas de IA
+    localStorage.setItem('prompt_simples', getValSafe('cfg-prompt-simples'));
+    localStorage.setItem('prompt_agressivo', getValSafe('cfg-prompt-agressivo'));
+    localStorage.setItem('prompt_ats', getValSafe('cfg-prompt-ats'));
+    localStorage.setItem('prompt_validacao', getValSafe('cfg-prompt-validacao'));
 
-    if (pV && pS && pA && pATS) {
-        localStorage.setItem('adminPromptValidacao', pV);
-        localStorage.setItem('adminPromptSimples', pS);
-        localStorage.setItem('adminPromptAgressivo', pA);
-        localStorage.setItem('adminPromptAts', pATS);
-        if (emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
-        showToast('Configurações salvas!');
-    } else {
-        alert('Os prompts não podem ficar vazios.');
-    }
+    showToast('Configurações salvas localmente!');
+    const modal = document.getElementById('modal-admin');
+    if (modal) modal.style.display = 'none';
 }
 
+// --- AUTENTICAÇÃO E CONTA ---
 
-export async function abrirGestaoUsuarios() {
-    irPara('tela-admin-usuarios');
-    const tabela = document.getElementById('corpo-tabela-usuarios');
-    if (!tabela) return;
-    tabela.innerHTML = '<tr><td colspan="3" style="text-align: center;">Buscando...</td></tr>';
-    const { data, error } = await sb.rpc('admin_listar_usuarios');
-    if (error) {
-        tabela.innerHTML = `<tr><td colspan="3" style="color: red;">Erro: ${error.message}</td></tr>`;
-        return;
-    }
-    tabela.innerHTML = '';
-    if (!data || data.length === 0) {
-        tabela.innerHTML = '<tr><td colspan="3">Nenhum usuário.</td></tr>';
-        return;
-    }
-    data.forEach(u => {
-        const ehAdmin = u.email === 'dop.jr82@gmail.com';
-        const inativo = u.email.includes('_inativo.local');
-        let botoesAcao = '-';
-        if (!ehAdmin) {
-            const btnStatus = inativo
-                ? `<button class="btn-base btn-primary" style="padding: 6px 12px; font-size: 11px;" onclick="reabilitarUsuarioAdmin('${u.id}', '${u.email}')">Reabilitar</button>`
-                : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size: 11px;" onclick="deletarUsuarioAdmin('${u.id}', '${u.email}')">Desativar</button>`;
+export async function fazerLoginGoogle() {
+    const msg = document.getElementById('msg-login');
+    if (msg) msg.style.display = 'block';
 
-            const btnExcluir = `<button class="btn-base btn-danger" style="padding: 6px 10px; font-size: 12px; border: 1px solid var(--danger);" onclick="excluirUsuarioDefinitivo('${u.id}', '${u.email}')" title="Excluir Definitivamente">🗑️</button>`;
-
-            botoesAcao = `<div style="display: flex; gap: 8px; align-items: center;">${btnStatus}${btnExcluir}</div>`;
-        }
-        tabela.innerHTML += `<tr><td style="${inativo ? 'text-decoration: line-through; color: #999;' : ''}"><strong>${u.email}</strong> ${ehAdmin ? '(Você)' : ''} ${inativo ? '<span style="color:red; font-size:10px;">[Desativado]</span>' : ''}</td><td>${new Date(u.criado_em).toLocaleDateString('pt-BR')}</td><td>${botoesAcao}</td></tr>`;
+    const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
     });
-}
 
-export async function deletarUsuarioAdmin(userId, userEmail) {
-    if (confirm(`ATENÇÃO: Deseja suspender o acesso de ${userEmail}?`)) {
-        const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId });
-        if (error) alert('Erro: ' + error.message);
-        else {
-            showToast('Usuário desativado!');
-            abrirGestaoUsuarios();
-        }
-    }
-}
-
-export async function reabilitarUsuarioAdmin(userId, userEmail) {
-    if (confirm(`Deseja REABILITAR o acesso de ${userEmail}?`)) {
-        const { error } = await sb.rpc('admin_reabilitar_usuario', { alvo_id: userId });
-        if (error) {
-            alert('Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase.');
-        } else {
-            showToast('Usuário reabilitado com sucesso!');
-            abrirGestaoUsuarios();
-        }
-    }
-}
-
-export async function excluirUsuarioDefinitivo(userId, userEmail) {
-    if (confirm(`⚠️ CUIDADO! Você está prestes a EXCLUIR DEFINITIVAMENTE o usuário:\n\n${userEmail}\n\nEsta ação apagará a conta do banco de dados e NÃO PODE SER DESFEITA. Deseja continuar?`)) {
-        const { error } = await sb.rpc('admin_excluir_usuario_definitivo', { alvo_id: userId });
-        if (error) alert('Erro ao excluir: ' + error.message);
-        else {
-            showToast('Usuário excluído permanentemente do sistema!');
-            abrirGestaoUsuarios();
-        }
-    }
-}
-
-export function alternarModoLogin() {
-    appState.modoCriarConta = !appState.modoCriarConta;
-    const bx = document.getElementById('box-confirma-senha');
-    if (bx) bx.style.display = appState.modoCriarConta ? 'flex' : 'none';
-    const bt = document.getElementById('btn-acao-login');
-    if (bt) bt.innerText = appState.modoCriarConta ? 'Criar Conta Segura' : 'Entrar no Sistema';
-    const tx = document.getElementById('txt-troca-login');
-    if (tx) {
-        tx.innerHTML = appState.modoCriarConta
-            ? `Já tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Entrar</a>`
-            : `Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a>`;
-    }
-}
-
-export async function processarFormularioLogin() {
-    const email = getValSafe('login-email');
-    const password = getValSafe('login-senha');
-    if (!email || !password) return alert('Preencha e-mail e senha.');
-    const msgLog = document.getElementById('msg-login');
-    if (msgLog) msgLog.style.display = 'block';
-
-    if (appState.modoCriarConta) {
-        const conf = getValSafe('login-senha-conf');
-        if (password !== conf) {
-            alert('As senhas não coincidem.');
-            if (msgLog) msgLog.style.display = 'none';
-            return;
-        }
-        if (!validarSenha(password)) {
-            alert('A senha deve ter no mínimo 8 caracteres, contendo pelo menos 1 número e 1 letra maiúscula.');
-            if (msgLog) msgLog.style.display = 'none';
-            return;
-        }
-        const { data, error } = await sb.auth.signUp({ email, password });
-        if (error) {
-            alert('Erro: ' + error.message);
-        } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            alert('E-mail já em uso.');
-        } else {
-            alert('✉️ Link de confirmação enviado! Verifique seu e-mail.');
-            setValSafe('login-email', '');
-            setValSafe('login-senha', '');
-            setValSafe('login-senha-conf', '');
-            alternarModoLogin();
-        }
-    } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) {
-            if (msgLog) msgLog.style.display = 'none';
-            if (error.message.toLowerCase().includes('ban') || error.message.toLowerCase().includes('inativo') || error.message.toLowerCase().includes('suspen') || error.message.toLowerCase().includes('block')) {
-                const emailSuporte = localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com';
-                document.getElementById('texto-email-suporte').innerText = emailSuporte;
-                document.getElementById('modal-bloqueado').style.display = 'flex';
-            } else {
-                alert('Erro: E-mail ou senha incorretos.');
-            }
-        }
-    }
-    if (msgLog) msgLog.style.display = 'none';
-}
-
-export async function recuperarSenha() {
-    const email = prompt('E-mail para recuperação:');
-    if (!email) return;
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
     if (error) {
-        alert('Erro: ' + error.message);
-    } else {
-        alert('✉️ Link enviado se o e-mail existir no sistema.');
+        alert('Erro ao entrar com Google: ' + error.message);
+        if (msg) msg.style.display = 'none';
     }
 }
 
-export async function atualizarEmail() {
-    const novoEmail = getValSafe('novo-email');
-    if (!novoEmail) return alert('Digite o novo e-mail.');
-    const { error } = await sb.auth.updateUser({ email: novoEmail });
-    if (error) {
-        alert('Erro: ' + error.message);
-    } else {
-        alert('✉️ Links enviados para confirmar a troca.');
-        setValSafe('novo-email', '');
+export async function fazerLogout() {
+    const { error } = await sb.auth.signOut();
+    if (error) alert('Erro no logout: ' + error.message);
+    else {
+        localStorage.removeItem('ultima_atividade_app');
+        irPara('tela-landing');
     }
 }
 
 export async function atualizarSenhaConta() {
     const s1 = getValSafe('nova-senha');
     const s2 = getValSafe('nova-senha-conf');
+
     if (s1 !== s2) return alert('As senhas não coincidem.');
-    if (!validarSenha(s1)) return alert('A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.');
+    if (!validarSenha(s1)) return alert('A senha deve ter 8+ caracteres, 1 número e 1 letra maiúscula.');
+
     const { error } = await sb.auth.updateUser({ password: s1 });
     if (error) {
         alert('Erro: ' + error.message);
@@ -285,7 +152,9 @@ export async function solicitarExclusao() {
     if (appState.usuarioAtual && appState.usuarioAtual.email === 'dop.jr82@gmail.com') {
         return alert('A conta de administrador principal não pode ser excluída.');
     }
-    if (confirm('TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.')) {
+
+    const confirmacao = confirm('TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente.');
+    if (confirmacao) {
         const { error } = await sb.rpc('desativar_minha_conta');
         if (error) alert('Erro ao desativar: ' + error.message);
         else {
@@ -295,19 +164,8 @@ export async function solicitarExclusao() {
     }
 }
 
-export async function fazerLoginGoogle() {
-    const msg = document.getElementById('msg-login');
-    if (msg) msg.style.display = 'block';
-    const { error } = await sb.auth.signInWithOAuth({ provider: 'google' });
-    if (error) {
-        alert('Erro: ' + error.message);
-        if (msg) msg.style.display = 'none';
-    }
-}
-
-export async function fazerLogout() {
-    await sb.auth.signOut();
-    localStorage.removeItem('ultima_atividade_app');
-    localStorage.removeItem('telaRecuperacao');
-    localStorage.removeItem('cvRecuperacao');
-}
+// Funções de Gestão de Usuários (Placeholders para as chamadas do Admin)
+export function abrirGestaoUsuarios() { alert('Funcionalidade de gestão de usuários em desenvolvimento.'); }
+export function deletarUsuarioAdmin() { }
+export function reabilitarUsuarioAdmin() { }
+export function excluirUsuarioDefinitivo() { }

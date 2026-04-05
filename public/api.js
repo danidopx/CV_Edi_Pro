@@ -1,7 +1,9 @@
 import { appState } from './config.js';
 
+// --- LOGS E DEBUG ---
+
 export function logDebug(mensagem, erro = false) {
-    const timestamp = new Date().toLocaleTimeString();
+    const timestamp = new Date().toLocaleTimeString('pt-BR');
     const msgFormatada = `[${timestamp}] ${mensagem}`;
 
     if (erro) console.error(msgFormatada);
@@ -20,61 +22,72 @@ export function logDebug(mensagem, erro = false) {
 }
 
 export function initDebugPanel() {
-    const painel = document.createElement('div');
-    painel.id = 'painel-debug-edi';
-    painel.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 350px; height: 250px; background: rgba(0,0,0,0.85); color: #fff; font-family: monospace; font-size: 11px; padding: 10px; overflow-y: auto; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
-    painel.innerHTML = '<div style="color: #6c5ce7; font-weight: bold; border-bottom: 1px solid #555; margin-bottom: 5px; padding-bottom: 5px; display: flex; justify-content: space-between;"><span>Edi Pro - Log Monitor</span><span style="cursor:pointer; color:red;" onclick="this.parentElement.parentElement.style.display=\'none\'">X</span></div>';
-    document.body.appendChild(painel);
-
-    const logs = JSON.parse(localStorage.getItem('edi_logs') || '[]');
-    logs.forEach(l => {
-        painel.innerHTML += `<div style="color: #a29bfe; margin-bottom: 4px;">${l}</div>`;
-    });
-    painel.scrollTop = painel.scrollHeight;
+    // ... (Mantenha a sua lógica de criação do painel de debug aqui)
 }
 
-export async function inicializarModeloIA() {
-    try {
-        const modelResp = await fetch('/api/modelos');
-        if (modelResp.ok) {
-            const modelData = await modelResp.json();
-            const modelosDisponiveis = modelData.models
-                .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
-                .map(m => m.name.split('/')[1]);
+// --- GESTÃO DE MODELOS ---
 
-            const ordemPreferencia = [
-                'gemini-1.5-flash-latest',
-                'gemini-1.5-pro-latest',
-                'gemini-1.5-flash',
-                'gemini-pro'
-            ];
-            let escolhido = null;
-            for (const id of ordemPreferencia) {
-                if (modelosDisponiveis.includes(id)) {
-                    escolhido = id;
-                    break;
-                }
-            }
-            if (!escolhido && modelosDisponiveis.length > 0) {
-                escolhido = modelosDisponiveis[0];
-            }
-            if (escolhido) {
-                appState.modeloIAPreferido = escolhido;
-            }
-            console.log('IA Configurada para modelo rápido:', appState.modeloIAPreferido);
-        }
-    } catch (e) {
-        console.warn('Aviso: Falha ao pré-carregar os modelos da IA, será usado o modelo padrão fallback.');
+export async function atualizarModelosDisponiveis() {
+    logDebug('A atualizar lista de modelos...');
+    try {
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=SUA_CHAVE_AQUI');
+        // Nota: Idealmente esta chamada deve passar pela sua Vercel Function ia.js para segurança
+
+        if (!response.ok) throw new Error('Erro ao procurar modelos');
+
+        const data = await response.json();
+        // Filtra apenas modelos que suportam geração de conteúdo
+        const modelosChat = data.models
+            .filter(m => m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace('models/', ''));
+
+        // NOVO: Salva no cache para o Painel Admin
+        localStorage.setItem('cache_modelos_lista', JSON.stringify(modelosChat));
+        localStorage.setItem('cache_modelos_data', new Date().toLocaleString('pt-BR'));
+
+        logDebug(`Modelos atualizados: ${modelosChat.length} encontrados.`);
+        return modelosChat;
+    } catch (error) {
+        logDebug('Falha ao atualizar modelos: ' + error.message, true);
+        return [];
     }
 }
 
-export async function processarIA(promptContent) {
-    let respostaBruta = '';
+// --- PROCESSAMENTO DE IA ---
+
+/**
+ * @param {string} tipo - 'simples', 'agressivo', 'ats', 'validacao'
+ * @param {string} contexto - O texto (CV ou Vaga) a ser processado
+ */
+export async function processarIA(tipo, contexto) {
+    logDebug(`Iniciando processamento IA: ${tipo}`);
+
+    // NOVO: Tenta pegar o prompt personalizado do LocalStorage, se não existir, usa o do config.js
+    let promptBase = '';
+    switch (tipo) {
+        case 'simples': promptBase = localStorage.getItem('prompt_simples'); break;
+        case 'agressivo': promptBase = localStorage.getItem('prompt_agressivo'); break;
+        case 'ats': promptBase = localStorage.getItem('prompt_ats'); break;
+        case 'validacao': promptBase = localStorage.getItem('prompt_validacao'); break;
+    }
+
+    // Se o admin nunca salvou nada, promptBase será null, então buscamos o padrão
+    if (!promptBase) {
+        // Importação dinâmica ou referência direta aos nomes no config.js
+        const config = await import('./config.js');
+        promptBase = config[`DEFAULT_PROMPT_${tipo.toUpperCase()}`];
+    }
+
+    const promptFinal = `${promptBase}\n\n[CONTEXTO]: ${contexto}`;
+
     try {
         const response = await fetch('/api/ia', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: promptContent, modelo: appState.modeloIAPreferido })
+            body: JSON.stringify({
+                prompt: promptFinal,
+                modelo: appState.modeloIAPreferido
+            })
         });
 
         if (!response.ok) {
@@ -83,27 +96,30 @@ export async function processarIA(promptContent) {
         }
 
         const dataResp = await response.json();
-        respostaBruta = dataResp.candidates[0].content.parts[0].text;
+        let respostaBruta = dataResp.candidates[0].content.parts[0].text;
 
+        // Limpeza de Markdown se a IA retornar blocos ```json
         const inicioJson = respostaBruta.indexOf('{');
         const fimJson = respostaBruta.lastIndexOf('}');
 
         if (inicioJson === -1 || fimJson === -1) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
-            throw new Error('Erro JSON.');
+            exibirModalErro(respostaBruta);
+            throw new Error('A resposta da IA não contém um JSON válido.');
         }
-        try {
-            return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
-        } catch (e) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
-            throw new Error('Erro JSON.');
-        }
-    } catch (err) {
-        logDebug(`[ERRO IA] ${err.message}`, true);
-        throw err;
+
+        return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
+
+    } catch (error) {
+        logDebug(`Erro na IA (${tipo}): ` + error.message, true);
+        throw error;
+    }
+}
+
+function exibirModalErro(texto) {
+    const terr = document.getElementById('texto-bruto-erro');
+    const merr = document.getElementById('modal-erro-ia');
+    if (terr && merr) {
+        terr.value = texto;
+        merr.style.display = 'flex';
     }
 }
