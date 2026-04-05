@@ -1,0 +1,97 @@
+import { appState } from './config.js';
+
+export function logDebug(mensagem, erro = false) {
+    const timestamp = new Date().toLocaleTimeString();
+    const msgFormatada = `[${timestamp}] ${mensagem}`;
+
+    if (erro) console.error(msgFormatada);
+    else console.log(msgFormatada);
+
+    let logs = JSON.parse(localStorage.getItem('edi_logs') || '[]');
+    logs.push(msgFormatada);
+    if (logs.length > 50) logs.shift();
+    localStorage.setItem('edi_logs', JSON.stringify(logs));
+
+    const painel = document.getElementById('painel-debug-edi');
+    if (painel) {
+        painel.innerHTML += `<div style="color: ${erro ? '#ff7675' : '#a29bfe'}; margin-bottom: 4px;">${msgFormatada}</div>`;
+        painel.scrollTop = painel.scrollHeight;
+    }
+}
+
+export function initDebugPanel() {
+    const painel = document.createElement('div');
+    painel.id = 'painel-debug-edi';
+    painel.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 350px; height: 250px; background: rgba(0,0,0,0.85); color: #fff; font-family: monospace; font-size: 11px; padding: 10px; overflow-y: auto; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
+    painel.innerHTML = '<div style="color: #6c5ce7; font-weight: bold; border-bottom: 1px solid #555; margin-bottom: 5px; padding-bottom: 5px; display: flex; justify-content: space-between;"><span>Edi Pro - Log Monitor</span><span style="cursor:pointer; color:red;" onclick="this.parentElement.parentElement.style.display=\'none\'">X</span></div>';
+    document.body.appendChild(painel);
+
+    const logs = JSON.parse(localStorage.getItem('edi_logs') || '[]');
+    logs.forEach(l => {
+        painel.innerHTML += `<div style="color: #a29bfe; margin-bottom: 4px;">${l}</div>`;
+    });
+    painel.scrollTop = painel.scrollHeight;
+}
+
+export async function inicializarModeloIA() {
+    try {
+        const modelResp = await fetch('/api/modelos');
+        if (modelResp.ok) {
+            const modelData = await modelResp.json();
+            const modelosDisponiveis = modelData.models
+                .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
+                .map(m => m.name.split('/')[1]);
+
+            if (modelosDisponiveis.includes('gemini-1.5-flash')) {
+                appState.modeloIAPreferido = 'gemini-1.5-flash';
+            } else if (modelosDisponiveis.includes('gemini-1.5-pro')) {
+                appState.modeloIAPreferido = 'gemini-1.5-pro';
+            } else if (modelosDisponiveis.length > 0) {
+                appState.modeloIAPreferido = modelosDisponiveis[0];
+            }
+            console.log('IA Configurada para modelo rápido:', appState.modeloIAPreferido);
+        }
+    } catch (e) {
+        console.warn('Aviso: Falha ao pré-carregar os modelos da IA, será usado o modelo padrão fallback.');
+    }
+}
+
+export async function processarIA(promptContent) {
+    let respostaBruta = '';
+    try {
+        const response = await fetch('/api/ia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptContent, modelo: appState.modeloIAPreferido })
+        });
+
+        if (!response.ok) {
+            const erroVercel = await response.text();
+            throw new Error(`Falha na API interna (Status ${response.status}): ${erroVercel}`);
+        }
+
+        const dataResp = await response.json();
+        respostaBruta = dataResp.candidates[0].content.parts[0].text;
+
+        const inicioJson = respostaBruta.indexOf('{');
+        const fimJson = respostaBruta.lastIndexOf('}');
+
+        if (inicioJson === -1 || fimJson === -1) {
+            const terr = document.getElementById('texto-bruto-erro');
+            const merr = document.getElementById('modal-erro-ia');
+            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
+            throw new Error('Erro JSON.');
+        }
+        try {
+            return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
+        } catch (e) {
+            const terr = document.getElementById('texto-bruto-erro');
+            const merr = document.getElementById('modal-erro-ia');
+            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
+            throw new Error('Erro JSON.');
+        }
+    } catch (err) {
+        logDebug(`[ERRO IA] ${err.message}`, true);
+        throw err;
+    }
+}
