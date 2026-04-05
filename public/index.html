@@ -8,24 +8,23 @@
 
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
-    <link rel="manifest" href="manifest.json?v=17086">
+
+    <link rel="manifest" href="manifest.json?v=20260405">
     <meta name="theme-color" content="#6c5ce7">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=17086'); }</script>
+
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=20260405'); }</script>
 
     <link rel="stylesheet" href="style.css">
-
     <style>
-        /* --- CORREÇÃO DAS ABAS DO PAINEL ADMIN --- */
+        /* CSS ADICIONADO PARA O FUNCIONAMENTO DAS ABAS */
         .tabs-header {
             display: flex;
             background: #2a2a3c;
             border-bottom: 1px solid #444;
             margin-bottom: 15px;
-            border-radius: 8px 8px 0 0;
-            overflow: hidden;
         }
 
         .tab-btn {
@@ -36,7 +35,6 @@
             color: #ccc;
             cursor: pointer;
             font-weight: bold;
-            transition: 0.3s;
             border-bottom: 3px solid transparent;
         }
 
@@ -47,31 +45,11 @@
         }
 
         .tab-content {
-            display: none;
-            /* Esconde por padrão */
-            padding: 10px 0;
-            animation: fadeIn 0.3s ease;
+            display: none !important;
         }
 
         .tab-content.active {
             display: block !important;
-            /* Mostra apenas a ativa */
-        }
-
-        #modal-admin .modal-content {
-            background: #1e1e2e;
-            color: #fff;
-            border: 1px solid #444;
-            max-width: 600px;
-            width: 95%;
-        }
-
-        .tabs-body label {
-            display: block;
-            margin: 12px 0 5px;
-            color: #6c5ce7;
-            font-size: 0.85rem;
-            font-weight: bold;
         }
 
         .model-item-badge {
@@ -83,29 +61,16 @@
             font-size: 0.85rem;
             font-family: monospace;
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
 
 <body>
-
     <div id="tela-landing" class="tela ativa">
         <div class="hero-section">
             <h1>CV Edi <span class="badge-pro">PRO</span></h1>
-            <p>O seu currículo adaptado para qualquer vaga em segundos usando Inteligência Artificial.</p>
+            <p>O seu currículo adaptado para qualquer vaga em segundos usando IA.</p>
             <div class="hero-btns">
-                <button class="btn-base btn-primary" onclick="irPara('tela-login')">Começar Agora</button>
+                <button class="btn-base btn-primary" onclick="irPara('tela-login')">Entrar ou Cadastrar</button>
             </div>
         </div>
     </div>
@@ -114,20 +79,19 @@
         <div class="login-container">
             <h2 id="login-title">Entrar no CV Edi</h2>
             <div id="msg-login" style="display:none; color: var(--primary); margin-bottom: 10px;">Processando...</div>
-
             <button class="btn-base btn-google" onclick="fazerLoginGoogle()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
-                Entrar com Google
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com
+                Google
             </button>
-
             <div class="separator"><span>ou use seu e-mail</span></div>
-
             <input type="email" id="login-email" class="input-base" placeholder="Seu e-mail">
             <input type="password" id="login-senha" class="input-base" placeholder="Sua senha">
-
             <button class="btn-base btn-primary" onclick="processarFormularioLogin()">Entrar</button>
-            <p class="toggle-login">Não tem conta? <a href="#" onclick="alternarModoLogin(true)">Cadastre-se</a></p>
+            <p class="toggle-login">Novo aqui? <a href="#" onclick="alternarModoLogin(true)">Criar conta</a></p>
         </div>
+    </div>
+
+    <div id="tela-onboarding" class="tela">
     </div>
 
     <div id="tela-editor" class="tela">
@@ -135,8 +99,8 @@
             <div class="logo">CV Edi <span class="badge-pro">PRO</span></div>
             <div class="user-menu">
                 <span id="user-name-display">Usuário</span>
-                <button id="btn-admin-config" class="btn-icon" onclick="abrirConfigAdmin()"
-                    style="display:none;">⚙️</button>
+                <button id="btn-admin-config" class="btn-icon" style="display:none;"
+                    onclick="abrirConfigAdmin()">⚙️</button>
                 <button class="btn-icon" onclick="fazerLogout()">🚪</button>
             </div>
         </header>
@@ -145,22 +109,10 @@
             <div class="sidebar-paineis">
                 <details open>
                     <summary>✨ Importação Mágica</summary>
-                    <div class="p-15">
-                        <textarea id="texto-extracao" class="input-base" rows="4"
-                            placeholder="Cole aqui seu LinkedIn ou CV antigo..."></textarea>
-                        <button class="btn-base btn-primary" onclick="fluxoNovo()">Extrair Dados com IA</button>
-                    </div>
-                </details>
-
-                <details>
-                    <summary>🎯 Adaptar para Vaga</summary>
-                    <div class="p-15">
-                        <textarea id="texto-vaga" class="input-base" rows="4"
-                            placeholder="Cole a descrição da vaga aqui..."></textarea>
-                        <div class="grid-2">
-                            <button class="btn-base" onclick="adaptarCV('simples')">Adaptação Direta</button>
-                            <button class="btn-base btn-primary" onclick="adaptarCV('agressivo')">Foco em ATS</button>
-                        </div>
+                    <div style="padding:15px;">
+                        <textarea id="texto-extracao" class="input-base" rows="5"
+                            placeholder="Cole seu LinkedIn..."></textarea>
+                        <button class="btn-base btn-primary" onclick="fluxoNovo()">Extrair com IA</button>
                     </div>
                 </details>
             </div>
@@ -169,16 +121,12 @@
                 <div id="curriculo-wrapper">
                     <div id="curriculo">
                         <h2 id="nomePreview">NOME COMPLETO</h2>
-                        <div id="contatoPreview" class="contato-line">Seus contatos aqui...</div>
-                        <div class="secao-titulo">Resumo Profissional</div>
+                        <div id="contatoPreview">...</div>
                         <div id="preRes"></div>
-                        <div class="secao-titulo">Experiência</div>
                         <div id="preExp"></div>
                     </div>
                 </div>
-                <div class="acoes-bottom">
-                    <button class="btn-base btn-primary" onclick="gerarPDF()">Baixar PDF</button>
-                </div>
+                <button class="btn-base btn-primary" onclick="gerarPDF()">Baixar PDF</button>
             </div>
         </main>
     </div>
@@ -186,7 +134,7 @@
     <div id="modal-admin" class="modal-overlay" style="display:none; z-index: 9999;">
         <div class="modal-content admin-panel">
             <div class="modal-header">
-                <h2>⚙️ Configurações de IA</h2>
+                <h2>Configurações da IA</h2>
                 <button class="btn-fechar" onclick="this.closest('.modal-overlay').style.display='none'">×</button>
             </div>
 
@@ -196,9 +144,9 @@
                 <button class="tab-btn" onclick="alternarAbasAdmin('tab-prompts-ats')">🎯 ATS</button>
             </div>
 
-            <div class="tabs-body" style="max-height: 60vh; overflow-y: auto; padding: 0 15px;">
+            <div class="tabs-body" style="max-height: 60vh; overflow-y: auto; padding: 15px;">
                 <div id="tab-modelos" class="tab-content active">
-                    <p><small>Sincronizado em:</small> <strong id="sync-data-hora">--</strong></p>
+                    <p><small>Última Sincronização:</small> <strong id="sync-data-hora">--</strong></p>
                     <div id="historico-modelos-ia"></div>
                 </div>
 
@@ -210,7 +158,7 @@
                 </div>
 
                 <div id="tab-prompts-ats" class="tab-content">
-                    <label>Prompt Motor ATS:</label>
+                    <label>Motor ATS:</label>
                     <textarea id="cfg-prompt-ats" class="input-base" rows="5"></textarea>
                     <label>Validação de Vaga:</label>
                     <textarea id="cfg-prompt-validacao" class="input-base" rows="3"></textarea>
