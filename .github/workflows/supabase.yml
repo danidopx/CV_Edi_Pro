@@ -40,6 +40,8 @@ jobs:
           # Atualiza os links de cache de forma limpa
           sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
           sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
+          # Service Worker: mesmo CACHE_ID que o index → precache novo e limpa caches antigos
+          sed -i "s|const CACHE_NAME = '[^']*';|const CACHE_NAME = 'cv-edi-pro-v$CACHE_ID';|" public/sw.js
           
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
