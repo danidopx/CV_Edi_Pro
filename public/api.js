@@ -66,8 +66,8 @@ export async function processarIA(promptContent) {
         });
 
         if (!response.ok) {
-            const erroVercel = await response.text();
-            throw new Error(`Falha na API interna (Status ${response.status}): ${erroVercel}`);
+            const corpoErro = await response.text();
+            throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
         }
 
         const dataResp = await response.json();

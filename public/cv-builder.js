@@ -216,10 +216,12 @@ export async function fluxoLista() {
             ? '<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>'
             : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
 
-        let dataHoraTxt = 'Data desconhecida';
+        let linhaAtualizado = 'Atualizado: —';
         if (item.conteudo && item.conteudo.data_atualizacao) {
             const d = new Date(item.conteudo.data_atualizacao);
-            dataHoraTxt = `Atualizado: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+            const data = d.toLocaleDateString('pt-BR');
+            const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            linhaAtualizado = `Atualizado: ${data} às ${hora}`;
         }
 
         const card = document.createElement('div');
@@ -227,7 +229,7 @@ export async function fluxoLista() {
         card.innerHTML = `
                 <div style="flex:1; min-width: 150px; cursor:pointer;" onclick="carregar('${item.identificador}')">
                     <strong style="display:block; font-size: 15px;">${item.identificador}</strong>
-                    <span style="font-size: 11px; color: var(--text-light); margin-top: 5px; display: block;">🗓️ ${dataHoraTxt}</span>
+                    <span style="font-size: 11px; color: var(--text-light); margin-top: 5px; display: block;">${linhaAtualizado}</span>
                 </div>
                 <div style="display:flex; gap:10px; align-items: center; flex-wrap: wrap;">
                     ${btnPadrao}
@@ -267,12 +269,13 @@ export async function salvar() {
     const id = appState.idAtual || prompt('Nome do currículo (ex: TI Banco Itaú):');
     if (!id) return;
     const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
+    const dataAtualizacao = new Date().toISOString();
     const payload = {
         identificador: id,
         user_id: appState.usuarioAtual.id,
         conteudo: {
             origem: appState.origemAtual,
-            data_atualizacao: new Date().toISOString(),
+            data_atualizacao: dataAtualizacao,
             analise_ats: appState.analiseAtsAtual,
             vaga_original: appState.vagaOriginalAtual,
             pessoais: {
