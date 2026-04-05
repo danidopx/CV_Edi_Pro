@@ -419,7 +419,8 @@ window.addEventListener('load', async () => {
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
         if (idVagaPendente || textoMobilePendente) {
-            setTimeout(() => showToast("Faça login ou crie sua conta para concluir a importação da vaga!"), 1000);
+            logDebug("Exibindo alerta de login obrigatório para o usuário.");
+            alert("⚠️ VAGA CAPTURADA E AGUARDANDO PROCESSAMENTO!\n\nFaça o login ou crie sua conta agora para que a Inteligência Artificial possa preencher o seu currículo.");
         }
         irPara('tela-landing');
     }
@@ -790,7 +791,8 @@ async function fluxoLista() {
 
     const padraoId = localStorage.getItem('cv_padrao_' + usuarioAtual.id);
 
-    const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', usuarioAtual.id).order('identificador', { ascending: true });
+    // Alterado para buscar também o conteudo onde está a data
+    const { data, error } = await sb.from('curriculos_saas').select('identificador, conteudo').eq('user_id', usuarioAtual.id).order('identificador', { ascending: true });
     grid.innerHTML = "";
 
     if (!data || data.length === 0) { grid.innerHTML = "<p>Nenhum currículo salvo.</p>"; return; }
@@ -807,9 +809,19 @@ async function fluxoLista() {
             ? `<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>`
             : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
 
+        // FORMATANDO A DATA DE ATUALIZAÇÃO
+        let dataHoraTxt = "Data desconhecida";
+        if (item.conteudo && item.conteudo.data_atualizacao) {
+            const d = new Date(item.conteudo.data_atualizacao);
+            dataHoraTxt = `Atualizado: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
         const card = document.createElement('div'); card.className = "card-salvo";
         card.innerHTML = `
-                <strong style="cursor:pointer; flex:1; min-width: 150px;" onclick="carregar('${item.identificador}')">${item.identificador}</strong>
+                <div style="flex:1; min-width: 150px; cursor:pointer;" onclick="carregar('${item.identificador}')">
+                    <strong style="display:block; font-size: 15px;">${item.identificador}</strong>
+                    <span style="font-size: 11px; color: var(--text-light); margin-top: 5px; display: block;">🗓️ ${dataHoraTxt}</span>
+                </div>
                 <div style="display:flex; gap:10px; align-items: center; flex-wrap: wrap;">
                     ${btnPadrao}
                     <button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:12px;" onclick="duplicar('${item.identificador}')">📑 Duplicar</button>
@@ -839,8 +851,9 @@ async function salvar() {
         identificador: id, user_id: usuarioAtual.id,
         conteudo: {
             origem: origemAtual,
-            analise_ats: analiseAtsAtual, // Salva o resultado do ATS
-            vaga_original: vagaOriginalAtual, // Guarda a vaga para recalcular no futuro
+            data_atualizacao: new Date().toISOString(), // <-- DATA/HORA SENDO SALVA AQUI
+            analise_ats: analiseAtsAtual,
+            vaga_original: vagaOriginalAtual,
             pessoais: { nome: getValSafe('inNome'), data: getValSafe('inData'), idade: getValSafe('inIdade'), cep: getValSafe('inCep'), end: getValSafe('inEnd'), email: getValSafe('inEmail'), whats: getValSafe('inWhats'), linkedin: getValSafe('inLinkedin'), vaga: getValSafe('inVaga'), status: getValSafe('inStatus'), pretensao: getValSafe('inPretensao'), mostrarPretensao: document.getElementById('chkPretensao')?.checked },
             resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()),
             experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({ cargo: el.querySelector('.exp-header span:first-child').innerText, data: el.querySelector('.exp-header span:last-child').innerText, empresa: el.querySelector('.exp-empresa').innerText, desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim() })),
@@ -854,9 +867,7 @@ async function salvar() {
         idAtual = id;
         localStorage.setItem('cvRecuperacao', idAtual);
         const sn = document.getElementById('status-nome'); if (sn) sn.innerText = "📄 Currículo: " + id;
-
-        temAlteracoesNaoSalvas = false; // Desbloqueia fechamento seguro
-
+        temAlteracoesNaoSalvas = false;
         showToast();
     } else { alert("Erro ao salvar."); }
 }
@@ -972,7 +983,11 @@ async function processarIA(promptContent) {
             body: JSON.stringify({ prompt: promptContent, modelo: modeloIAPreferido })
         });
 
-        if (!response.ok) throw new Error("Falha na API interna.");
+        // SE A VERCEL DERRUBAR O REQUEST, CAPTURA O MOTIVO REAL!
+        if (!response.ok) {
+            const erroVercel = await response.text();
+            throw new Error(`Falha na API interna (Status ${response.status}): ${erroVercel}`);
+        }
 
         const dataResp = await response.json();
         respostaBruta = dataResp.candidates[0].content.parts[0].text;
@@ -992,6 +1007,7 @@ async function processarIA(promptContent) {
             throw new Error("Erro JSON.");
         }
     } catch (err) {
+        logDebug(`[ERRO IA] ${err.message}`, true); // MANDA O DETALHE PRO LOG
         throw err;
     }
 }
@@ -1134,7 +1150,7 @@ async function ajustarCurriculoVaga() {
 
         let matchOrigem = textoVaga.match(/\[ORIGEM DA VAGA: (.*?)\]/);
         if (matchOrigem) {
-            origemAtual = `Extração Nativa (${matchOrigem[1]})`;
+            origemAtual = `Adaptado da vaga (${matchOrigem[1]})`;
         } else {
             origemAtual = `Adaptado da vaga (Texto copiado)`;
         }
