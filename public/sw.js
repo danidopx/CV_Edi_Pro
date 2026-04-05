@@ -1,5 +1,5 @@
 /** Em push na main, o workflow GitHub substitui este valor pelo CACHE_ID (igual ao ?v= do index.html). */
-const CACHE_NAME = 'cv-edi-pro-v10589';
+const CACHE_NAME = 'cv-edi-pro-v16043';
 
 const PRECACHE_URLS = [
     '/',
