@@ -40,56 +40,39 @@ export function atualizarInfosUsuarioTopo() {
 // --- GESTÃO DE ABAS DO PAINEL ADMIN (CORREÇÃO DA ABA INACESSÍVEL) ---
 
 export function alternarAbasAdmin(tabId) {
-    // 1. Remove classes ativas de todos os conteúdos e esconde
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.style.display = 'none';
-        content.classList.remove('active');
+    // 1. Esconde todos os conteúdos
+    document.querySelectorAll('.tab-content').forEach(c => {
+        c.style.display = 'none';
+        c.classList.remove('active');
     });
+    // 2. Remove destaque dos botões
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-    // 2. Remove destaque de todos os botões de aba
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    // 3. Ativa o conteúdo da aba selecionada
-    const targetTab = document.getElementById(tabId);
-    if (targetTab) {
-        targetTab.style.display = 'block';
-        targetTab.classList.add('active');
+    // 3. Ativa a aba e o botão corretos
+    const target = document.getElementById(tabId);
+    if (target) {
+        target.style.display = 'block';
+        target.classList.add('active');
     }
-
-    // 4. Ativa visualmente o botão correspondente
-    // Busca o botão que contém o ID da aba no atributo onclick
-    const activeBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
-    if (activeBtn) activeBtn.classList.add('active');
+    const btn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+    if (btn) btn.classList.add('active');
 }
 
-// --- CONFIGURAÇÕES DA IA ---
-
 export function abrirConfigAdmin() {
-    // 1. Carrega Histórico de Modelos do LocalStorage
-    const listaModelos = JSON.parse(localStorage.getItem('cache_modelos_lista') || '[]');
-    const dataSinc = localStorage.getItem('cache_modelos_data') || 'Não sincronizado';
+    // Carrega dados do histórico de modelos
+    const lista = JSON.parse(localStorage.getItem('cache_modelos_lista') || '[]');
+    const dataH = localStorage.getItem('cache_modelos_data') || '--';
 
-    const spanData = document.getElementById('sync-data-hora');
-    if (spanData) spanData.innerText = dataSinc;
+    document.getElementById('sync-data-hora').innerText = dataH;
+    document.getElementById('historico-modelos-ia').innerHTML = lista.map(m => `<div class="model-item-badge">${m}</div>`).join('');
 
-    const containerModelos = document.getElementById('historico-modelos-ia');
-    if (containerModelos) {
-        containerModelos.innerHTML = listaModelos.length > 0
-            ? listaModelos.map(m => `<div class="model-item-badge">${m}</div>`).join('')
-            : '<p>Nenhum modelo em cache. Sincronize com a API.</p>';
-    }
-
-    // 2. Preenche os Prompts (Usa o salvo ou o padrão do config.js)
+    // Preenche os prompts com o que está no localStorage ou o padrão do config.js
     setValSafe('cfg-prompt-simples', localStorage.getItem('prompt_simples') || DEFAULT_PROMPT_SIMPLES);
     setValSafe('cfg-prompt-agressivo', localStorage.getItem('prompt_agressivo') || DEFAULT_PROMPT_AGRESSIVO);
     setValSafe('cfg-prompt-ats', localStorage.getItem('prompt_ats') || DEFAULT_PROMPT_ATS);
     setValSafe('cfg-prompt-validacao', localStorage.getItem('prompt_validacao') || DEFAULT_PROMPT_VALIDACAO);
 
-    // 3. Exibe o Modal e garante a primeira aba ativa
-    const modal = document.getElementById('modal-admin');
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('modal-admin').style.display = 'flex';
     alternarAbasAdmin('tab-modelos');
 }
 
