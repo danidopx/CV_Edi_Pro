@@ -1,39 +1,59 @@
-# CV Edi Pro 📄✨
+# 📝 CV Edi PRO - Gerador de Currículos com IA
 
-O **CV Edi Pro** é uma aplicação SaaS (Software as a Service) projetada para automatizar, otimizar e validar a criação de currículos através do poder da Inteligência Artificial Generativa.
+O **CV Edi PRO** é uma aplicação PWA (Progressive Web App) desenvolvida para automatizar a criação e adaptação de currículos utilizando Inteligência Artificial (Google Gemini). O sistema extrai dados de textos brutos e os adapta estrategicamente para vagas específicas, focando em aprovação em sistemas de triagem (ATS).
 
-O sistema permite que os usuários fujam da formatação manual tradicional, extraiam dados de arquivos antigos com um clique, ajustem perfeitamente seus currículos para vagas específicas e obtenham um Score ATS (Applicant Tracking System) antes da candidatura.
+---
 
-## 🚀 Funcionalidades Principais
+## 🚀 Tecnologias e Arquitetura
 
-* **Extração Mágica (IA):** Transforma textos brutos de currículos antigos ou perfis do LinkedIn em dados estruturados automaticamente.
-* **Ajuste Cirúrgico à Vaga:** Cruza os dados do perfil do candidato com a descrição da vaga, reescrevendo o currículo para garantir a maior aderência possível com as palavras-chave buscadas pelo RH.
-* **Análise de Score ATS:** Avaliação assíncrona gerada por IA que simula um robô de triagem, fornecendo pontuação de 0 a 100, risco de eliminação, identificação de "gaps" (lacunas) e sugestões de melhoria.
-* **Currículo "Patrão" (Padrão):** Sistema de favoritamento de currículos base para agilizar fluxos repetitivos.
-* **Exportação Profissional:** Geração de arquivos PDF com design limpo, tipografia moderna e paginação inteligente.
-* **PWA / Mobile First:** Interface totalmente adaptada para dispositivos móveis, com recurso de ampliação em tela cheia (zoom) para edição e compatibilidade de instalação como aplicativo (PWA).
+### **Frontend**
+* **Linguagens:** HTML5, CSS3, JavaScript Vanilla (ES6 Modules).
+* **Bibliotecas:** * [Supabase JS](https://supabase.com/docs/reference/javascript/introduction): Autenticação e Banco de Dados.
+    * [jsPDF](https://github.com/parallax/jsPDF): Geração de PDFs no lado do cliente.
+* **PWA:** Service Worker (`sw.js`) para cache offline e Manifesto para instalação mobile.
 
-## 🛠️ Stack Tecnológico
+### **Backend & Infraestrutura**
+* **Hospedagem:** [Vercel](https://vercel.com/).
+* **Serverless Functions:** Localizadas em `/api/ia.js` para processamento seguro de chamadas à API do Google Gemini.
+* **Banco de Dados:** Supabase (PostgreSQL) com Row Level Security (RLS) ativo.
 
-A arquitetura atual foi projetada para altíssima velocidade de carregamento, utilizando uma abordagem Serverless Monolítica no front-end:
+---
 
-* **Front-end:** HTML5, CSS3, Vanilla JavaScript (ES6+).
-* **BaaS (Backend as a Service):** Supabase (Autenticação, PostgreSQL, Funções RPC).
-* **Inteligência Artificial:** Google Gemini API (`gemini-1.5-flash`).
-* **Geração de PDF:** `jsPDF`.
-* **Deploy:** Vercel.
+## 🛠️ Estrutura de Arquivos
 
-## ⚙️ Estrutura do Projeto
+* `index.html`: Gerenciador de telas (Landing, Login, Editor) via IDs.
+* `config.js`: Central de constantes, chaves públicas e Prompts Base da IA.
+* `api.js`: Gerencia a comunicação com a Vercel Function e logs de debug.
+* `auth.js`: Lógica de autenticação Supabase e permissões de Administrador.
+* `cv-builder.js`: Core da lógica de construção do currículo e integração ATS.
+* `ui.js`: Manipulação de DOM, temas (dark/light) e máscaras de interface.
+* `pdf.js`: Configurações de layout e exportação do documento PDF.
 
-* `index.html`: Core da aplicação contendo toda a interface de usuário, lógicas de transição de estado e requisições para a API do Supabase e Google Gemini.
-* `sw.js`: Service Worker responsável pelo cache de assets e comportamento PWA.
-* `manifest.json`: Diretivas de instalação do aplicativo mobile/desktop.
+---
 
-## 🔒 Segurança e Tratamento de Dados
+## 🔑 Configurações Necessárias (Vercel)
 
-* Rate Limiting manual aplicado na interface gráfica para evitar estresse de API e custos desnecessários em chamadas de IA.
-* Proteção contra perda de dados via evento `beforeunload`, impedindo navegações acidentais com modificações não salvas no editor.
-* Painel Administrativo com controle de bloqueio e exclusão de contas, além de gestão dinâmica dos Prompts de IA diretamente do painel do criador.
+Para o funcionamento da IA, as seguintes variáveis de ambiente devem estar configuradas no painel da Vercel:
+* `GEMINI_KEY`: Sua chave de API do Google AI Studio.
 
-## 📌 Versão Atual
-**v1.1.18** - Implementação de processamento assíncrono de ATS, UX otimizada no painel de edição e gestão de currículos padrão.
+---
+
+## 🧠 Lógica de Prompts (IA)
+
+O sistema utiliza quatro motores principais de processamento:
+1.  **Extração:** Converte texto do LinkedIn/CV antigo em JSON estruturado.
+2.  **Adaptação Simples:** Ajusta o resumo e competências para uma vaga.
+3.  **Adaptação Agressiva (ATS):** Otimiza o currículo com palavras-chave estratégicas.
+4.  **Análise ATS:** Gera um score de 0 a 100 e fornece feedback de melhorias.
+
+---
+
+## 🛡️ Notas de Desenvolvimento (Importante)
+
+1.  **Segurança:** Nunca coloque chaves privadas ou a `GEMINI_KEY` no `config.js`. Use sempre a rota `/api/ia`.
+2.  **Manutenção de Telas:** A navegação é feita via `irPara(idTela)`. Certifique-se de que cada nova seção no `index.html` possua a classe `.tela`.
+3.  **Cache:** Ao realizar alterações no HTML/CSS, incremente a versão do cache no `sw.js` e a query string no `index.html` (ex: `v=123`) para forçar a atualização nos dispositivos dos usuários.
+4.  **Admin:** Funções administrativas são liberadas apenas para o e-mail: `dop.jr82@gmail.com`.
+
+---
+Criado por [Daniel](https://github.com/danidopx) - 2026
