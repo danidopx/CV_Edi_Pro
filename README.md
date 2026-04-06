@@ -46,14 +46,6 @@ O sistema utiliza quatro motores principais de processamento:
 3.  **Adaptação Agressiva (ATS):** Otimiza o currículo com palavras-chave estratégicas.
 4.  **Análise ATS:** Gera um score de 0 a 100 e fornece feedback de melhorias.
 
----
-
-## 🛡️ Notas de Desenvolvimento (Importante)
-
-1.  **Segurança:** Nunca coloque chaves privadas ou a `GEMINI_KEY` no `config.js`. Use sempre a rota `/api/ia`.
-2.  **Manutenção de Telas:** A navegação é feita via `irPara(idTela)`. Certifique-se de que cada nova seção no `index.html` possua a classe `.tela`.
-3.  **Cache:** Ao realizar alterações no HTML/CSS, incremente a versão do cache no `sw.js` e a query string no `index.html` (ex: `v=123`) para forçar a atualização nos dispositivos dos usuários.
-4.  **Admin:** Funções administrativas são liberadas apenas para o e-mail: `dop.jr82@gmail.com`.
 
 ---
 Criado por [Daniel](https://github.com/danidopx) - 2026
