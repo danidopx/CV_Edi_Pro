@@ -6,6 +6,7 @@ import {
     DEFAULT_PROMPT_AGRESSIVO,
     DEFAULT_PROMPT_ATS
 } from './config.js';
+import { carregarPromptIA, PROMPT_NAMES } from './api.js';
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
 
 export function validarSenha(senha) {
@@ -50,15 +51,21 @@ export async function atualizarNomeConta() {
     }
 }
 
-export function abrirConfigAdmin() {
-    setValSafe('admin-prompt-simples', localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
-    setValSafe('admin-prompt-agressivo', localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO);
-    setValSafe('admin-prompt-ats', localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS);
+export async function abrirConfigAdmin() {
+    const [promptSimples, promptAgressivo, promptAts] = await Promise.all([
+        carregarPromptIA(PROMPT_NAMES.simples, { logMissing: false }),
+        carregarPromptIA(PROMPT_NAMES.agressivo, { logMissing: false }),
+        carregarPromptIA(PROMPT_NAMES.ats, { logMissing: false })
+    ]);
+
+    setValSafe('admin-prompt-simples', promptSimples?.prompt_content || localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
+    setValSafe('admin-prompt-agressivo', promptAgressivo?.prompt_content || localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO);
+    setValSafe('admin-prompt-ats', promptAts?.prompt_content || localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS);
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
     document.getElementById('modal-admin').style.display = 'flex';
 }
 
-export function salvarConfigAdmin() {
+export async function salvarConfigAdmin() {
     const pS = getValSafe('admin-prompt-simples').trim();
     const pA = getValSafe('admin-prompt-agressivo').trim();
     const pATS = getValSafe('admin-prompt-ats').trim();
@@ -69,6 +76,41 @@ export function salvarConfigAdmin() {
         localStorage.setItem('adminPromptAgressivo', pA);
         localStorage.setItem('adminPromptAts', pATS);
         if (emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
+
+        const adminId = appState.usuarioAtual?.id || null;
+        const promptsParaSalvar = [
+            {
+                prompt_name: PROMPT_NAMES.simples,
+                prompt_content: pS,
+                description: 'Prompt base do ajuste simples',
+                user_id: adminId,
+                is_system_prompt: true
+            },
+            {
+                prompt_name: PROMPT_NAMES.agressivo,
+                prompt_content: pA,
+                description: 'Prompt base do ajuste agressivo',
+                user_id: adminId,
+                is_system_prompt: true
+            },
+            {
+                prompt_name: PROMPT_NAMES.ats,
+                prompt_content: pATS,
+                description: 'Prompt base da analise ATS',
+                user_id: adminId,
+                is_system_prompt: true
+            }
+        ];
+
+        const { error } = await sb
+            .from('ai_prompts')
+            .upsert(promptsParaSalvar, { onConflict: 'prompt_name' });
+
+        if (error) {
+            alert('Erro ao salvar prompts no banco: ' + error.message);
+            return;
+        }
+
         document.getElementById('modal-admin').style.display = 'none';
         showToast();
     } else {

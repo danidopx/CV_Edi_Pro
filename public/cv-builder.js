@@ -1,5 +1,5 @@
 import { sb, appState, DEFAULT_PROMPT_SIMPLES, DEFAULT_PROMPT_AGRESSIVO, DEFAULT_PROMPT_ATS } from './config.js';
-import { logDebug, processarIA } from './api.js';
+import { carregarPromptIA, logDebug, processarIA, PROMPT_NAMES } from './api.js';
 import {
     getValSafe,
     setValSafe,
@@ -505,7 +505,9 @@ export async function extrairDadosIA() {
 async function gerarAtsEmSegundoPlano(textoVaga, curriculoAdaptado, abrirPainel = true) {
     mostrarCarregamentoATS(abrirPainel);
     try {
-        const promptAtsBase = localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS;
+        const promptAtsBase = (await carregarPromptIA(PROMPT_NAMES.ats, { logMissing: false }))?.prompt_content
+            || localStorage.getItem('adminPromptAts')
+            || DEFAULT_PROMPT_ATS;
         const promptFinalAts = promptAtsBase.replace('{{VAGA}}', textoVaga).replace('{{CURRICULO}}', JSON.stringify(curriculoAdaptado));
 
         const resultadoAts = await processarIA(promptFinalAts);
@@ -601,9 +603,12 @@ export async function ajustarCurriculoVaga() {
             }) : [],
             habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : []
         };
+        const promptAgressivoDb = await carregarPromptIA(PROMPT_NAMES.agressivo, { logMissing: false });
+        const promptSimplesDb = await carregarPromptIA(PROMPT_NAMES.simples, { logMissing: false });
+
         const basePrompt = nivelAjuste === 'agressivo'
-            ? (localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO)
-            : (localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
+            ? (promptAgressivoDb?.prompt_content || localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO)
+            : (promptSimplesDb?.prompt_content || localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
 
         const promptAjustado = basePrompt + ' STATUS FORMAÇÃO: Obrigatório manter/reescrever para um dos: "Concluído", "Cursando", "Trancado".';
 
