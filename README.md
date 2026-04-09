@@ -1,39 +1,122 @@
-# CV Edi Pro 📄✨
+# 📝 CV Edi PRO - Gerador de Currículos com IA
 
-O **CV Edi Pro** é uma aplicação SaaS (Software as a Service) projetada para automatizar, otimizar e validar a criação de currículos através do poder da Inteligência Artificial Generativa.
+O **CV Edi PRO** é uma aplicação PWA (Progressive Web App) desenvolvida para automatizar a criação e adaptação de currículos utilizando Inteligência Artificial (Google Gemini). O sistema extrai dados de textos brutos e os adapta estrategicamente para vagas específicas, focando em aprovação em sistemas de triagem (ATS).
 
-O sistema permite que os usuários fujam da formatação manual tradicional, extraiam dados de arquivos antigos com um clique, ajustem perfeitamente seus currículos para vagas específicas e obtenham um Score ATS (Applicant Tracking System) antes da candidatura.
+---
 
-## 🚀 Funcionalidades Principais
+## 🚀 Tecnologias e Arquitetura
 
-* **Extração Mágica (IA):** Transforma textos brutos de currículos antigos ou perfis do LinkedIn em dados estruturados automaticamente.
-* **Ajuste Cirúrgico à Vaga:** Cruza os dados do perfil do candidato com a descrição da vaga, reescrevendo o currículo para garantir a maior aderência possível com as palavras-chave buscadas pelo RH.
-* **Análise de Score ATS:** Avaliação assíncrona gerada por IA que simula um robô de triagem, fornecendo pontuação de 0 a 100, risco de eliminação, identificação de "gaps" (lacunas) e sugestões de melhoria.
-* **Currículo "Patrão" (Padrão):** Sistema de favoritamento de currículos base para agilizar fluxos repetitivos.
-* **Exportação Profissional:** Geração de arquivos PDF com design limpo, tipografia moderna e paginação inteligente.
-* **PWA / Mobile First:** Interface totalmente adaptada para dispositivos móveis, com recurso de ampliação em tela cheia (zoom) para edição e compatibilidade de instalação como aplicativo (PWA).
+### **Frontend**
+* **Linguagens:** HTML5, CSS3, JavaScript Vanilla (ES6 Modules).
+* **Bibliotecas:** * [Supabase JS](https://supabase.com/docs/reference/javascript/introduction): Autenticação e Banco de Dados.
+    * [jsPDF](https://github.com/parallax/jsPDF): Geração de PDFs no lado do cliente.
+* **PWA:** Service Worker (`sw.js`) para cache offline e Manifesto para instalação mobile.
 
-## 🛠️ Stack Tecnológico
+### **Backend & Infraestrutura**
+* **Hospedagem:** [Vercel](https://vercel.com/).
+* **Serverless Functions:** Localizadas em `/api/ia.js` para processamento seguro de chamadas à API do Google Gemini.
+* **Banco de Dados:** Supabase (PostgreSQL) com Row Level Security (RLS) ativo.
 
-A arquitetura atual foi projetada para altíssima velocidade de carregamento, utilizando uma abordagem Serverless Monolítica no front-end:
+---
 
-* **Front-end:** HTML5, CSS3, Vanilla JavaScript (ES6+).
-* **BaaS (Backend as a Service):** Supabase (Autenticação, PostgreSQL, Funções RPC).
-* **Inteligência Artificial:** Google Gemini API (`gemini-1.5-flash`).
-* **Geração de PDF:** `jsPDF`.
-* **Deploy:** Vercel.
+## 🛠️ Estrutura de Arquivos
 
-## ⚙️ Estrutura do Projeto
+* `index.html`: Gerenciador de telas (Landing, Login, Editor) via IDs.
+* `config.js`: Central de constantes, chaves públicas e Prompts Base da IA.
+* `api.js`: Gerencia a comunicação com a Vercel Function e logs de debug.
+* `auth.js`: Lógica de autenticação Supabase e permissões de Administrador.
+* `cv-builder.js`: Core da lógica de construção do currículo e integração ATS.
+* `ui.js`: Manipulação de DOM, temas (dark/light) e máscaras de interface.
+* `pdf.js`: Configurações de layout e exportação do documento PDF.
 
-* `index.html`: Core da aplicação contendo toda a interface de usuário, lógicas de transição de estado e requisições para a API do Supabase e Google Gemini.
-* `sw.js`: Service Worker responsável pelo cache de assets e comportamento PWA.
-* `manifest.json`: Diretivas de instalação do aplicativo mobile/desktop.
+---
 
-## 🔒 Segurança e Tratamento de Dados
+## 🔑 Configurações Necessárias (Vercel)
 
-* Rate Limiting manual aplicado na interface gráfica para evitar estresse de API e custos desnecessários em chamadas de IA.
-* Proteção contra perda de dados via evento `beforeunload`, impedindo navegações acidentais com modificações não salvas no editor.
-* Painel Administrativo com controle de bloqueio e exclusão de contas, além de gestão dinâmica dos Prompts de IA diretamente do painel do criador.
+Para o funcionamento da IA, as seguintes variáveis de ambiente devem estar configuradas no painel da Vercel:
+* `GEMINI_KEY`: Sua chave de API do Google AI Studio.
 
-## 📌 Versão Atual
-**v1.1.18** - Implementação de processamento assíncrono de ATS, UX otimizada no painel de edição e gestão de currículos padrão.
+---
+
+## 🧠 Lógica de Prompts (IA)
+
+O sistema utiliza quatro motores principais de processamento:
+1.  **Extração:** Converte texto do LinkedIn/CV antigo em JSON estruturado.
+2.  **Adaptação Simples:** Ajusta o resumo e competências para uma vaga.
+3.  **Adaptação Agressiva (ATS):** Otimiza o currículo com palavras-chave estratégicas.
+4.  **Análise ATS:** Gera um score de 0 a 100 e fornece feedback de melhorias.
+
+
+---
+
+Dossiê Técnico: CV Edi Pro
+1. Visão Geral da Arquitetura
+O projeto é um PWA (Progressive Web App) de página única (SPA), onde a navegação entre a Landing Page, o Login e o Editor acontece via manipulação de visibilidade de elementos no DOM, sem recarregar a página.
+
+Frontend: HTML5, CSS3 (Variáveis nativas), JavaScript Vanilla (ES6 Modules).
+
+Backend Serverless: Vercel Functions (Node.js) para chamadas seguras de IA.
+
+BaaS (Backend as a Service): Supabase (Auth, Database, RLS).
+
+2. Estrutura de Dados e Integrações
+Supabase (Banco de Dados)
+Tabela profiles: Dados estendidos do usuário (nome, preferências, metadados de onboarding).
+
+Tabela curriculos: Armazena objetos JSON contendo a estrutura completa do CV.
+
+Segurança (RLS): Toda tabela possui Row Level Security ativa, garantindo que o uid do usuário autenticado só acesse seus próprios registros.
+
+RPC: Existem funções PostgreSQL (RPC) como desativar_minha_conta chamadas via JS.
+
+Vercel Functions (IA)
+Rota: /api/ia.js
+
+Lógica: Recebe o prompt e o modelo do frontend, anexa a GEMINI_KEY (variável de ambiente oculta) e faz o fetch para a API do Google Gemini.
+
+Modelo Padrão: gemini-1.5-flash ou gemini-1.5-flash-latest.
+
+3. Lógica de Navegação e Estado (Frontend)
+Gerenciamento de Telas (ui.js e index.html)
+A navegação utiliza a função irPara(idTela).
+
+As telas principais são: tela-landing, tela-login, tela-editor e tela-onboarding.
+
+IMPORTANTE: Nunca crie novos arquivos .html. Toda nova funcionalidade deve ser uma div com a classe .tela dentro do index.html.
+
+Estado Global (config.js)
+O objeto appState centraliza o usuário atual, o ID do currículo em edição, o modelo de IA selecionado e o histórico de telas para a função "voltar".
+
+4. O "Cérebro" da IA (cv-builder.js e api.js)
+A aplicação depende da conversão de texto bruto em JSON estruturado.
+
+Processamento: O frontend envia um prompt para a API.
+
+Sanitização: A função processarIA em api.js limpa a resposta da IA (remove marcações de markdown como ```json) e faz o JSON.parse().
+
+Renderização: O JSON retornado preenche automaticamente os campos do editor e o preview visual.
+
+5. Regras de Ouro para a Próxima IA (Instruções de Programação)
+Para evitar quebras no código, a IA deve seguir estas diretrizes:
+
+Não altere a estrutura do modal de Login: O fluxo de autenticação (Google e e-mail) está vinculado a IDs específicos (login-email, login-senha).
+
+Preserve o Service Worker: Qualquer mudança em arquivos estáticos (JS, CSS, HTML) exige o incremento da constante CACHE_NAME no sw.js e da versão ?v=... nas importações do index.html.
+
+CSS Variável: Use as variáveis definidas no :root do style.css para manter a consistência do tema Dark/Light.
+
+Acesso Admin: A lógica de administrador é baseada no e-mail dop.jr82@gmail.com. Funções como abrirConfigAdmin() só devem ser renderizadas se este e-mail estiver logado.
+
+Tratamento de PDF: A função gerarPDF em pdf.js usa coordenadas fixas em mm (A4). Alterações no layout do CV no editor não refletem automaticamente no PDF sem ajuste manual das coordenadas no script.
+
+6. Configurações de Deploy (Vercel)
+Build Command: (Padrão/Vazio - projeto estático).
+
+Output Directory: . (Raiz).
+
+Environment Variables: É obrigatório configurar GEMINI_KEY no Dashboard da Vercel para que a extração mágica funcione.
+
+
+
+----
+Criado por [Daniel](https://github.com/danidopx) - 2026
