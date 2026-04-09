@@ -22,7 +22,7 @@ export const appState = {
     vagaOriginalAtual: '',
     origemAtual: 'Criado do zero',
     historicoTelas: [],
-    modeloIAPreferido: 'gemini-1.5-flash-latest',
+    modeloIAPreferido: 'gemini-2.5-flash',
     temAlteracoesNaoSalvas: false,
     passoTour: 0
 };

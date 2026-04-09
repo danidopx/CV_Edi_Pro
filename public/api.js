@@ -1,4 +1,38 @@
-import { appState } from './config.js';
+import { appState, sb } from './config.js';
+
+export const PROMPT_NAMES = {
+    simples: 'ajuste_simples',
+    agressivo: 'ajuste_agressivo',
+    ats: 'analise_ats'
+};
+
+const ORDEM_PREFERENCIA_MODELOS = [
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-pro'
+];
+
+function escolherModeloPreferido(modelosDisponiveis) {
+    for (const id of ORDEM_PREFERENCIA_MODELOS) {
+        if (modelosDisponiveis.includes(id)) {
+            return id;
+        }
+    }
+
+    return modelosDisponiveis[0] || null;
+}
+
+function erroDeModeloInvalido(mensagem) {
+    return typeof mensagem === 'string'
+        && (
+            mensagem.includes('is not found for API version')
+            || mensagem.includes('not supported for generateContent')
+        );
+}
 
 export function logDebug(mensagem, erro = false) {
     const timestamp = new Date().toLocaleTimeString();
@@ -41,23 +75,7 @@ export async function inicializarModeloIA() {
             const modelosDisponiveis = modelData.models
                 .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
                 .map(m => m.name.split('/')[1]);
-
-            const ordemPreferencia = [
-                'gemini-1.5-flash-latest',
-                'gemini-1.5-pro-latest',
-                'gemini-1.5-flash',
-                'gemini-pro'
-            ];
-            let escolhido = null;
-            for (const id of ordemPreferencia) {
-                if (modelosDisponiveis.includes(id)) {
-                    escolhido = id;
-                    break;
-                }
-            }
-            if (!escolhido && modelosDisponiveis.length > 0) {
-                escolhido = modelosDisponiveis[0];
-            }
+            const escolhido = escolherModeloPreferido(modelosDisponiveis);
             if (escolhido) {
                 appState.modeloIAPreferido = escolhido;
             }
@@ -68,18 +86,85 @@ export async function inicializarModeloIA() {
     }
 }
 
-export async function processarIA(promptContent) {
+export async function carregarPromptIA(promptName, { logMissing = true } = {}) {
+    const { data, error } = await sb
+        .from('ai_prompts')
+        .select('id, prompt_content')
+        .eq('prompt_name', promptName)
+        .single();
+
+    if (error) {
+        if (logMissing && error.code !== 'PGRST116') {
+            logDebug(`[ERRO Supabase] Falha ao buscar prompt '${promptName}': ${error.message}`, true);
+        }
+        return null;
+    }
+
+    return data;
+}
+
+export async function processarIA(promptOrContent, options = {}) {
     let respostaBruta = '';
+    let promptId = null;
+    let actualPromptContent = promptOrContent;
+
     try {
-        const response = await fetch('/api/ia', {
+        if (options.promptName) {
+            const promptData = await carregarPromptIA(options.promptName);
+            if (promptData) {
+                promptId = promptData.id;
+                actualPromptContent = promptData.prompt_content;
+            }
+        } else if (options.promptContentOverride) {
+            actualPromptContent = options.promptContentOverride;
+        } else if (options.promptNameFallback) {
+            const promptData = await carregarPromptIA(options.promptNameFallback, { logMissing: false });
+            if (promptData) {
+                promptId = promptData.id;
+                actualPromptContent = promptData.prompt_content;
+            }
+        }
+
+        if (options.transformPromptContent) {
+            actualPromptContent = options.transformPromptContent(actualPromptContent);
+        }
+
+        if (options.promptIdOverride) {
+            promptId = options.promptIdOverride;
+        }
+
+        if (options.promptRecord) {
+            const promptData = options.promptRecord;
+            promptId = promptData.id;
+            actualPromptContent = promptData.prompt_content;
+        }
+
+        const { data: { user } } = await sb.auth.getUser();
+        const userId = user?.id || null;
+
+        const executarRequisicaoIA = async () => fetch('/api/ia', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: promptContent, modelo: appState.modeloIAPreferido })
+            body: JSON.stringify({ prompt: actualPromptContent, modelo: appState.modeloIAPreferido })
         });
 
+        let response = await executarRequisicaoIA();
+
         if (!response.ok) {
-            const corpoErro = await response.text();
-            throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+            let corpoErro = await response.text();
+
+            if (response.status === 500 && erroDeModeloInvalido(corpoErro)) {
+                logDebug(`Modelo '${appState.modeloIAPreferido}' invalido. Atualizando lista de modelos e tentando novamente...`, true);
+                await inicializarModeloIA();
+                response = await executarRequisicaoIA();
+
+                if (!response.ok) {
+                    corpoErro = await response.text();
+                    throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+                }
+            } else {
+                throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+            }
         }
 
         const dataResp = await response.json();
@@ -88,22 +173,57 @@ export async function processarIA(promptContent) {
         const inicioJson = respostaBruta.indexOf('{');
         const fimJson = respostaBruta.lastIndexOf('}');
 
-        if (inicioJson === -1 || fimJson === -1) {
+        let parsedJson = null;
+        if (inicioJson !== -1 && fimJson !== -1) {
+            try {
+                parsedJson = JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
+            } catch (e) {
+                logDebug(`[ERRO JSON Parse] Falha ao fazer parse do JSON: ${e.message}`, true);
+            }
+        }
+
+        // 2. Log AI interaction to Supabase
+        const { error: logError } = await sb.from('ai_interactions').insert({
+            prompt_id: promptId,
+            model_used: appState.modeloIAPreferido,
+            input_content: actualPromptContent,
+            raw_response: respostaBruta,
+            parsed_response: parsedJson,
+            user_id: userId
+        });
+
+        if (logError) {
+            logDebug(`[ERRO Supabase] Falha ao logar interação da IA: ${logError.message}`, true);
+        }
+
+        if (!parsedJson) {
             const terr = document.getElementById('texto-bruto-erro');
             const merr = document.getElementById('modal-erro-ia');
             if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
-            throw new Error('Erro JSON.');
+            throw new Error('Erro JSON: Resposta da IA não contém JSON válido ou falha no parse.');
         }
-        try {
-            return JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
-        } catch (e) {
-            const terr = document.getElementById('texto-bruto-erro');
-            const merr = document.getElementById('modal-erro-ia');
-            if (terr && merr) { terr.value = respostaBruta; merr.style.display = 'flex'; }
-            throw new Error('Erro JSON.');
-        }
+
+        return parsedJson;
     } catch (err) {
         logDebug(`[ERRO IA] ${err.message}`, true);
+
+        // Still try to log the error interaction if possible
+        const { data: { user } } = await sb.auth.getUser();
+        const userId = user?.id || null;
+
+        const { error: logError } = await sb.from('ai_interactions').insert({
+            prompt_id: promptId,
+            model_used: appState.modeloIAPreferido,
+            input_content: actualPromptContent,
+            raw_response: respostaBruta, // Even if it's an error, log the raw response
+            parsed_response: null, // No parsed JSON on error
+            user_id: userId
+        });
+
+        if (logError) {
+            logDebug(`[ERRO Supabase] Falha ao logar interação de ERRO da IA: ${logError.message}`, true);
+        }
+
         throw err;
     }
 }
