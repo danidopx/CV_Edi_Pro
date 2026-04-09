@@ -1,6 +1,6 @@
 {
   "name": "cv-edi-pro",
-  "version": "0.0.22",
+  "version": "0.0.37",
   "private": true,
   "scripts": {
     "start": "vercel dev"
