@@ -9,6 +9,10 @@ import {
 import { carregarPromptIA, PROMPT_NAMES } from './api.js';
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
 
+function getAuthRedirectUrl() {
+    return window.location.origin;
+}
+
 export function validarSenha(senha) {
     return regexSenha.test(senha);
 }
@@ -248,7 +252,7 @@ export async function processarFormularioLogin() {
 export async function recuperarSenha() {
     const email = prompt('E-mail para recuperação:');
     if (!email) return;
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl() });
     if (error) {
         alert('Erro: ' + error.message);
     } else {
@@ -300,7 +304,10 @@ export async function solicitarExclusao() {
 export async function fazerLoginGoogle() {
     const msg = document.getElementById('msg-login');
     if (msg) msg.style.display = 'block';
-    const { error } = await sb.auth.signInWithOAuth({ provider: 'google' });
+    const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: getAuthRedirectUrl() }
+    });
     if (error) {
         alert('Erro: ' + error.message);
         if (msg) msg.style.display = 'none';
