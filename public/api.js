@@ -34,6 +34,22 @@ function erroDeModeloInvalido(mensagem) {
         );
 }
 
+function traduzirErroIA(status, mensagem) {
+    if (typeof mensagem !== 'string') {
+        return `Status HTTP ${status}: erro desconhecido na IA.`;
+    }
+
+    if (mensagem.includes('API_KEY_INVALID') || mensagem.includes('API Key not found')) {
+        return 'A chave da API Gemini parece inválida ou não chegou corretamente ao ambiente do Vercel.';
+    }
+
+    if (mensagem.includes('"status": "UNAVAILABLE"') || mensagem.includes('currently experiencing high demand')) {
+        return 'A API do Gemini está com alta demanda no momento. Tente novamente em alguns instantes.';
+    }
+
+    return `Status HTTP ${status}: ${mensagem}`;
+}
+
 export function logDebug(mensagem, erro = false) {
     const timestamp = new Date().toLocaleTimeString();
     const msgFormatada = `[${timestamp}] ${mensagem}`;
@@ -160,10 +176,10 @@ export async function processarIA(promptOrContent, options = {}) {
 
                 if (!response.ok) {
                     corpoErro = await response.text();
-                    throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+                    throw new Error(traduzirErroIA(response.status, corpoErro));
                 }
             } else {
-                throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+                throw new Error(traduzirErroIA(response.status, corpoErro));
             }
         }
 
