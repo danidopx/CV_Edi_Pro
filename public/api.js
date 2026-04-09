@@ -6,6 +6,34 @@ export const PROMPT_NAMES = {
     ats: 'analise_ats'
 };
 
+const ORDEM_PREFERENCIA_MODELOS = [
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+    'gemini-pro'
+];
+
+function escolherModeloPreferido(modelosDisponiveis) {
+    for (const id of ORDEM_PREFERENCIA_MODELOS) {
+        if (modelosDisponiveis.includes(id)) {
+            return id;
+        }
+    }
+
+    return modelosDisponiveis[0] || null;
+}
+
+function erroDeModeloInvalido(mensagem) {
+    return typeof mensagem === 'string'
+        && (
+            mensagem.includes('is not found for API version')
+            || mensagem.includes('not supported for generateContent')
+        );
+}
+
 export function logDebug(mensagem, erro = false) {
     const timestamp = new Date().toLocaleTimeString();
     const msgFormatada = `[${timestamp}] ${mensagem}`;
@@ -47,23 +75,7 @@ export async function inicializarModeloIA() {
             const modelosDisponiveis = modelData.models
                 .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
                 .map(m => m.name.split('/')[1]);
-
-            const ordemPreferencia = [
-                'gemini-1.5-flash-latest',
-                'gemini-1.5-pro-latest',
-                'gemini-1.5-flash',
-                'gemini-pro'
-            ];
-            let escolhido = null;
-            for (const id of ordemPreferencia) {
-                if (modelosDisponiveis.includes(id)) {
-                    escolhido = id;
-                    break;
-                }
-            }
-            if (!escolhido && modelosDisponiveis.length > 0) {
-                escolhido = modelosDisponiveis[0];
-            }
+            const escolhido = escolherModeloPreferido(modelosDisponiveis);
             if (escolhido) {
                 appState.modeloIAPreferido = escolhido;
             }
@@ -130,15 +142,29 @@ export async function processarIA(promptOrContent, options = {}) {
         const { data: { user } } = await sb.auth.getUser();
         const userId = user?.id || null;
 
-        const response = await fetch('/api/ia', {
+        const executarRequisicaoIA = async () => fetch('/api/ia', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: actualPromptContent, modelo: appState.modeloIAPreferido })
         });
 
+        let response = await executarRequisicaoIA();
+
         if (!response.ok) {
-            const corpoErro = await response.text();
-            throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+            let corpoErro = await response.text();
+
+            if (response.status === 500 && erroDeModeloInvalido(corpoErro)) {
+                logDebug(`Modelo '${appState.modeloIAPreferido}' invalido. Atualizando lista de modelos e tentando novamente...`, true);
+                await inicializarModeloIA();
+                response = await executarRequisicaoIA();
+
+                if (!response.ok) {
+                    corpoErro = await response.text();
+                    throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+                }
+            } else {
+                throw new Error(`Status HTTP ${response.status}: ${corpoErro}`);
+            }
         }
 
         const dataResp = await response.json();
