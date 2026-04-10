@@ -100,42 +100,37 @@ Payload:
 
 ## Testar com preview da Vercel
 
-1. Abra `popup.js`.
-2. Troque temporariamente:
+1. No topo de `popup.js`, deixe:
 
 ```js
-const SEU_SITE_URL = 'https://curriculo-edi.vercel.app';
+const MODO_CONFIGURACAO_AMBIENTE = true;
 ```
 
-por sua URL de preview, por exemplo:
+2. Recarregue a extensao em `chrome://extensions`.
+3. Abra o popup da extensao.
+4. No bloco `Ambiente de teste`, cole a URL de preview:
 
-```js
-const SEU_SITE_URL = 'https://sua-preview.vercel.app';
+```txt
+https://sua-preview.vercel.app
 ```
 
-3. Abra `manifest.json`.
-4. Adicione temporariamente a URL de preview em `host_permissions`:
+5. Clique em `Salvar`.
+6. Abra a URL de preview no mesmo Chrome e autentique/libere a tela da Vercel, se aparecer.
+7. Teste a captura em uma pagina de vaga.
 
-```json
-"host_permissions": [
-  "https://curriculo-edi.vercel.app/*",
-  "https://sua-preview.vercel.app/*"
-]
-```
-
-5. Recarregue a extensao em `chrome://extensions`.
-6. Teste a captura em uma pagina de vaga.
+O `manifest.json` ja permite `https://*.vercel.app/*` para facilitar previews sem editar arquivo.
 
 ## Voltar para producao
 
-1. Em `popup.js`, volte `SEU_SITE_URL` para:
+1. Abra o popup da extensao.
+2. Clique em `Producao`.
+3. Antes de publicar para usuarios finais, altere no topo de `popup.js`:
 
 ```js
-const SEU_SITE_URL = 'https://curriculo-edi.vercel.app';
+const MODO_CONFIGURACAO_AMBIENTE = false;
 ```
 
-2. Em `manifest.json`, remova a URL temporaria de preview.
-3. Recarregue a extensao em `chrome://extensions`.
+4. Recarregue a extensao em `chrome://extensions`.
 
 ## Variaveis de ambiente no backend
 

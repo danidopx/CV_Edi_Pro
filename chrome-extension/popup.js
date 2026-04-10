@@ -1,6 +1,6 @@
-const SEU_SITE_URL = 'https://curriculo-edi.vercel.app'; 
-const AI_VALIDATION_ENDPOINT = `${SEU_SITE_URL}/api/validar-vaga`;
-const SALVAR_VAGA_ENDPOINT = `${SEU_SITE_URL}/api/salvar-vaga`;
+const MODO_CONFIGURACAO_AMBIENTE = true;
+const SITE_PRODUCAO_URL = 'https://curriculo-edi.vercel.app';
+const STORAGE_SITE_URL_KEY = 'ediProSiteUrl';
 const MAX_TEXTO_VAGA_LENGTH = 8000;
 const MIN_TEXTO_VAGA_LENGTH = 80;
 const VALIDACAO_IA_PROMPT = `
@@ -18,6 +18,12 @@ Se valido, remova menus, rodapes, botoes, comentarios, textos repetidos e ruido 
 `;
 
 const btnCapturar = document.getElementById('btn-capturar');
+const configAmbiente = document.getElementById('config-ambiente');
+const inputSiteUrl = document.getElementById('input-site-url');
+const btnSalvarUrl = document.getElementById('btn-salvar-url');
+const btnUsarProducao = document.getElementById('btn-usar-producao');
+const ambienteAtual = document.getElementById('ambiente-atual');
+let siteUrlAtual = SITE_PRODUCAO_URL;
 
 function setButtonStatus(text, disabled = false) {
     btnCapturar.innerText = text;
@@ -27,6 +33,41 @@ function setButtonStatus(text, disabled = false) {
 function normalizarMensagemErro(mensagem) {
     if (!mensagem) return 'Nao foi possivel concluir a captura.';
     return mensagem.length > 90 ? `${mensagem.substring(0, 87)}...` : mensagem;
+}
+
+function normalizarSiteUrl(url) {
+    const valor = typeof url === 'string' ? url.trim().replace(/\/+$/, '') : '';
+
+    if (!valor) return SITE_PRODUCAO_URL;
+    if (!/^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(valor)) {
+        throw new Error('Informe uma URL HTTPS valida.');
+    }
+
+    return valor;
+}
+
+function atualizarTextoAmbiente() {
+    if (!ambienteAtual) return;
+    const label = siteUrlAtual === SITE_PRODUCAO_URL ? 'Producao' : 'Teste';
+    ambienteAtual.innerText = `${label}: ${siteUrlAtual}`;
+}
+
+async function carregarSiteUrl() {
+    if (!MODO_CONFIGURACAO_AMBIENTE || !chrome.storage?.local) {
+        siteUrlAtual = SITE_PRODUCAO_URL;
+        return siteUrlAtual;
+    }
+
+    const dados = await chrome.storage.local.get(STORAGE_SITE_URL_KEY);
+    siteUrlAtual = normalizarSiteUrl(dados[STORAGE_SITE_URL_KEY]);
+
+    if (inputSiteUrl) inputSiteUrl.value = siteUrlAtual;
+    atualizarTextoAmbiente();
+    return siteUrlAtual;
+}
+
+function getEndpoint(path) {
+    return `${siteUrlAtual}${path}`;
 }
 
 async function capturarTextoDaAba(tabId) {
@@ -51,7 +92,7 @@ async function capturarTextoDaAba(tabId) {
 }
 
 async function validarTextoComIa(captura) {
-    const res = await fetch(AI_VALIDATION_ENDPOINT, {
+    const res = await fetch(getEndpoint('/api/validar-vaga'), {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -87,7 +128,7 @@ async function validarTextoComIa(captura) {
 }
 
 async function salvarVagaNoBackend(idVaga, textoVaga) {
-    const res = await fetch(SALVAR_VAGA_ENDPOINT, {
+    const res = await fetch(getEndpoint('/api/salvar-vaga'), {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -109,6 +150,7 @@ btnCapturar.addEventListener('click', async () => {
     setButtonStatus('⏳ Lendo pagina...', true);
 
     try {
+        await carregarSiteUrl();
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
         if (!tab || !tab.id) {
@@ -135,10 +177,40 @@ btnCapturar.addEventListener('click', async () => {
 
         setButtonStatus('✔ Sucesso!', true);
         setTimeout(() => {
-            chrome.tabs.create({ url: `${SEU_SITE_URL}/?vaga_id=${idVaga}` });
+            chrome.tabs.create({ url: `${siteUrlAtual}/?vaga_id=${idVaga}` });
         }, 500);
     } catch (e) {
         console.error(e);
         setButtonStatus(normalizarMensagemErro(e.message), false);
     }
 });
+
+async function iniciarConfiguracaoAmbiente() {
+    if (!MODO_CONFIGURACAO_AMBIENTE || !configAmbiente) {
+        return;
+    }
+
+    configAmbiente.style.display = 'block';
+    await carregarSiteUrl();
+
+    btnSalvarUrl?.addEventListener('click', async () => {
+        try {
+            siteUrlAtual = normalizarSiteUrl(inputSiteUrl?.value);
+            await chrome.storage.local.set({ [STORAGE_SITE_URL_KEY]: siteUrlAtual });
+            atualizarTextoAmbiente();
+            setButtonStatus('Ambiente salvo', false);
+        } catch (error) {
+            setButtonStatus(normalizarMensagemErro(error.message), false);
+        }
+    });
+
+    btnUsarProducao?.addEventListener('click', async () => {
+        siteUrlAtual = SITE_PRODUCAO_URL;
+        if (inputSiteUrl) inputSiteUrl.value = SITE_PRODUCAO_URL;
+        await chrome.storage.local.remove(STORAGE_SITE_URL_KEY);
+        atualizarTextoAmbiente();
+        setButtonStatus('Producao selecionada', false);
+    });
+}
+
+iniciarConfiguracaoAmbiente();

@@ -5,10 +5,12 @@
   "description": "Capture vagas para ajustar o seu currículo com Inteligência Artificial.",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
-    "https://curriculo-edi.vercel.app/*"
+    "https://curriculo-edi.vercel.app/*",
+    "https://*.vercel.app/*"
   ],
   "action": {
     "default_popup": "popup.html",
