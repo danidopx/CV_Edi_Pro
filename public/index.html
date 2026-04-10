@@ -191,20 +191,26 @@
             <input type="email" id="admin-email-suporte" placeholder="Ex: suporte@meusite.com"
                 style="margin-bottom: 15px;">
 
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--accent);">🟢 Prompt -
-                Ajuste Simples:</label>
-            <textarea id="admin-prompt-simples"
-                style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
+            <div style="margin-bottom: 18px; padding: 16px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">🧠 Modelo atual em uso:</label>
+                <div id="admin-modelo-atual" style="margin-bottom: 12px; color: var(--primary); font-weight: bold;">Carregando...</div>
 
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: var(--danger);">🔴 Prompt -
-                Ajuste Agressivo:</label>
-            <textarea id="admin-prompt-agressivo"
-                style="width: 100%; height: 160px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo manual (override):</label>
+                <select id="admin-modelo-select" style="margin-bottom: 10px;"></select>
+                <input type="text" id="admin-modelo-manual" placeholder="Ou digite manualmente um modelo exato, ex: gemini-2.5-flash"
+                    style="margin-bottom: 8px; font-family: monospace;">
+                <small style="color: var(--text-light); display: block;">Se deixar vazio, o sistema continua usando a lógica automática atual.</small>
+            </div>
 
-            <label style="font-weight: bold; margin-bottom: 8px; display: block; color: #f39c12;">📊 Prompt - Análise de
-                Vaga (ATS):</label>
-            <textarea id="admin-prompt-ats"
-                style="width: 100%; height: 200px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; resize: vertical;"></textarea>
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px;">
+                <div>
+                    <label style="font-weight: bold; display: block; color: var(--primary);">✍️ Prompts e Chamadas da IA</label>
+                    <small style="color: var(--text-light);">Você pode editar os prompts padrão e também criar novos prompts administrativos.</small>
+                </div>
+                <button class="btn-base btn-neutral" onclick="adicionarPromptAdmin()" type="button">+ Novo Prompt</button>
+            </div>
+
+            <div id="admin-prompts-dinamicos" style="margin-bottom: 15px;"></div>
 
             <div style="display: flex; gap: 10px;">
                 <button class="btn-base btn-neutral"

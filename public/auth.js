@@ -2,11 +2,9 @@ import {
     sb,
     appState,
     regexSenha,
-    DEFAULT_PROMPT_SIMPLES,
-    DEFAULT_PROMPT_AGRESSIVO,
-    DEFAULT_PROMPT_ATS
+    DEFAULT_PROMPTS_BY_NAME
 } from './config.js';
-import { carregarPromptIA, PROMPT_NAMES } from './api.js';
+import { carregarConfiguracaoIA, carregarTodosPromptsIA, getPromptCatalog, inicializarModeloIA } from './api.js';
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
 
 function getAuthRedirectUrl() {
@@ -56,70 +54,136 @@ export async function atualizarNomeConta() {
 }
 
 export async function abrirConfigAdmin() {
-    const [promptSimples, promptAgressivo, promptAts] = await Promise.all([
-        carregarPromptIA(PROMPT_NAMES.simples, { logMissing: false }),
-        carregarPromptIA(PROMPT_NAMES.agressivo, { logMissing: false }),
-        carregarPromptIA(PROMPT_NAMES.ats, { logMissing: false })
+    const [promptsSalvos, configModelo, modelResp] = await Promise.all([
+        carregarTodosPromptsIA().catch(() => []),
+        carregarConfiguracaoIA('modelo_forcado', { logMissing: false }).catch(() => null),
+        fetch('/api/modelos').catch(() => null)
     ]);
 
-    setValSafe('admin-prompt-simples', promptSimples?.prompt_content || localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
-    setValSafe('admin-prompt-agressivo', promptAgressivo?.prompt_content || localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO);
-    setValSafe('admin-prompt-ats', promptAts?.prompt_content || localStorage.getItem('adminPromptAts') || DEFAULT_PROMPT_ATS);
+    const catalogo = getPromptCatalog();
+    const promptsMap = new Map(promptsSalvos.map(prompt => [prompt.prompt_name, prompt]));
+    const promptsParaRenderizar = Object.entries(catalogo).map(([promptName, meta]) => ({
+        prompt_name: promptName,
+        description: meta.description,
+        label: meta.label,
+        prompt_content: promptsMap.get(promptName)?.prompt_content || meta.content
+    }));
+
+    promptsSalvos.forEach(prompt => {
+        if (!catalogo[prompt.prompt_name]) {
+            promptsParaRenderizar.push({
+                prompt_name: prompt.prompt_name,
+                description: prompt.description || 'Prompt personalizado salvo no banco.',
+                label: prompt.prompt_name,
+                prompt_content: prompt.prompt_content
+            });
+        }
+    });
+
+    const lista = document.getElementById('admin-prompts-dinamicos');
+    if (lista) {
+        lista.innerHTML = promptsParaRenderizar.map(prompt => `
+            <div class="admin-prompt-card" style="margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-body);">
+                <label style="font-weight: bold; margin-bottom: 6px; display: block; color: var(--primary);">${prompt.label}</label>
+                <input data-prompt-name value="${prompt.prompt_name}" placeholder="Identificador do prompt" style="margin-bottom: 8px; font-family: monospace;">
+                <input data-prompt-description value="${(prompt.description || '').replace(/"/g, '&quot;')}" placeholder="Descrição" style="margin-bottom: 8px;">
+                <textarea data-prompt-content style="width: 100%; height: 150px; background: var(--bg-panel); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: vertical;">${prompt.prompt_content}</textarea>
+            </div>
+        `).join('');
+    }
+
+    let modelosDisponiveis = [];
+    if (modelResp?.ok) {
+        const modelData = await modelResp.json();
+        modelosDisponiveis = modelData.models
+            .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
+            .map(m => m.name.split('/')[1])
+            .sort();
+    }
+
+    const modeloForcado = configModelo?.setting_value || '';
+    setValSafe('admin-modelo-manual', modeloForcado);
+    const selectModelo = document.getElementById('admin-modelo-select');
+    if (selectModelo) {
+        selectModelo.innerHTML = ['<option value="">Automático (lógica atual)</option>', ...modelosDisponiveis.map(modelo => `<option value="${modelo}">${modelo}</option>`)].join('');
+        selectModelo.value = modeloForcado && modelosDisponiveis.includes(modeloForcado) ? modeloForcado : '';
+    }
+
+    const textoModeloAtual = document.getElementById('admin-modelo-atual');
+    if (textoModeloAtual) {
+        textoModeloAtual.innerText = appState.modeloIAPreferido || 'Não definido';
+    }
+
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
     document.getElementById('modal-admin').style.display = 'flex';
 }
 
 export async function salvarConfigAdmin() {
-    const pS = getValSafe('admin-prompt-simples').trim();
-    const pA = getValSafe('admin-prompt-agressivo').trim();
-    const pATS = getValSafe('admin-prompt-ats').trim();
     const emailSuporte = getValSafe('admin-email-suporte').trim();
+    const modeloSelecionado = getValSafe('admin-modelo-select').trim();
+    const modeloManual = getValSafe('admin-modelo-manual').trim();
+    const modeloFinal = modeloManual || modeloSelecionado;
+    const promptCards = Array.from(document.querySelectorAll('#admin-prompts-dinamicos .admin-prompt-card'));
 
-    if (pS && pA && pATS) {
-        localStorage.setItem('adminPromptSimples', pS);
-        localStorage.setItem('adminPromptAgressivo', pA);
-        localStorage.setItem('adminPromptAts', pATS);
+    const promptsParaSalvar = promptCards.map(card => ({
+        prompt_name: card.querySelector('[data-prompt-name]')?.value.trim(),
+        description: card.querySelector('[data-prompt-description]')?.value.trim() || null,
+        prompt_content: card.querySelector('[data-prompt-content]')?.value.trim(),
+        user_id: appState.usuarioAtual?.id || null,
+        is_system_prompt: true
+    })).filter(prompt => prompt.prompt_name && prompt.prompt_content);
+
+    if (promptsParaSalvar.length > 0) {
+        const catalogo = getPromptCatalog();
+        localStorage.setItem('adminPromptSimples', promptsParaSalvar.find(item => item.prompt_name === 'ajuste_simples')?.prompt_content || catalogo.ajuste_simples.content);
+        localStorage.setItem('adminPromptAgressivo', promptsParaSalvar.find(item => item.prompt_name === 'ajuste_agressivo')?.prompt_content || catalogo.ajuste_agressivo.content);
+        localStorage.setItem('adminPromptAts', promptsParaSalvar.find(item => item.prompt_name === 'analise_ats')?.prompt_content || catalogo.analise_ats.content);
         if (emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
 
-        const adminId = appState.usuarioAtual?.id || null;
-        const promptsParaSalvar = [
-            {
-                prompt_name: PROMPT_NAMES.simples,
-                prompt_content: pS,
-                description: 'Prompt base do ajuste simples',
-                user_id: adminId,
-                is_system_prompt: true
-            },
-            {
-                prompt_name: PROMPT_NAMES.agressivo,
-                prompt_content: pA,
-                description: 'Prompt base do ajuste agressivo',
-                user_id: adminId,
-                is_system_prompt: true
-            },
-            {
-                prompt_name: PROMPT_NAMES.ats,
-                prompt_content: pATS,
-                description: 'Prompt base da analise ATS',
-                user_id: adminId,
-                is_system_prompt: true
-            }
-        ];
-
-        const { error } = await sb
-            .from('ai_prompts')
-            .upsert(promptsParaSalvar, { onConflict: 'prompt_name' });
+        const { error } = await sb.from('ai_prompts').upsert(promptsParaSalvar, { onConflict: 'prompt_name' });
 
         if (error) {
             alert('Erro ao salvar prompts no banco: ' + error.message);
             return;
         }
 
+        const { error: settingError } = await sb.from('ai_settings').upsert({
+            setting_key: 'modelo_forcado',
+            setting_value: modeloFinal,
+            description: 'Modelo Gemini forçado manualmente pelo admin',
+            user_id: appState.usuarioAtual?.id || null,
+            is_system_setting: true
+        }, { onConflict: 'setting_key' });
+
+        if (settingError) {
+            alert('Erro ao salvar modelo da IA no banco: ' + settingError.message);
+            return;
+        }
+
+        appState.modeloIAForcado = modeloFinal;
+        await inicializarModeloIA();
+
         document.getElementById('modal-admin').style.display = 'none';
         showToast();
     } else {
         alert('Os prompts não podem ficar vazios.');
     }
+}
+
+export function adicionarPromptAdmin() {
+    const lista = document.getElementById('admin-prompts-dinamicos');
+    if (!lista) return;
+
+    const bloco = document.createElement('div');
+    bloco.className = 'admin-prompt-card';
+    bloco.style.cssText = 'margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-body);';
+    bloco.innerHTML = `
+        <label style="font-weight: bold; margin-bottom: 6px; display: block; color: var(--primary);">Novo Prompt</label>
+        <input data-prompt-name placeholder="Identificador do prompt" style="margin-bottom: 8px; font-family: monospace;">
+        <input data-prompt-description placeholder="Descrição" style="margin-bottom: 8px;">
+        <textarea data-prompt-content style="width: 100%; height: 150px; background: var(--bg-panel); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: vertical;"></textarea>
+    `;
+    lista.appendChild(bloco);
 }
 
 export async function abrirGestaoUsuarios() {

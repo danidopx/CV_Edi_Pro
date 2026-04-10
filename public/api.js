@@ -1,9 +1,12 @@
-import { appState, sb } from './config.js';
+import { appState, sb, DEFAULT_PROMPTS_BY_NAME } from './config.js';
 
 export const PROMPT_NAMES = {
     simples: 'ajuste_simples',
     agressivo: 'ajuste_agressivo',
-    ats: 'analise_ats'
+    ats: 'analise_ats',
+    validarVagaImportada: 'validar_vaga_importada',
+    validarVagaAjuste: 'validar_vaga_ajuste',
+    extracaoTextoCv: 'extracao_texto_cv'
 };
 
 const ORDEM_PREFERENCIA_MODELOS = [
@@ -24,6 +27,10 @@ function escolherModeloPreferido(modelosDisponiveis) {
     }
 
     return modelosDisponiveis[0] || null;
+}
+
+export function getPromptCatalog() {
+    return DEFAULT_PROMPTS_BY_NAME;
 }
 
 function erroDeModeloInvalido(mensagem) {
@@ -85,13 +92,17 @@ export function initDebugPanel() {
 
 export async function inicializarModeloIA() {
     try {
+        const modeloForcado = await carregarConfiguracaoIA('modelo_forcado', { logMissing: false });
+        appState.modeloIAForcado = (modeloForcado?.setting_value || '').trim();
+
         const modelResp = await fetch('/api/modelos');
         if (modelResp.ok) {
             const modelData = await modelResp.json();
             const modelosDisponiveis = modelData.models
                 .filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'))
                 .map(m => m.name.split('/')[1]);
-            const escolhido = escolherModeloPreferido(modelosDisponiveis);
+
+            const escolhido = appState.modeloIAForcado || escolherModeloPreferido(modelosDisponiveis);
             if (escolhido) {
                 appState.modeloIAPreferido = escolhido;
             }
@@ -112,6 +123,36 @@ export async function carregarPromptIA(promptName, { logMissing = true } = {}) {
     if (error) {
         if (logMissing && error.code !== 'PGRST116') {
             logDebug(`[ERRO Supabase] Falha ao buscar prompt '${promptName}': ${error.message}`, true);
+        }
+        return null;
+    }
+
+    return data;
+}
+
+export async function carregarTodosPromptsIA() {
+    const { data, error } = await sb
+        .from('ai_prompts')
+        .select('id, prompt_name, prompt_content, description, is_system_prompt, updated_at')
+        .order('prompt_name', { ascending: true });
+
+    if (error) {
+        throw error;
+    }
+
+    return data || [];
+}
+
+export async function carregarConfiguracaoIA(settingKey, { logMissing = true } = {}) {
+    const { data, error } = await sb
+        .from('ai_settings')
+        .select('setting_key, setting_value, description, updated_at')
+        .eq('setting_key', settingKey)
+        .maybeSingle();
+
+    if (error) {
+        if (logMissing) {
+            logDebug(`[ERRO Supabase] Falha ao buscar configuração '${settingKey}': ${error.message}`, true);
         }
         return null;
     }

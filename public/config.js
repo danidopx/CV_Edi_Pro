@@ -23,6 +23,7 @@ export const appState = {
     origemAtual: 'Criado do zero',
     historicoTelas: [],
     modeloIAPreferido: 'gemini-2.5-flash',
+    modeloIAForcado: '',
     temAlteracoesNaoSalvas: false,
     passoTour: 0
 };
@@ -57,6 +58,45 @@ Formato EXATO obrigatório:
 }
 
 [VAGA] {{VAGA}} [CURRÍCULO] {{CURRICULO}}`;
+
+export const DEFAULT_PROMPT_VALIDAR_VAGA_IMPORTADA = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}. Texto: {{TEXTO_VAGA}}`;
+
+export const DEFAULT_PROMPT_VALIDAR_VAGA_AJUSTE = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: {{TEXTO_VAGA}}`;
+
+export const DEFAULT_PROMPT_EXTRACAO = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "status":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } STATUS FORMAÇÃO: Obrigatório retornar um dos: "Concluído", "Cursando", "Trancado". Texto: {{TEXTO_BRUTO}}`;
+
+export const DEFAULT_PROMPTS_BY_NAME = {
+    ajuste_simples: {
+        label: 'Ajuste Simples',
+        description: 'Prompt base do ajuste simples de currículo para vaga.',
+        content: DEFAULT_PROMPT_SIMPLES
+    },
+    ajuste_agressivo: {
+        label: 'Ajuste Agressivo',
+        description: 'Prompt base do ajuste agressivo de currículo para vaga.',
+        content: DEFAULT_PROMPT_AGRESSIVO
+    },
+    analise_ats: {
+        label: 'Análise ATS',
+        description: 'Prompt base para score ATS e análise de aderência.',
+        content: DEFAULT_PROMPT_ATS
+    },
+    validar_vaga_importada: {
+        label: 'Validação de Vaga Importada',
+        description: 'Valida vagas capturadas externamente antes do uso no app.',
+        content: DEFAULT_PROMPT_VALIDAR_VAGA_IMPORTADA
+    },
+    validar_vaga_ajuste: {
+        label: 'Validação de Vaga para Ajuste',
+        description: 'Valida a vaga colada manualmente antes de ajustar currículo.',
+        content: DEFAULT_PROMPT_VALIDAR_VAGA_AJUSTE
+    },
+    extracao_texto_cv: {
+        label: 'Extração de Texto em CV',
+        description: 'Converte texto bruto de currículo/LinkedIn em JSON estruturado.',
+        content: DEFAULT_PROMPT_EXTRACAO
+    }
+};
 
 export const tourTextos = [
     '<b>1. Extração Mágica (IA) ✨</b><br><br>Cole todo o texto do seu LinkedIn ou de um currículo antigo no primeiro menu. A nossa Inteligência Artificial vai ler tudo e preencher todos os campos do editor de forma automática para você!',
