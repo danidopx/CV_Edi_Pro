@@ -53,6 +53,7 @@ async function capturarTextoDaAba(tabId) {
 async function validarTextoComIa(captura) {
     const res = await fetch(AI_VALIDATION_ENDPOINT, {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json'
         },
@@ -88,6 +89,7 @@ async function validarTextoComIa(captura) {
 async function salvarVagaNoBackend(idVaga, textoVaga) {
     const res = await fetch(SALVAR_VAGA_ENDPOINT, {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json'
         },
