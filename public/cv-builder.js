@@ -81,8 +81,10 @@ export async function receberVagaExterna(idTransferencia) {
         const textoVaga = data.texto;
 
         const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}. Texto: ${textoVaga.substring(0, 1000)}`;
-
-        const validacao = await processarIA(promptValidacao);
+        const validacao = await processarIA(promptValidacao, {
+            promptNameFallback: PROMPT_NAMES.validarVagaImportada,
+            transformPromptContent: template => template.replace('{{TEXTO_VAGA}}', textoVaga.substring(0, 1000))
+        });
         logDebug(`Resposta da IA recebida: ${JSON.stringify(validacao)}`);
 
         if (validacao && validacao.valida === false) {
@@ -483,7 +485,10 @@ export async function extrairDadosIA() {
     const prompt = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "status":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } STATUS FORMAÇÃO: Obrigatório retornar um dos: "Concluído", "Cursando", "Trancado". Texto: ${txt}`;
 
     try {
-        const extraido = await processarIA(prompt);
+        const extraido = await processarIA(prompt, {
+            promptNameFallback: PROMPT_NAMES.extracaoTextoCv,
+            transformPromptContent: template => template.replace('{{TEXTO_BRUTO}}', txt)
+        });
         limparTudo();
         appState.idAtual = null;
         localStorage.removeItem('cvRecuperacao');
@@ -567,7 +572,10 @@ export async function ajustarCurriculoVaga() {
     try {
         document.getElementById('loading-text').innerText = 'Analisando a vaga...';
         const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: ${textoVaga.substring(0, 1500)}`;
-        const validacao = await processarIA(promptValidacao);
+        const validacao = await processarIA(promptValidacao, {
+            promptNameFallback: PROMPT_NAMES.validarVagaAjuste,
+            transformPromptContent: template => template.replace('{{TEXTO_VAGA}}', textoVaga.substring(0, 1500))
+        });
 
         if (validacao && validacao.valida === false) {
             ocultarCarregamento();
