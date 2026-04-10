@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { width: 320px; padding: 25px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #ffffff; margin: 0; border: 1px solid #e0e6ed; }
+        h3 { color: #6c5ce7; margin-top: 0; font-weight: 900; font-size: 22px; letter-spacing: -0.5px; }
+        p { font-size: 14px; color: #333333; margin-bottom: 18px; line-height: 1.5; font-weight: 500; }
+        button { background: #6c5ce7; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 15px; transition: 0.2s; box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px; white-space: normal; overflow-wrap: anywhere; }
+        button:hover { background: #5b4bc4; transform: translateY(-1px); box-shadow: 0 6px 10px rgba(108, 92, 231, 0.3); }
+        button:disabled { background: #b2bec3; cursor: not-allowed; transform: none; box-shadow: none; }
+        .dica-selecao { margin: 0 0 18px; padding: 10px; background: #f1f3ff; border: 1px solid #dfe3ff; border-radius: 8px; font-size: 12px; color: #2d3436; text-align: left; line-height: 1.45; }
+        .aviso-login { margin-top: 15px; padding: 10px; background: #f8f9fa; border-left: 3px solid #6c5ce7; border-radius: 4px; font-size: 12px; color: #2d3436; text-align: left; }
+    </style>
+</head>
+<body>
+    <h3>Edi Pro Capture</h3>
+    
+    <p>Abra a página de uma vaga de emprego (LinkedIn, Gupy, etc.) e clique abaixo para validar e extrair os dados.</p>
+
+    <div class="dica-selecao">
+        <strong>Melhor resultado:</strong> antes de clicar, selecione com o mouse o texto principal da vaga na página. Se nada for selecionado, a extensão tenta ler a página inteira.
+    </div>
+    
+    <button id="btn-capturar">🚀 Validar e Capturar Vaga</button>
+
+    <div class="aviso-login">
+        <strong>Atenção:</strong> É necessário estar logado na plataforma Edi Pro para processar a vaga capturada.
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

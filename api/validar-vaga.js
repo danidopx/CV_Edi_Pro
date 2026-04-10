@@ -7,7 +7,14 @@ const MODELOS_FALLBACK = [
 
 const MAX_TEXTO_CHARS = 30000;
 
+function setCorsHeaders(res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
 function enviarJson(res, status, payload) {
+    setCorsHeaders(res);
     res.status(status).json({
         valido: Boolean(payload.valido),
         motivo: payload.motivo || '',
@@ -78,8 +85,13 @@ async function chamarGemini({ prompt, modelo, apiKey }) {
 }
 
 export default async function handler(req, res) {
+    if (req.method === 'OPTIONS') {
+        setCorsHeaders(res);
+        return res.status(204).end();
+    }
+
     if (req.method !== 'POST') {
-        res.setHeader('Allow', 'POST');
+        res.setHeader('Allow', 'POST, OPTIONS');
         return enviarJson(res, 405, {
             valido: false,
             motivo: 'Método não permitido. Use POST.',
