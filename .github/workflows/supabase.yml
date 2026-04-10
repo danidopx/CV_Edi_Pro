@@ -69,6 +69,7 @@ jobs:
           PREVIEW_VER=${{ steps.preview_version.outputs.value }}
           CACHE_ID=$(date +%s | tail -c 6)
 
+          sed -i "s/\"version\": \".*\"/\"version\": \"$PREVIEW_VER\"/" package.json
           sed -i "s|CV Edi Pro v[0-9.]*\( - Preview\)\{0,1\}|CV Edi Pro v$PREVIEW_VER - Preview|g" public/index.html
           sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
           sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
