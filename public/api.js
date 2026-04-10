@@ -69,25 +69,49 @@ export function logDebug(mensagem, erro = false) {
     if (logs.length > 50) logs.shift();
     localStorage.setItem('edi_logs', JSON.stringify(logs));
 
-    const painel = document.getElementById('painel-debug-edi');
-    if (painel) {
-        painel.innerHTML += `<div style="color: ${erro ? '#ff7675' : '#a29bfe'}; margin-bottom: 4px;">${msgFormatada}</div>`;
-        painel.scrollTop = painel.scrollHeight;
+    const conteudo = document.getElementById('painel-debug-edi-conteudo');
+    if (conteudo) {
+        conteudo.innerHTML += `<div style="color: ${erro ? '#ff7675' : '#a29bfe'}; margin-bottom: 4px;">${msgFormatada}</div>`;
+        conteudo.scrollTop = conteudo.scrollHeight;
     }
 }
 
 export function initDebugPanel() {
     const painel = document.createElement('div');
     painel.id = 'painel-debug-edi';
-    painel.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 350px; height: 250px; background: rgba(0,0,0,0.85); color: #fff; font-family: monospace; font-size: 11px; padding: 10px; overflow-y: auto; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
-    painel.innerHTML = '<div style="color: #6c5ce7; font-weight: bold; border-bottom: 1px solid #555; margin-bottom: 5px; padding-bottom: 5px; display: flex; justify-content: space-between;"><span>Edi Pro - Log Monitor</span><span style="cursor:pointer; color:red;" onclick="this.parentElement.parentElement.style.display=\'none\'">X</span></div>';
+    const versao = document.querySelector('.footer-info strong')?.innerText || 'CV Edi Pro';
+    painel.dataset.expandido = 'false';
+    painel.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 260px; height: 38px; background: rgba(0,0,0,0.88); color: #fff; font-family: monospace; font-size: 11px; padding: 8px; overflow: hidden; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
+    painel.innerHTML = `
+        <div style="color: #a29bfe; font-weight: bold; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <button id="painel-debug-toggle" type="button" style="background: transparent; color: #a29bfe; border: 0; cursor: pointer; font-weight: bold;">+</button>
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Log - ${versao}</span>
+            <span style="cursor:pointer; color:#ff7675;" onclick="this.closest('#painel-debug-edi').style.display='none'">X</span>
+        </div>
+        <div id="painel-debug-edi-conteudo" style="display:none; margin-top: 8px; border-top: 1px solid #555; padding-top: 8px; height: 190px; overflow-y: auto;"></div>
+    `;
     document.body.appendChild(painel);
+
+    const conteudo = document.getElementById('painel-debug-edi-conteudo');
+    const toggle = document.getElementById('painel-debug-toggle');
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            const expandido = painel.dataset.expandido === 'true';
+            painel.dataset.expandido = expandido ? 'false' : 'true';
+            painel.style.width = expandido ? '260px' : '350px';
+            painel.style.height = expandido ? '38px' : '250px';
+            painel.style.overflow = expandido ? 'hidden' : 'hidden';
+            if (conteudo) conteudo.style.display = expandido ? 'none' : 'block';
+            toggle.innerText = expandido ? '+' : '-';
+            if (conteudo) conteudo.scrollTop = conteudo.scrollHeight;
+        });
+    }
 
     const logs = JSON.parse(localStorage.getItem('edi_logs') || '[]');
     logs.forEach(l => {
-        painel.innerHTML += `<div style="color: #a29bfe; margin-bottom: 4px;">${l}</div>`;
+        if (conteudo) conteudo.innerHTML += `<div style="color: #a29bfe; margin-bottom: 4px;">${l}</div>`;
     });
-    painel.scrollTop = painel.scrollHeight;
+    if (conteudo) conteudo.scrollTop = conteudo.scrollHeight;
 }
 
 export async function inicializarModeloIA() {

@@ -7,6 +7,33 @@ const MODELOS_FALLBACK = [
 
 const MAX_TEXTO_CHARS = 30000;
 
+function normalizarTexto(texto) {
+    return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function dataBRParaDate(dia, mes, ano) {
+    const anoNumerico = Number(ano.length === 2 ? `20${ano}` : ano);
+    return new Date(anoNumerico, Number(mes) - 1, Number(dia), 23, 59, 59, 999);
+}
+
+function detectarVagaInativa(texto) {
+    const normalizado = normalizarTexto(texto);
+    const termoEncerrado = /(vaga|inscricoes|candidaturas|processo seletivo)\s+(encerrad[ao]s?|expirad[ao]s?|fechad[ao]s?|finalizad[ao]s?)|prazo\s+(encerrado|expirado|vencido)/i;
+    if (termoEncerrado.test(normalizado)) {
+        return 'O texto informa que a vaga ou as inscrições estão encerradas.';
+    }
+
+    const matchData = texto.match(/(?:vaga|inscri[cç][oõ]es?|candidaturas?|prazo)[^\n\r]{0,35}(?:encerrad[ao]s?|expirad[ao]s?|ate|até|limite|final)[^\d]{0,10}(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
+    if (matchData) {
+        const dataLimite = dataBRParaDate(matchData[1], matchData[2], matchData[3]);
+        if (!Number.isNaN(dataLimite.getTime()) && dataLimite < new Date()) {
+            return `O prazo da vaga terminou em ${matchData[1].padStart(2, '0')}/${matchData[2].padStart(2, '0')}/${matchData[3]}.`;
+        }
+    }
+
+    return '';
+}
+
 function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -110,6 +137,16 @@ export default async function handler(req, res) {
         });
     }
 
+    const textoLimitado = textoOriginal.slice(0, MAX_TEXTO_CHARS);
+    const motivoInativa = detectarVagaInativa(textoLimitado);
+    if (motivoInativa) {
+        return enviarJson(res, 200, {
+            valido: false,
+            motivo: motivoInativa,
+            texto_normalizado: ''
+        });
+    }
+
     const apiKey = process.env.GEMINI_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey) {
         return enviarJson(res, 500, {
@@ -119,7 +156,6 @@ export default async function handler(req, res) {
         });
     }
 
-    const textoLimitado = textoOriginal.slice(0, MAX_TEXTO_CHARS);
     const promptServidor = montarPromptServidor({
         texto: textoLimitado,
         origem: origem === 'pagina' || origem === 'selecao' ? origem : 'desconhecida',

@@ -19,7 +19,59 @@ import {
     fecharFullscreenSeguro,
     iniciarTour
 } from './ui.js';
-import { abrirGestaoUsuarios } from './auth.js';
+import { abrirGestaoUsuarios, usuarioEhAdmin } from './auth.js';
+
+function normalizarTextoBusca(texto) {
+    return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function detectarVagaInativa(texto) {
+    const normalizado = normalizarTextoBusca(texto);
+    const termoEncerrado = /(vaga|inscricoes|candidaturas|processo seletivo)\s+(encerrad[ao]s?|expirad[ao]s?|fechad[ao]s?|finalizad[ao]s?)|prazo\s+(encerrado|expirado|vencido)/i;
+    if (termoEncerrado.test(normalizado)) {
+        return 'O texto informa que a vaga ou as inscrições estão encerradas.';
+    }
+
+    const matchData = String(texto || '').match(/(?:vaga|inscri[cç][oõ]es?|candidaturas?|prazo)[^\n\r]{0,35}(?:encerrad[ao]s?|expirad[ao]s?|ate|até|limite|final)[^\d]{0,10}(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
+    if (matchData) {
+        const ano = Number(matchData[3].length === 2 ? `20${matchData[3]}` : matchData[3]);
+        const dataLimite = new Date(ano, Number(matchData[2]) - 1, Number(matchData[1]), 23, 59, 59, 999);
+        if (!Number.isNaN(dataLimite.getTime()) && dataLimite < new Date()) {
+            return `O prazo da vaga terminou em ${matchData[1].padStart(2, '0')}/${matchData[2].padStart(2, '0')}/${matchData[3]}.`;
+        }
+    }
+
+    return '';
+}
+
+async function usuarioTemCurriculoBase() {
+    const { data, error } = await sb
+        .from('curriculos_saas')
+        .select('identificador')
+        .eq('user_id', appState.usuarioAtual.id)
+        .limit(1);
+    return !error && Array.isArray(data) && data.length > 0;
+}
+
+function registrarVagaCapturadaAdmin(texto) {
+    sessionStorage.setItem('ultima_vaga_capturada', texto || '');
+    atualizarBotaoVagaCapturadaAdmin();
+}
+
+export function atualizarBotaoVagaCapturadaAdmin() {
+    const btn = document.getElementById('btn-vaga-capturada-admin');
+    if (!btn) return;
+    const temTexto = Boolean(sessionStorage.getItem('ultima_vaga_capturada'));
+    btn.style.display = usuarioEhAdmin() && temTexto ? 'block' : 'none';
+}
+
+export function alternarModalVagaCapturadaAdmin() {
+    const modal = document.getElementById('modal-vaga-capturada-admin');
+    const txt = document.getElementById('texto-vaga-capturada-admin');
+    if (!modal || !txt) return;
+    txt.value = sessionStorage.getItem('ultima_vaga_capturada') || '';
+    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+}
 
 export function marcarAlteracao() {
     appState.temAlteracoesNaoSalvas = true;
@@ -79,6 +131,26 @@ export async function receberVagaExterna(idTransferencia) {
 
         logDebug('✅ Vaga encontrada no banco. Acionando a IA para validação...');
         const textoVaga = data.texto;
+        registrarVagaCapturadaAdmin(textoVaga);
+
+        const motivoInativa = detectarVagaInativa(textoVaga);
+        if (motivoInativa) {
+            logDebug(`⛔ Vaga bloqueada por validação local: ${motivoInativa}`, true);
+            alert(`⚠️ Esta vaga não será importada.\n\n${motivoInativa}`);
+            localStorage.removeItem('vaga_pendente_importacao');
+            await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
+            irPara('tela-menu');
+            return;
+        }
+
+        const temCurriculo = await usuarioTemCurriculoBase();
+        if (!temCurriculo) {
+            alert('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente pela extensão para análise.');
+            localStorage.removeItem('vaga_pendente_importacao');
+            await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
+            irPara('tela-menu');
+            return;
+        }
 
         const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}. Texto: ${textoVaga.substring(0, 1000)}`;
         const validacao = await processarIA(promptValidacao, {
@@ -123,6 +195,18 @@ export async function receberVagaExterna(idTransferencia) {
 
 export async function receberVagaMobile(textoCompleto) {
     localStorage.removeItem('vaga_mobile_pendente');
+    registrarVagaCapturadaAdmin(textoCompleto);
+    const motivoInativa = detectarVagaInativa(textoCompleto);
+    if (motivoInativa) {
+        alert(`⚠️ Esta vaga não será importada.\n\n${motivoInativa}`);
+        irPara('tela-menu');
+        return;
+    }
+    if (!await usuarioTemCurriculoBase()) {
+        alert('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente para análise.');
+        irPara('tela-menu');
+        return;
+    }
     await abrirTelaVaga();
     const txtEl = document.getElementById('texto-vaga');
     if (txtEl) txtEl.value = textoCompleto;
@@ -433,6 +517,11 @@ export async function abrirTelaVaga() {
     const { data, error } = await sb.from('curriculos_saas').select('identificador').eq('user_id', appState.usuarioAtual.id);
     if (error || !data || data.length === 0) {
         select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>";
+        const aviso = document.getElementById('aviso-cv-incompleto');
+        if (aviso) {
+            aviso.innerHTML = '<b>⚠️ Cadastre um currículo primeiro:</b> crie manualmente ou importe um currículo existente. Ele será usado como base padrão e então você poderá enviar a vaga novamente para análise.';
+            aviso.style.display = 'block';
+        }
         return;
     }
 
@@ -565,7 +654,11 @@ export async function ajustarCurriculoVaga() {
     const idBase = getValSafe('select-curriculo-base');
     const textoVaga = getValSafe('texto-vaga');
     const nivelAjuste = getValSafe('nivel-ajuste');
-    if (!idBase || !textoVaga) return alert('Preencha todos os campos da tela.');
+    if (!idBase) return alert('Cadastre ou selecione um currículo base antes de ajustar a vaga.');
+    if (!textoVaga) return alert('Cole ou envie uma descrição de vaga antes de gerar o ajuste.');
+
+    const motivoInativa = detectarVagaInativa(textoVaga);
+    if (motivoInativa) return alert(`⚠️ Esta vaga não parece ativa.\n\n${motivoInativa}`);
 
     mostrarCarregamento();
 

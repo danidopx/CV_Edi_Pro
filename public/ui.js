@@ -306,7 +306,7 @@ export function calcularIdadeEditor() {
 }
 
 export function iniciarTour() {
-    if (!localStorage.getItem('tourV1')) {
+    if (!localStorage.getItem('tourV2')) {
         document.getElementById('tour-panel').style.display = 'block';
         mostrarPassoTour();
     }
@@ -327,7 +327,7 @@ export function proximoTour() {
 
 export function fecharTour() {
     document.getElementById('tour-panel').style.display = 'none';
-    localStorage.setItem('tourV1', 'concluido');
+    localStorage.setItem('tourV2', 'concluido');
 }
 
 export function fecharOnboarding() {

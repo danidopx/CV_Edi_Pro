@@ -99,7 +99,8 @@ export const DEFAULT_PROMPTS_BY_NAME = {
 };
 
 export const tourTextos = [
-    '<b>1. Extração Mágica (IA) ✨</b><br><br>Cole todo o texto do seu LinkedIn ou de um currículo antigo no primeiro menu. A nossa Inteligência Artificial vai ler tudo e preencher todos os campos do editor de forma automática para você!',
-    '<b>2. Múltiplas Versões 📑</b><br><br>Para se candidatar a vagas diferentes, use o botão <b>Salvar Cópia</b> no topo da tela. Ele duplica o seu currículo atual, permitindo que você altere informações sem perder a versão original.',
-    '<b>3. Gerenciar e Exportar 📄</b><br><br>Na tela inicial do sistema, em <b>Ver Salvos</b>, você gerencia todas as suas versões. Quando o currículo estiver perfeito, é só clicar em <b>Gerar PDF</b> no menu superior!'
+    '<b>1. Cadastre seu currículo base</b><br><br>Comece criando um currículo manualmente ou importando um texto existente. O primeiro currículo salvo vira sua base para os ajustes de vaga.',
+    '<b>2. Capture ou cole a vaga</b><br><br>Use <b>Ajustar à Vaga</b> no app ou envie uma vaga pela extensão do Chrome. Se a vaga vier da extensão, o app valida o texto antes de usar.',
+    '<b>3. Gere uma versão ajustada</b><br><br>Escolha o currículo base, confira a vaga capturada e clique em gerar. O Edi Pro adapta o conteúdo e também cria uma análise ATS.',
+    '<b>4. Salve, revise e exporte</b><br><br>Use <b>Salvar Cópia</b> para manter versões diferentes por vaga. Quando estiver pronto, gere o PDF e revise o resultado final.'
 ];
