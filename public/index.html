@@ -9,13 +9,13 @@
     <link rel="icon" type="image/png" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-512.png">
 
-    <link rel="manifest" href="manifest.json?v=37605">
+    <link rel="manifest" href="manifest.json?v=98888">
     <meta name="theme-color" content="#6c5ce7">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=37605'); }</script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=98888'); }</script>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -178,7 +178,7 @@
         </div>
     </div>
 
-    <div id="modal-admin"
+    <div id="modal-admin" onclick="if(event.target===this)this.style.display='none'"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
         <div
             style="background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 100%; max-width: 800px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto;">
@@ -186,31 +186,37 @@
                 style="color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">
                 ⚙️ Configuração da IA</h2>
 
-            <label style="font-weight: bold; margin-bottom: 8px; margin-top: 15px; display: block;">📧 E-mail de Suporte
-                (Mostrado em bloqueios):</label>
-            <input type="email" id="admin-email-suporte" placeholder="Ex: suporte@meusite.com"
-                style="margin-bottom: 15px;">
-
-            <div style="margin-bottom: 18px; padding: 16px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
-                <label style="font-weight: bold; margin-bottom: 8px; display: block;">🧠 Modelo atual em uso:</label>
-                <div id="admin-modelo-atual" style="margin-bottom: 12px; color: var(--primary); font-weight: bold;">Carregando...</div>
-
-                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo manual (override):</label>
-                <select id="admin-modelo-select" style="margin-bottom: 10px;"></select>
-                <input type="text" id="admin-modelo-manual" placeholder="Ou digite manualmente um modelo exato, ex: gemini-2.5-flash"
-                    style="margin-bottom: 8px; font-family: monospace;">
-                <small style="color: var(--text-light); display: block;">Se deixar vazio, o sistema continua usando a lógica automática atual.</small>
-            </div>
-
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px;">
-                <div>
-                    <label style="font-weight: bold; display: block; color: var(--primary);">✍️ Prompts e Chamadas da IA</label>
-                    <small style="color: var(--text-light);">Você pode editar os prompts padrão e também criar novos prompts administrativos.</small>
+            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">📧 E-mail de Suporte</summary>
+                <div style="margin-top: 12px;">
+                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">Mostrado em bloqueios:</label>
+                    <input type="email" id="admin-email-suporte" placeholder="Ex: suporte@meusite.com">
                 </div>
-                <button class="btn-base btn-neutral" onclick="adicionarPromptAdmin()" type="button">+ Novo Prompt</button>
-            </div>
+            </details>
 
-            <div id="admin-prompts-dinamicos" style="margin-bottom: 15px;"></div>
+            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🧠 Modelo da IA</summary>
+                <div style="margin-top: 12px;">
+                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo atual em uso:</label>
+                    <div id="admin-modelo-atual" style="margin-bottom: 12px; color: var(--primary); font-weight: bold;">Carregando...</div>
+
+                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo manual (override):</label>
+                    <select id="admin-modelo-select" style="margin-bottom: 10px;"></select>
+                    <input type="text" id="admin-modelo-manual" placeholder="Ou digite manualmente um modelo exato, ex: gemini-2.5-flash"
+                        style="margin-bottom: 8px; font-family: monospace;">
+                    <small style="color: var(--text-light); display: block;">Se deixar vazio, o sistema continua usando a lógica automática atual.</small>
+                </div>
+            </details>
+
+            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">✍️ Prompts e Chamadas da IA</summary>
+                <div style="display:flex; justify-content: space-between; align-items: center; margin: 12px 0; gap: 10px;">
+                    <small style="color: var(--text-light);">Edite prompts padrão ou crie prompts administrativos.</small>
+                    <button class="btn-base btn-neutral" onclick="adicionarPromptAdmin()" type="button">+ Novo Prompt</button>
+                </div>
+
+                <div id="admin-prompts-dinamicos" style="margin-bottom: 15px;"></div>
+            </details>
 
             <div style="display: flex; gap: 10px;">
                 <button class="btn-base btn-neutral"
@@ -285,7 +291,7 @@
         </div>
 
         <div class="footer-info">
-            <strong>CV Edi Pro v0.0.39</strong><br><br>
+            <strong>CV Edi Pro v0.0.39 - Preview</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
         </div>
     </div>
@@ -376,8 +382,24 @@
         </div>
 
         <div class="footer-info">
-            <strong>CV Edi Pro v0.0.39</strong><br><br>
+            <strong>CV Edi Pro v0.0.39 - Preview</strong><br><br>
             Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
+        </div>
+    </div>
+
+    <button id="btn-vaga-capturada-admin" class="btn-base btn-ia"
+        style="display:none; position: fixed; left: 14px; bottom: 14px; z-index: 9998; padding: 12px 16px; font-size: 13px;"
+        onclick="alternarModalVagaCapturadaAdmin()">Ver vaga capturada</button>
+
+    <div id="modal-vaga-capturada-admin" onclick="if(event.target===this)this.style.display='none'"
+        style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 9999; align-items: center; justify-content: center; padding: 18px;">
+        <div style="width: min(820px, 96vw); background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
+            <div style="display:flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin:0; color: var(--primary);">Texto capturado pela extensão</h3>
+                <button class="btn-base btn-neutral" onclick="document.getElementById('modal-vaga-capturada-admin').style.display='none'">Fechar</button>
+            </div>
+            <textarea id="texto-vaga-capturada-admin" readonly
+                style="height: 420px; width: 100%; font-family: monospace; font-size: 12px; line-height: 1.5; background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;"></textarea>
         </div>
     </div>
 
@@ -386,11 +408,15 @@
             style="width: 100%; max-width: 600px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
             <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">⚙️ Minha Conta</h2>
+            <div id="aviso-conta-admin"
+                style="display:none; margin-bottom: 20px; padding: 12px; border: 1px solid var(--danger); border-radius: 8px; color: var(--danger); background: rgba(255,118,117,0.1); font-size: 13px;">
+                Conta admin principal: alterações cadastrais ficam bloqueadas por segurança.
+            </div>
 
             <div style="margin-bottom: 25px;">
                 <label style="font-weight: bold; margin-bottom: 8px; display: block;">Nome de Exibição:</label>
                 <div style="display: flex; gap: 10px;"><input type="text" id="novo-nome"
-                        placeholder="Seu nome (ex: João Silva)"><button class="btn-base btn-primary"
+                        placeholder="Seu nome (ex: João Silva)"><button class="btn-base btn-primary" data-bloqueia-admin="true"
                         onclick="atualizarNomeConta()">Salvar Nome</button></div>
                 <small style="color: var(--text-light);">Este nome aparecerá no topo do sistema.</small>
             </div>
@@ -399,7 +425,7 @@
                 <label style="font-weight: bold; margin-bottom: 8px; display: block;">Atualizar E-mail de
                     Acesso:</label>
                 <div style="display: flex; gap: 10px;"><input type="email" id="novo-email"
-                        placeholder="Novo e-mail"><button class="btn-base btn-primary"
+                        placeholder="Novo e-mail"><button class="btn-base btn-primary" data-bloqueia-admin="true"
                         onclick="atualizarEmail()">Atualizar</button></div>
                 <small style="color: var(--text-light);">Enviaremos um link de confirmação.</small>
             </div>
@@ -412,7 +438,7 @@
                     <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password">
                     <input type="password" id="nova-senha-conf" placeholder="Confirme a nova senha"
                         autocomplete="new-password">
-                    <button type="submit" class="btn-base btn-primary">Atualizar Senha</button>
+                    <button type="submit" class="btn-base btn-primary" data-bloqueia-admin="true">Atualizar Senha</button>
                     <small style="color: var(--text-light);">Mínimo 8 caracteres, 1 número e 1 letra maiúscula.</small>
                 </form>
             </div>
@@ -423,7 +449,7 @@
                 <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Ao excluir sua conta, o
                     acesso será permanentemente bloqueado. Os dados dos currículos poderão ser retidos de forma anônima
                     para fins estatísticos.</p><button class="btn-base btn-danger"
-                    style="border: 1px solid var(--danger); padding: 12px 20px;" onclick="solicitarExclusao()">🚨
+                    style="border: 1px solid var(--danger); padding: 12px 20px;" data-bloqueia-admin="true" onclick="solicitarExclusao()">🚨
                     Excluir Minha Conta</button>
             </div>
         </div>

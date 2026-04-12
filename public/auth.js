@@ -11,12 +11,45 @@ function getAuthRedirectUrl() {
     return window.location.origin;
 }
 
+export function usuarioEhAdmin() {
+    return appState.usuarioAtual?.email === 'dop.jr82@gmail.com';
+}
+
+function escaparHtml(valor) {
+    return String(valor || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function bloquearSeAdmin() {
+    if (!usuarioEhAdmin()) return false;
+    alert('Por segurança, os dados cadastrais da conta admin principal não podem ser alterados por esta tela.');
+    return true;
+}
+
+function atualizarControlesContaAdmin() {
+    const admin = usuarioEhAdmin();
+    const aviso = document.getElementById('aviso-conta-admin');
+    if (aviso) aviso.style.display = admin ? 'block' : 'none';
+    ['novo-nome', 'novo-email', 'nova-senha', 'nova-senha-conf'].forEach(id => {
+        const campo = document.getElementById(id);
+        if (campo) campo.disabled = admin;
+    });
+    document.querySelectorAll('[data-bloqueia-admin="true"]').forEach(btn => {
+        btn.disabled = admin;
+        btn.style.opacity = admin ? '0.55' : '1';
+        btn.style.cursor = admin ? 'not-allowed' : 'pointer';
+    });
+}
+
 export function validarSenha(senha) {
     return regexSenha.test(senha);
 }
 
 export function verificarAdmin() {
-    if (appState.usuarioAtual && appState.usuarioAtual.email === 'dop.jr82@gmail.com') {
+    if (usuarioEhAdmin()) {
         const c = document.getElementById('btn-admin-config');
         const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'flex';
@@ -37,10 +70,13 @@ export function atualizarInfosUsuarioTopo() {
     if (displayName) {
         const nomeMeta = appState.usuarioAtual.user_metadata?.full_name || appState.usuarioAtual.user_metadata?.name || 'Usuário';
         displayName.innerText = `Olá, ${nomeMeta.split(' ')[0]}`;
+        setValSafe('novo-nome', nomeMeta);
     }
+    atualizarControlesContaAdmin();
 }
 
 export async function atualizarNomeConta() {
+    if (bloquearSeAdmin()) return;
     const novoNome = getValSafe('novo-nome');
     if (!novoNome) return alert('Digite o nome desejado.');
     const { data, error } = await sb.auth.updateUser({ data: { full_name: novoNome } });
@@ -83,12 +119,14 @@ export async function abrirConfigAdmin() {
     const lista = document.getElementById('admin-prompts-dinamicos');
     if (lista) {
         lista.innerHTML = promptsParaRenderizar.map(prompt => `
-            <div class="admin-prompt-card" style="margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-body);">
-                <label style="font-weight: bold; margin-bottom: 6px; display: block; color: var(--primary);">${prompt.label}</label>
-                <input data-prompt-name value="${prompt.prompt_name}" placeholder="Identificador do prompt" style="margin-bottom: 8px; font-family: monospace;">
-                <input data-prompt-description value="${(prompt.description || '').replace(/"/g, '&quot;')}" placeholder="Descrição" style="margin-bottom: 8px;">
-                <textarea data-prompt-content style="width: 100%; height: 150px; background: var(--bg-panel); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: vertical;">${prompt.prompt_content}</textarea>
-            </div>
+            <details class="admin-prompt-card" style="margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">${escaparHtml(prompt.label)}</summary>
+                <div style="margin-top: 12px;">
+                    <input data-prompt-name value="${escaparHtml(prompt.prompt_name)}" placeholder="Identificador do prompt" style="margin-bottom: 8px; font-family: monospace;">
+                    <input data-prompt-description value="${escaparHtml(prompt.description || '')}" placeholder="Descrição" style="margin-bottom: 8px;">
+                    <textarea data-prompt-content style="width: 100%; height: 150px; background: var(--bg-panel); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: vertical;">${escaparHtml(prompt.prompt_content)}</textarea>
+                </div>
+            </details>
         `).join('');
     }
 
@@ -174,14 +212,17 @@ export function adicionarPromptAdmin() {
     const lista = document.getElementById('admin-prompts-dinamicos');
     if (!lista) return;
 
-    const bloco = document.createElement('div');
+    const bloco = document.createElement('details');
     bloco.className = 'admin-prompt-card';
-    bloco.style.cssText = 'margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-body);';
+    bloco.open = true;
+    bloco.style.cssText = 'margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; background: var(--bg-body);';
     bloco.innerHTML = `
-        <label style="font-weight: bold; margin-bottom: 6px; display: block; color: var(--primary);">Novo Prompt</label>
-        <input data-prompt-name placeholder="Identificador do prompt" style="margin-bottom: 8px; font-family: monospace;">
-        <input data-prompt-description placeholder="Descrição" style="margin-bottom: 8px;">
-        <textarea data-prompt-content style="width: 100%; height: 150px; background: var(--bg-panel); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: vertical;"></textarea>
+        <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">Novo Prompt</summary>
+        <div style="margin-top: 12px;">
+            <input data-prompt-name placeholder="Identificador do prompt" style="margin-bottom: 8px; font-family: monospace;">
+            <input data-prompt-description placeholder="Descrição" style="margin-bottom: 8px;">
+            <textarea data-prompt-content style="width: 100%; height: 150px; background: var(--bg-panel); color: var(--text-main); font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: vertical;"></textarea>
+        </div>
     `;
     lista.appendChild(bloco);
 }
@@ -325,6 +366,7 @@ export async function recuperarSenha() {
 }
 
 export async function atualizarEmail() {
+    if (bloquearSeAdmin()) return;
     const novoEmail = getValSafe('novo-email');
     if (!novoEmail) return alert('Digite o novo e-mail.');
     const { error } = await sb.auth.updateUser({ email: novoEmail });
@@ -337,6 +379,7 @@ export async function atualizarEmail() {
 }
 
 export async function atualizarSenhaConta() {
+    if (bloquearSeAdmin()) return;
     const s1 = getValSafe('nova-senha');
     const s2 = getValSafe('nova-senha-conf');
     if (s1 !== s2) return alert('As senhas não coincidem.');
@@ -352,7 +395,7 @@ export async function atualizarSenhaConta() {
 }
 
 export async function solicitarExclusao() {
-    if (appState.usuarioAtual && appState.usuarioAtual.email === 'dop.jr82@gmail.com') {
+    if (usuarioEhAdmin()) {
         return alert('A conta de administrador principal não pode ser excluída.');
     }
     if (confirm('TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.')) {

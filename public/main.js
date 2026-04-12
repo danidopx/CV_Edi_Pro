@@ -68,7 +68,9 @@ import {
     adicionarIdioma,
     editarHabilidade,
     adicionarHabilidade,
-    initEditorFieldGuards
+    initEditorFieldGuards,
+    atualizarBotaoVagaCapturadaAdmin,
+    alternarModalVagaCapturadaAdmin
 } from './cv-builder.js';
 import { gerarPDF } from './pdf.js';
 
@@ -130,7 +132,9 @@ function bindWindowGlobals() {
         marcarAlteracao,
         deletarUsuarioAdmin,
         reabilitarUsuarioAdmin,
-        excluirUsuarioDefinitivo
+        excluirUsuarioDefinitivo,
+        atualizarBotaoVagaCapturadaAdmin,
+        alternarModalVagaCapturadaAdmin
     });
 }
 
@@ -195,6 +199,7 @@ window.addEventListener('load', async () => {
         localStorage.setItem('ultima_atividade_app', Date.now());
         atualizarInfosUsuarioTopo();
         verificarAdmin();
+        atualizarBotaoVagaCapturadaAdmin();
 
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
