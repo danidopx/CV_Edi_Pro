@@ -83,6 +83,17 @@ export async function carregarVersaoAtualApp(environmentName = detectarAmbienteA
     return data || null;
 }
 
+function registroVersaoCombinaComDeployAtual(registro) {
+    if (!registro) return false;
+    if (registro.environment_name === 'production') return true;
+
+    const deploymentUrl = String(registro.deployment_url || '').trim().replace(/\/+$/, '');
+    const origemAtual = String(window.location.origin || '').trim().replace(/\/+$/, '');
+
+    if (!deploymentUrl) return false;
+    return deploymentUrl.toLowerCase() === origemAtual.toLowerCase();
+}
+
 export async function carregarHistoricoVersoesApp(environmentName) {
     let query = sb
         .from('app_versions')
@@ -166,7 +177,13 @@ export async function sincronizarVersaoAppNaTela() {
     if (rotulos.length === 0) return null;
 
     const registro = await carregarVersaoAtualApp();
-    if (!registro) return null;
+    if (!registroVersaoCombinaComDeployAtual(registro)) {
+        metas.forEach(el => {
+            el.textContent = '';
+            el.style.display = 'none';
+        });
+        return null;
+    }
 
     const label = montarRotuloVersao(registro);
     const dataFormatada = formatarDataVersao(registro.release_date);

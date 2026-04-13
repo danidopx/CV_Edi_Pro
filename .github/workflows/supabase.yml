@@ -43,11 +43,34 @@ jobs:
         id: preview_version
         shell: bash
         run: |
+          BASE_VERSION=$(node -p "require('./package.json').version")
           LATEST_TAG=$(git tag --sort=-version:refname | head -n 1)
           if [[ -z "$LATEST_TAG" ]]; then
-            LATEST_TAG=$(node -p "require('./package.json').version")
+            LATEST_TAG="0.0.0"
           fi
-          echo "value=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+
+          IFS='.' read -r BASE_MAJOR BASE_MINOR BASE_PATCH <<< "$BASE_VERSION"
+          IFS='.' read -r TAG_MAJOR TAG_MINOR TAG_PATCH <<< "$LATEST_TAG"
+
+          BASE_MAJOR=${BASE_MAJOR:-0}
+          BASE_MINOR=${BASE_MINOR:-0}
+          BASE_PATCH=${BASE_PATCH:-0}
+          TAG_MAJOR=${TAG_MAJOR:-0}
+          TAG_MINOR=${TAG_MINOR:-0}
+          TAG_PATCH=${TAG_PATCH:-0}
+
+          PREVIEW_MAJOR=$BASE_MAJOR
+          PREVIEW_MINOR=$BASE_MINOR
+          PREVIEW_PATCH=$BASE_PATCH
+
+          if (( TAG_MAJOR > PREVIEW_MAJOR || (TAG_MAJOR == PREVIEW_MAJOR && TAG_MINOR > PREVIEW_MINOR) || (TAG_MAJOR == PREVIEW_MAJOR && TAG_MINOR == PREVIEW_MINOR && TAG_PATCH > PREVIEW_PATCH) )); then
+            PREVIEW_MAJOR=$TAG_MAJOR
+            PREVIEW_MINOR=$TAG_MINOR
+            PREVIEW_PATCH=$TAG_PATCH
+          fi
+
+          PREVIEW_PATCH=$((PREVIEW_PATCH + 1))
+          echo "value=$PREVIEW_MAJOR.$PREVIEW_MINOR.$PREVIEW_PATCH" >> "$GITHUB_OUTPUT"
 
       - name: Atualizar arquivos para release
         if: steps.context.outputs.is_release_branch == 'true'
