@@ -29,54 +29,58 @@ jobs:
             echo "is_release_branch=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Automatizar versão oficial
-        if: steps.context.outputs.is_release_branch == 'true'
-        id: tag_version
-        uses: anothrNick/github-tag-action@1.64.0
+      - name: Ler versões atuais no banco
+        id: db_versions
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: false
-          DEFAULT_BUMP: patch
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
 
-      - name: Calcular versão do preview
-        if: steps.context.outputs.is_release_branch == 'false'
-        id: preview_version
+          PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '0.0.0');" | tr -d '[:space:]')
+          PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '0.0.0');" | tr -d '[:space:]')
+
+          echo "preview_current=${PREVIEW_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
+          echo "production_current=${PRODUCTION_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
+
+      - name: Definir próxima versão
+        id: next_version
         shell: bash
         run: |
-          BASE_VERSION=$(node -p "require('./package.json').version")
-          LATEST_TAG=$(git tag --sort=-version:refname | head -n 1)
-          if [[ -z "$LATEST_TAG" ]]; then
-            LATEST_TAG="0.0.0"
+          increment_patch() {
+            local version="$1"
+            IFS='.' read -r major minor patch <<< "${version:-0.0.0}"
+            major=${major:-0}
+            minor=${minor:-0}
+            patch=${patch:-0}
+            patch=$((patch + 1))
+            echo "${major}.${minor}.${patch}"
+          }
+
+          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
+            CURRENT_VERSION="${{ steps.db_versions.outputs.production_current }}"
+            NEXT_VERSION=$(increment_patch "$CURRENT_VERSION")
+            echo "environment_name=production" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "deployment_url=https://cvedipro.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "release_notes=Registro automático de versão de produção pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+          else
+            CURRENT_VERSION="${{ steps.db_versions.outputs.preview_current }}"
+            NEXT_VERSION=$(increment_patch "$CURRENT_VERSION")
+            echo "environment_name=preview" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "deployment_url=https://cvedipro-preview.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "release_notes=Registro automático de versão de preview pelo GitHub Actions." >> "$GITHUB_OUTPUT"
           fi
-
-          IFS='.' read -r BASE_MAJOR BASE_MINOR BASE_PATCH <<< "$BASE_VERSION"
-          IFS='.' read -r TAG_MAJOR TAG_MINOR TAG_PATCH <<< "$LATEST_TAG"
-
-          BASE_MAJOR=${BASE_MAJOR:-0}
-          BASE_MINOR=${BASE_MINOR:-0}
-          BASE_PATCH=${BASE_PATCH:-0}
-          TAG_MAJOR=${TAG_MAJOR:-0}
-          TAG_MINOR=${TAG_MINOR:-0}
-          TAG_PATCH=${TAG_PATCH:-0}
-
-          PREVIEW_MAJOR=$BASE_MAJOR
-          PREVIEW_MINOR=$BASE_MINOR
-          PREVIEW_PATCH=$BASE_PATCH
-
-          if (( TAG_MAJOR > PREVIEW_MAJOR || (TAG_MAJOR == PREVIEW_MAJOR && TAG_MINOR > PREVIEW_MINOR) || (TAG_MAJOR == PREVIEW_MAJOR && TAG_MINOR == PREVIEW_MINOR && TAG_PATCH > PREVIEW_PATCH) )); then
-            PREVIEW_MAJOR=$TAG_MAJOR
-            PREVIEW_MINOR=$TAG_MINOR
-            PREVIEW_PATCH=$TAG_PATCH
-          fi
-
-          PREVIEW_PATCH=$((PREVIEW_PATCH + 1))
-          echo "value=$PREVIEW_MAJOR.$PREVIEW_MINOR.$PREVIEW_PATCH" >> "$GITHUB_OUTPUT"
 
       - name: Atualizar arquivos para release
         if: steps.context.outputs.is_release_branch == 'true'
         shell: bash
         run: |
-          NEW_VER=${{ steps.tag_version.outputs.new_tag }}
+          NEW_VER=${{ steps.next_version.outputs.target_version }}
           CACHE_ID=$(date +%s | tail -c 6)
 
           sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VER\"/" package.json
@@ -89,7 +93,7 @@ jobs:
         if: steps.context.outputs.is_release_branch == 'false'
         shell: bash
         run: |
-          PREVIEW_VER=${{ steps.preview_version.outputs.value }}
+          PREVIEW_VER=${{ steps.next_version.outputs.target_version }}
           CACHE_ID=$(date +%s | tail -c 6)
 
           sed -i "s/\"version\": \".*\"/\"version\": \"$PREVIEW_VER\"/" package.json
@@ -111,32 +115,26 @@ jobs:
           fi
 
           if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            TARGET_VER=${{ steps.tag_version.outputs.new_tag }}
+            TARGET_VER=${{ steps.next_version.outputs.target_version }}
             git commit -m "chore: v$TARGET_VER [skip ci]"
           else
-            TARGET_VER=${{ steps.preview_version.outputs.value }}
+            TARGET_VER=${{ steps.next_version.outputs.target_version }}
             git commit -m "chore: preview v$TARGET_VER [skip ci]"
           fi
 
           git push origin HEAD:${GITHUB_REF_NAME}
 
-      - name: Definir metadados de versionamento
-        id: version_meta
+      - name: Criar tag da produção
+        if: steps.context.outputs.is_release_branch == 'true'
         shell: bash
         run: |
-          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            echo "environment_name=production" >> "$GITHUB_OUTPUT"
-            echo "target_version=${{ steps.tag_version.outputs.new_tag }}" >> "$GITHUB_OUTPUT"
-            echo "deployment_url=https://cvedipro.vercel.app" >> "$GITHUB_OUTPUT"
-            echo "release_notes=Registro automático de versão de produção pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+          TARGET_VER=${{ steps.next_version.outputs.target_version }}
+          if git rev-parse "$TARGET_VER" >/dev/null 2>&1; then
+            echo "Tag $TARGET_VER já existe localmente."
           else
-            echo "environment_name=preview" >> "$GITHUB_OUTPUT"
-            echo "target_version=${{ steps.preview_version.outputs.value }}" >> "$GITHUB_OUTPUT"
-            echo "deployment_url=https://cvedipro-preview.vercel.app" >> "$GITHUB_OUTPUT"
-            echo "release_notes=Registro automático de versão de preview pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+            git tag "$TARGET_VER"
+            git push origin "$TARGET_VER"
           fi
-
-          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Instalar Supabase CLI
         uses: supabase/setup-cli@v1
@@ -158,7 +156,7 @@ jobs:
           WITH previous_current AS (
               SELECT id, current_version
               FROM public.app_versions
-              WHERE environment_name = '${{ steps.version_meta.outputs.environment_name }}'
+              WHERE environment_name = '${{ steps.next_version.outputs.environment_name }}'
                 AND is_current = true
               ORDER BY release_date DESC
               LIMIT 1
@@ -186,15 +184,15 @@ jobs:
           )
           VALUES (
               'CV Edi Pro',
-              '${{ steps.version_meta.outputs.environment_name }}',
-              '${{ steps.version_meta.outputs.target_version }}',
+              '${{ steps.next_version.outputs.environment_name }}',
+              '${{ steps.next_version.outputs.target_version }}',
               COALESCE((SELECT current_version FROM previous_current), NULL),
               NOW(),
               'GitHub Action',
               'action@github.com',
-              '${{ steps.version_meta.outputs.deployment_url }}',
-              '${{ steps.version_meta.outputs.commit_sha }}',
-              '${{ steps.version_meta.outputs.release_notes }}',
+              '${{ steps.next_version.outputs.deployment_url }}',
+              '$(git rev-parse HEAD)',
+              '${{ steps.next_version.outputs.release_notes }}',
               'github_actions',
               true,
               true,
