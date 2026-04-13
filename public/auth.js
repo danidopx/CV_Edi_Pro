@@ -4,11 +4,27 @@ import {
     regexSenha,
     DEFAULT_PROMPTS_BY_NAME
 } from './config.js';
-import { carregarConfiguracaoIA, carregarTodosPromptsIA, getPromptCatalog, inicializarModeloIA } from './api.js';
-import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
+import {
+    carregarConfiguracaoIA,
+    carregarTodosPromptsIA,
+    getPromptCatalog,
+    inicializarModeloIA,
+    atualizarVisibilidadePainelDebug,
+    detectarAmbienteAtual,
+    carregarVersaoAtualApp,
+    carregarHistoricoVersoesApp,
+    registrarVersaoApp
+} from './api.js';
+import { getValSafe, setValSafe, showToast, irPara, mostrarAviso, mostrarConfirmacao } from './ui.js';
 
 function getAuthRedirectUrl() {
-    return window.location.origin;
+    const host = String(window.location.hostname || '').toLowerCase();
+
+    if (host === 'cvedipro.vercel.app' || host === 'curriculo-edi.vercel.app') {
+        return 'https://cvedipro.vercel.app';
+    }
+
+    return 'https://cvedipro-preview.vercel.app';
 }
 
 export function usuarioEhAdmin() {
@@ -25,8 +41,90 @@ function escaparHtml(valor) {
 
 function bloquearSeAdmin() {
     if (!usuarioEhAdmin()) return false;
-    alert('Por segurança, os dados cadastrais da conta admin principal não podem ser alterados por esta tela.');
+    mostrarAviso('Por segurança, os dados cadastrais da conta admin principal não podem ser alterados por esta tela.', {
+        title: 'Acesso protegido'
+    });
     return true;
+}
+
+function mensagemSenhaSegura() {
+    return 'Crie uma senha com pelo menos 8 caracteres, incluindo 1 letra maiúscula e 1 número.';
+}
+
+function obterStatusSenhaCadastro() {
+    const senha = getValSafe('login-senha');
+    const confirmacao = getValSafe('login-senha-conf');
+    const temConteudo = Boolean(senha || confirmacao);
+    const temTamanho = senha.length >= 8;
+    const temMaiuscula = /[A-Z]/.test(senha);
+    const temNumero = /\d/.test(senha);
+    const senhasCoincidem = !confirmacao || senha === confirmacao;
+
+    return {
+        senha,
+        confirmacao,
+        temConteudo,
+        temTamanho,
+        temMaiuscula,
+        temNumero,
+        senhasCoincidem,
+        senhaValida: temTamanho && temMaiuscula && temNumero
+    };
+}
+
+function atualizarItemValidacaoSenha(id, valido, rotulo) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = `${valido ? '✓' : '•'} ${rotulo}`;
+    el.style.color = valido ? 'var(--accent)' : 'var(--text-light)';
+}
+
+export function atualizarValidacaoSenhaCadastro() {
+    const box = document.getElementById('box-validacao-senha');
+    const resumo = document.getElementById('login-senha-resumo');
+    const status = obterStatusSenhaCadastro();
+
+    if (!box || !resumo) return status;
+
+    box.style.display = appState.modoCriarConta ? 'block' : 'none';
+
+    atualizarItemValidacaoSenha('senha-regra-tamanho', status.temTamanho, 'Pelo menos 8 caracteres');
+    atualizarItemValidacaoSenha('senha-regra-maiuscula', status.temMaiuscula, '1 letra maiúscula');
+    atualizarItemValidacaoSenha('senha-regra-numero', status.temNumero, '1 número');
+    atualizarItemValidacaoSenha('senha-regra-coincide', status.senhasCoincidem && Boolean(status.confirmacao), 'Senhas iguais');
+
+    if (!appState.modoCriarConta || !status.temConteudo) {
+        resumo.textContent = 'Sua senha ficará protegida pelo Supabase Auth.';
+        resumo.style.color = 'var(--text-light)';
+        return status;
+    }
+
+    if (status.senhaValida && status.senhasCoincidem && status.confirmacao) {
+        resumo.textContent = 'Senha pronta para criar a conta.';
+        resumo.style.color = 'var(--accent)';
+    } else if (!status.senhaValida) {
+        resumo.textContent = mensagemSenhaSegura();
+        resumo.style.color = 'var(--text-light)';
+    } else if (status.confirmacao && !status.senhasCoincidem) {
+        resumo.textContent = 'As duas senhas ainda não coincidem.';
+        resumo.style.color = 'var(--danger)';
+    } else {
+        resumo.textContent = 'Confirme a senha para concluir o cadastro.';
+        resumo.style.color = 'var(--text-light)';
+    }
+
+    return status;
+}
+
+export function initCadastroSenhaEmTempoReal() {
+    ['login-senha', 'login-senha-conf'].forEach(id => {
+        const campo = document.getElementById(id);
+        if (!campo || campo.dataset.validacaoSenhaInit === 'true') return;
+        campo.dataset.validacaoSenhaInit = 'true';
+        campo.addEventListener('input', atualizarValidacaoSenhaCadastro);
+    });
+
+    atualizarValidacaoSenhaCadastro();
 }
 
 function atualizarControlesContaAdmin() {
@@ -44,12 +142,113 @@ function atualizarControlesContaAdmin() {
     });
 }
 
+function formatarDataHoraInput(valor) {
+    if (!valor) return '';
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) return '';
+    const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+}
+
+function formatarDataHoraTabela(valor) {
+    if (!valor) return '—';
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) return '—';
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function extrairVersaoDoRotuloAtual() {
+    const texto = document.querySelector('[data-app-version-label]')?.textContent || '';
+    const match = texto.match(/v(\d+\.\d+\.\d+)/i);
+    return match ? match[1] : '';
+}
+
+function calcularVersaoAnteriorSugerida(versaoAtual) {
+    const partes = String(versaoAtual || '').split('.').map(Number);
+    if (partes.length !== 3 || partes.some(Number.isNaN)) return '';
+    const [major, minor, patch] = partes;
+    if (patch > 0) return `${major}.${minor}.${patch - 1}`;
+    return '';
+}
+
+async function preencherPainelVersionamentoAdmin() {
+    const ambienteAtual = detectarAmbienteAtual();
+    const selectAmbiente = document.getElementById('admin-versao-ambiente');
+    if (selectAmbiente) selectAmbiente.value = ambienteAtual;
+
+    const infoAtual = document.getElementById('admin-versao-atual-info');
+    const historicoBody = document.getElementById('admin-versoes-historico');
+
+    try {
+        const [versaoAtual, historico] = await Promise.all([
+            carregarVersaoAtualApp(ambienteAtual),
+            carregarHistoricoVersoesApp()
+        ]);
+
+        if (infoAtual) {
+            if (versaoAtual) {
+                const responsavel = versaoAtual.responsible_name || versaoAtual.responsible_email || 'Não informado';
+                infoAtual.innerHTML = `<strong>Versão atual em ${ambienteAtual === 'production' ? 'Produção' : 'Preview'}:</strong> v${escaparHtml(versaoAtual.current_version)} | ${formatarDataHoraTabela(versaoAtual.release_date)} | ${escaparHtml(responsavel)}`;
+            } else {
+                infoAtual.innerHTML = '<strong>Nenhuma versão cadastrada ainda</strong> para este ambiente.';
+            }
+        }
+
+        const versaoSugerida = versaoAtual?.current_version || extrairVersaoDoRotuloAtual();
+        const versaoAnteriorSugerida = versaoAtual?.current_version || calcularVersaoAnteriorSugerida(versaoSugerida);
+
+        setValSafe('admin-versao-atual', versaoSugerida);
+        setValSafe('admin-versao-anterior', versaoAnteriorSugerida);
+        setValSafe('admin-versao-responsavel', appState.usuarioAtual?.user_metadata?.full_name || appState.usuarioAtual?.user_metadata?.name || '');
+        setValSafe('admin-versao-email', appState.usuarioAtual?.email || '');
+        setValSafe('admin-versao-url', window.location.origin);
+        setValSafe('admin-versao-commit', '');
+        setValSafe('admin-versao-observacoes', '');
+        setValSafe('admin-versao-data', formatarDataHoraInput(new Date().toISOString()));
+
+        if (historicoBody) {
+            historicoBody.innerHTML = historico.length === 0
+                ? '<tr><td colspan="6" style="text-align: center;">Nenhum registro encontrado.</td></tr>'
+                : historico.map(item => {
+                    const ambiente = item.environment_name === 'production' ? 'Produção' : 'Preview';
+                    const responsavel = item.responsible_name || item.responsible_email || '—';
+                    return `
+                        <tr>
+                            <td>${ambiente}</td>
+                            <td><strong>v${escaparHtml(item.current_version)}</strong></td>
+                            <td>${escaparHtml(item.previous_version || '—')}</td>
+                            <td>${formatarDataHoraTabela(item.release_date)}</td>
+                            <td>${escaparHtml(responsavel)}</td>
+                            <td>${item.is_current ? '<span style="color: var(--accent); font-weight: bold;">Atual</span>' : 'Histórico'}</td>
+                        </tr>
+                    `;
+                }).join('');
+        }
+    } catch (error) {
+        if (infoAtual) {
+            infoAtual.innerHTML = `<span style="color: var(--danger);">Erro ao carregar versionamento: ${escaparHtml(error.message)}</span>`;
+        }
+        if (historicoBody) {
+            historicoBody.innerHTML = `<tr><td colspan="6" style="color: var(--danger); text-align: center;">Erro ao carregar histórico: ${escaparHtml(error.message)}</td></tr>`;
+        }
+    }
+}
+
 export function validarSenha(senha) {
     return regexSenha.test(senha);
 }
 
 export function verificarAdmin() {
-    if (usuarioEhAdmin()) {
+    const admin = usuarioEhAdmin();
+    atualizarVisibilidadePainelDebug(admin);
+
+    if (admin) {
         const c = document.getElementById('btn-admin-config');
         const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'flex';
@@ -78,10 +277,10 @@ export function atualizarInfosUsuarioTopo() {
 export async function atualizarNomeConta() {
     if (bloquearSeAdmin()) return;
     const novoNome = getValSafe('novo-nome');
-    if (!novoNome) return alert('Digite o nome desejado.');
+    if (!novoNome) return mostrarAviso('Digite o nome que você deseja usar na conta.');
     const { data, error } = await sb.auth.updateUser({ data: { full_name: novoNome } });
     if (error) {
-        alert('Erro ao atualizar nome: ' + error.message);
+        mostrarAviso('Não foi possível atualizar o nome agora.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
         appState.usuarioAtual = data.user;
         atualizarInfosUsuarioTopo();
@@ -153,6 +352,7 @@ export async function abrirConfigAdmin() {
     }
 
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
+    await preencherPainelVersionamentoAdmin();
     document.getElementById('modal-admin').style.display = 'flex';
 }
 
@@ -181,7 +381,7 @@ export async function salvarConfigAdmin() {
         const { error } = await sb.from('ai_prompts').upsert(promptsParaSalvar, { onConflict: 'prompt_name' });
 
         if (error) {
-            alert('Erro ao salvar prompts no banco: ' + error.message);
+            mostrarAviso('Não foi possível salvar os prompts no banco.\n\nDetalhe: ' + error.message, { tone: 'erro' });
             return;
         }
 
@@ -194,7 +394,7 @@ export async function salvarConfigAdmin() {
         }, { onConflict: 'setting_key' });
 
         if (settingError) {
-            alert('Erro ao salvar modelo da IA no banco: ' + settingError.message);
+            mostrarAviso('Não foi possível salvar o modelo da IA no banco.\n\nDetalhe: ' + settingError.message, { tone: 'erro' });
             return;
         }
 
@@ -204,7 +404,7 @@ export async function salvarConfigAdmin() {
         document.getElementById('modal-admin').style.display = 'none';
         showToast();
     } else {
-        alert('Os prompts não podem ficar vazios.');
+        mostrarAviso('Os prompts não podem ficar vazios.');
     }
 }
 
@@ -225,6 +425,36 @@ export function adicionarPromptAdmin() {
         </div>
     `;
     lista.appendChild(bloco);
+}
+
+export async function registrarVersaoAdmin() {
+    const environment_name = getValSafe('admin-versao-ambiente').trim();
+    const current_version = getValSafe('admin-versao-atual').trim();
+
+    if (!environment_name || !current_version) {
+        mostrarAviso('Preencha ao menos o ambiente e a versão atual.');
+        return;
+    }
+
+    try {
+        await registrarVersaoApp({
+            environment_name,
+            current_version,
+            previous_version: getValSafe('admin-versao-anterior').trim(),
+            release_date: getValSafe('admin-versao-data') ? new Date(getValSafe('admin-versao-data')).toISOString() : new Date().toISOString(),
+            responsible_name: getValSafe('admin-versao-responsavel').trim(),
+            responsible_email: getValSafe('admin-versao-email').trim(),
+            deployment_url: getValSafe('admin-versao-url').trim(),
+            commit_ref: getValSafe('admin-versao-commit').trim(),
+            release_notes: getValSafe('admin-versao-observacoes').trim(),
+            source: 'manual'
+        });
+
+        await preencherPainelVersionamentoAdmin();
+        showToast('Versionamento atualizado!');
+    } catch (error) {
+        mostrarAviso('Não foi possível registrar a versão.\n\nDetalhe: ' + error.message, { tone: 'erro' });
+    }
 }
 
 export async function abrirGestaoUsuarios() {
@@ -260,9 +490,14 @@ export async function abrirGestaoUsuarios() {
 }
 
 export async function deletarUsuarioAdmin(userId, userEmail) {
-    if (confirm(`ATENÇÃO: Deseja suspender o acesso de ${userEmail}?`)) {
+    if (await mostrarConfirmacao(`Deseja suspender o acesso de ${userEmail}?`, {
+        title: 'Desativar usuário',
+        confirmLabel: 'Desativar',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId });
-        if (error) alert('Erro: ' + error.message);
+        if (error) mostrarAviso('Não foi possível desativar o usuário.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         else {
             showToast('Usuário desativado!');
             abrirGestaoUsuarios();
@@ -271,10 +506,15 @@ export async function deletarUsuarioAdmin(userId, userEmail) {
 }
 
 export async function reabilitarUsuarioAdmin(userId, userEmail) {
-    if (confirm(`Deseja REABILITAR o acesso de ${userEmail}?`)) {
+    if (await mostrarConfirmacao(`Deseja reabilitar o acesso de ${userEmail}?`, {
+        title: 'Reabilitar usuário',
+        confirmLabel: 'Reabilitar',
+        cancelLabel: 'Cancelar',
+        tone: 'sucesso'
+    })) {
         const { error } = await sb.rpc('admin_reabilitar_usuario', { alvo_id: userId });
         if (error) {
-            alert('Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase.');
+            mostrarAviso('Não foi possível reabilitar o usuário.\n\nO banco não encontrou a função admin_reabilitar_usuario. Verifique essa função no Supabase.', { tone: 'erro' });
         } else {
             showToast('Usuário reabilitado com sucesso!');
             abrirGestaoUsuarios();
@@ -283,9 +523,14 @@ export async function reabilitarUsuarioAdmin(userId, userEmail) {
 }
 
 export async function excluirUsuarioDefinitivo(userId, userEmail) {
-    if (confirm(`⚠️ CUIDADO! Você está prestes a EXCLUIR DEFINITIVAMENTE o usuário:\n\n${userEmail}\n\nEsta ação apagará a conta do banco de dados e NÃO PODE SER DESFEITA. Deseja continuar?`)) {
+    if (await mostrarConfirmacao(`Você está prestes a excluir definitivamente o usuário:\n\n${userEmail}\n\nEssa ação apagará a conta do banco e não pode ser desfeita.`, {
+        title: 'Excluir usuário definitivamente',
+        confirmLabel: 'Excluir definitivamente',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.rpc('admin_excluir_usuario_definitivo', { alvo_id: userId });
-        if (error) alert('Erro ao excluir: ' + error.message);
+        if (error) mostrarAviso('Não foi possível excluir o usuário definitivamente.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         else {
             showToast('Usuário excluído permanentemente do sistema!');
             abrirGestaoUsuarios();
@@ -305,38 +550,45 @@ export function alternarModoLogin() {
             ? `Já tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Entrar</a>`
             : `Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a>`;
     }
+    atualizarValidacaoSenhaCadastro();
 }
 
 export async function processarFormularioLogin() {
     const email = getValSafe('login-email');
     const password = getValSafe('login-senha');
-    if (!email || !password) return alert('Preencha e-mail e senha.');
+    if (!email || !password) return mostrarAviso('Preencha e-mail e senha para continuar.');
     const msgLog = document.getElementById('msg-login');
     if (msgLog) msgLog.style.display = 'block';
 
     if (appState.modoCriarConta) {
-        const conf = getValSafe('login-senha-conf');
-        if (password !== conf) {
-            alert('As senhas não coincidem.');
+        const statusSenha = atualizarValidacaoSenhaCadastro();
+        if (password !== statusSenha.confirmacao) {
+            mostrarAviso('As senhas informadas não coincidem. Revise e tente novamente.');
             if (msgLog) msgLog.style.display = 'none';
             return;
         }
-        if (!validarSenha(password)) {
-            alert('A senha deve ter no mínimo 8 caracteres, contendo pelo menos 1 número e 1 letra maiúscula.');
+        if (!statusSenha.senhaValida) {
+            mostrarAviso(mensagemSenhaSegura(), {
+                title: 'Senha mais forte'
+            });
             if (msgLog) msgLog.style.display = 'none';
             return;
         }
         const { data, error } = await sb.auth.signUp({ email, password });
         if (error) {
-            alert('Erro: ' + error.message);
+            mostrarAviso('Não foi possível criar sua conta agora.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            alert('E-mail já em uso.');
+            mostrarAviso('Este e-mail já está em uso. Tente entrar ou recuperar a senha.');
         } else {
-            alert('✉️ Link de confirmação enviado! Verifique seu e-mail.');
+            mostrarAviso('Enviamos um link de confirmação para o seu e-mail. Verifique a caixa de entrada para concluir o cadastro.', {
+                title: 'Quase lá',
+                tone: 'sucesso'
+            });
             setValSafe('login-email', '');
             setValSafe('login-senha', '');
             setValSafe('login-senha-conf', '');
             alternarModoLogin();
+            atualizarValidacaoSenhaCadastro();
         }
     } else {
         const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -347,7 +599,10 @@ export async function processarFormularioLogin() {
                 document.getElementById('texto-email-suporte').innerText = emailSuporte;
                 document.getElementById('modal-bloqueado').style.display = 'flex';
             } else {
-                alert('Erro: E-mail ou senha incorretos.');
+                mostrarAviso('E-mail ou senha incorretos. Revise os dados e tente novamente.', {
+                    title: 'Não foi possível entrar',
+                    tone: 'erro'
+                });
             }
         }
     }
@@ -359,21 +614,27 @@ export async function recuperarSenha() {
     if (!email) return;
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl() });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível enviar o link de recuperação.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
-        alert('✉️ Link enviado se o e-mail existir no sistema.');
+        mostrarAviso('Se o e-mail existir no sistema, você receberá um link para redefinir a senha.', {
+            title: 'Verifique seu e-mail',
+            tone: 'sucesso'
+        });
     }
 }
 
 export async function atualizarEmail() {
     if (bloquearSeAdmin()) return;
     const novoEmail = getValSafe('novo-email');
-    if (!novoEmail) return alert('Digite o novo e-mail.');
+    if (!novoEmail) return mostrarAviso('Digite o novo e-mail para continuar.');
     const { error } = await sb.auth.updateUser({ email: novoEmail });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível atualizar o e-mail.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
-        alert('✉️ Links enviados para confirmar a troca.');
+        mostrarAviso('Enviamos os links de confirmação para concluir a troca de e-mail.', {
+            title: 'Confirmação enviada',
+            tone: 'sucesso'
+        });
         setValSafe('novo-email', '');
     }
 }
@@ -382,13 +643,16 @@ export async function atualizarSenhaConta() {
     if (bloquearSeAdmin()) return;
     const s1 = getValSafe('nova-senha');
     const s2 = getValSafe('nova-senha-conf');
-    if (s1 !== s2) return alert('As senhas não coincidem.');
-    if (!validarSenha(s1)) return alert('A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.');
+    if (s1 !== s2) return mostrarAviso('As senhas informadas não coincidem. Revise e tente novamente.');
+    if (!validarSenha(s1)) return mostrarAviso(mensagemSenhaSegura(), { title: 'Senha mais forte' });
     const { error } = await sb.auth.updateUser({ password: s1 });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível atualizar a senha.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
-        alert('Senha atualizada!');
+        mostrarAviso('Sua senha foi atualizada com sucesso.', {
+            title: 'Senha atualizada',
+            tone: 'sucesso'
+        });
         setValSafe('nova-senha', '');
         setValSafe('nova-senha-conf', '');
     }
@@ -396,14 +660,22 @@ export async function atualizarSenhaConta() {
 
 export async function solicitarExclusao() {
     if (usuarioEhAdmin()) {
-        return alert('A conta de administrador principal não pode ser excluída.');
+        return mostrarAviso('A conta de administrador principal não pode ser excluída.');
     }
-    if (confirm('TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.')) {
+    if (await mostrarConfirmacao('O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.', {
+        title: 'Desativar minha conta',
+        confirmLabel: 'Desativar conta',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.rpc('desativar_minha_conta');
-        if (error) alert('Erro ao desativar: ' + error.message);
+        if (error) mostrarAviso('Não foi possível desativar a conta.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         else {
             await fazerLogout();
-            alert('Conta desativada com sucesso.');
+            mostrarAviso('Sua conta foi desativada com sucesso.', {
+                title: 'Conta desativada',
+                tone: 'sucesso'
+            });
         }
     }
 }
@@ -416,7 +688,7 @@ export async function fazerLoginGoogle() {
         options: { redirectTo: getAuthRedirectUrl() }
     });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível iniciar o login com Google.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         if (msg) msg.style.display = 'none';
     }
 }

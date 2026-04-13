@@ -19,6 +19,7 @@ export const appState = {
     modoCriarConta: false,
     ultimasAlteracoesIA: '',
     analiseAtsAtual: null,
+    sugestoesAtsEstruturadas: [],
     vagaOriginalAtual: '',
     origemAtual: 'Criado do zero',
     historicoTelas: [],
@@ -27,6 +28,40 @@ export const appState = {
     temAlteracoesNaoSalvas: false,
     passoTour: 0
 };
+
+function clonarSugestaoAts(sugestao) {
+    if (!sugestao || typeof sugestao !== 'object') return null;
+
+    return {
+        tipo: String(sugestao.tipo || 'geral'),
+        alvo: String(sugestao.alvo || 'curriculo'),
+        descricao: String(sugestao.descricao || ''),
+        prioridade: String(sugestao.prioridade || 'media'),
+        aplicavel_automaticamente: Boolean(sugestao.aplicavel_automaticamente)
+    };
+}
+
+export function atualizarSugestoesAtsEstruturadas(origem) {
+    const sugestoes = Array.isArray(origem?.sugestoes_estruturadas)
+        ? origem.sugestoes_estruturadas
+        : [];
+
+    appState.sugestoesAtsEstruturadas = sugestoes
+        .map(clonarSugestaoAts)
+        .filter(item => item && item.descricao);
+
+    return appState.sugestoesAtsEstruturadas;
+}
+
+export function limparSugestoesAtsEstruturadas() {
+    appState.sugestoesAtsEstruturadas = [];
+}
+
+export function obterSugestoesAtsEstruturadas() {
+    return appState.sugestoesAtsEstruturadas
+        .map(clonarSugestaoAts)
+        .filter(item => item && item.descricao);
+}
 
 export const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 

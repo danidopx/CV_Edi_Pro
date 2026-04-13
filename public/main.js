@@ -1,5 +1,5 @@
 import { sb, appState } from './config.js';
-import { logDebug, initDebugPanel, inicializarModeloIA } from './api.js';
+import { logDebug, initDebugPanel, inicializarModeloIA, sincronizarVersaoAppNaTela } from './api.js';
 import {
     applyTheme,
     irPara,
@@ -17,7 +17,11 @@ import {
     syncContato,
     voltarTela,
     mostrarAlteracoes,
-    toggleFullscreenCV
+    toggleFullscreenCV,
+    mostrarAviso,
+    fecharAviso,
+    fecharConfirmacao,
+    responderConfirmacao
 } from './ui.js';
 import {
     verificarAdmin,
@@ -26,6 +30,7 @@ import {
     abrirConfigAdmin,
     adicionarPromptAdmin,
     salvarConfigAdmin,
+    registrarVersaoAdmin,
     abrirGestaoUsuarios,
     deletarUsuarioAdmin,
     reabilitarUsuarioAdmin,
@@ -33,6 +38,7 @@ import {
     alternarModoLogin,
     processarFormularioLogin,
     recuperarSenha,
+    initCadastroSenhaEmTempoReal,
     atualizarEmail,
     atualizarSenhaConta,
     solicitarExclusao,
@@ -44,16 +50,16 @@ import {
     recuperarEstadoTela,
     receberVagaExterna,
     receberVagaMobile,
-    fluxoNovo,
+    abrirFluxoEditorCurriculo,
+    abrirCurriculosSalvos,
     salvarOnboardingEContinuar,
     definirPadrao,
-    fluxoLista,
     duplicar,
     salvarComo,
     salvar,
     carregar,
     deletar,
-    abrirTelaVaga,
+    abrirFluxoAnaliseVaga,
     verificarCurriculoBase,
     extrairDadosIA,
     acionarRecalculoATS,
@@ -68,6 +74,7 @@ import {
     adicionarIdioma,
     editarHabilidade,
     adicionarHabilidade,
+    sincronizarCurriculoPadraoPersistido,
     initEditorFieldGuards,
     atualizarBotaoVagaCapturadaAdmin,
     alternarModalVagaCapturadaAdmin
@@ -83,6 +90,7 @@ function bindWindowGlobals() {
         adicionarPromptAdmin,
         abrirGestaoUsuarios,
         salvarConfigAdmin,
+        registrarVersaoAdmin,
         fecharOnboarding,
         mascaraWhats,
         calcularIdadeOnboarding,
@@ -96,9 +104,9 @@ function bindWindowGlobals() {
         alternarModoLogin,
         fazerLoginGoogle,
         fazerLogout,
-        fluxoNovo,
-        fluxoLista,
-        abrirTelaVaga,
+        abrirFluxoEditorCurriculo,
+        abrirCurriculosSalvos,
+        abrirFluxoAnaliseVaga,
         atualizarNomeConta,
         atualizarEmail,
         atualizarSenhaConta,
@@ -134,7 +142,10 @@ function bindWindowGlobals() {
         reabilitarUsuarioAdmin,
         excluirUsuarioDefinitivo,
         atualizarBotaoVagaCapturadaAdmin,
-        alternarModalVagaCapturadaAdmin
+        alternarModalVagaCapturadaAdmin,
+        fecharAviso,
+        fecharConfirmacao,
+        responderConfirmacao
     });
 }
 
@@ -151,6 +162,8 @@ window.addEventListener('beforeunload', function (e) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initDebugPanel();
+    sincronizarVersaoAppNaTela().catch(() => {});
+    initCadastroSenhaEmTempoReal();
 
     const editorPanel = document.getElementById('editor');
     if (editorPanel) {
@@ -197,6 +210,7 @@ window.addEventListener('load', async () => {
         logDebug('Usuário LOGADO detectado.');
         appState.usuarioAtual = session.user;
         localStorage.setItem('ultima_atividade_app', Date.now());
+        await sincronizarCurriculoPadraoPersistido();
         atualizarInfosUsuarioTopo();
         verificarAdmin();
         atualizarBotaoVagaCapturadaAdmin();
@@ -220,7 +234,9 @@ window.addEventListener('load', async () => {
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
         if (idVagaPendente || textoMobilePendente) {
             logDebug('Exibindo alerta de login obrigatório para o usuário.');
-            alert('⚠️ VAGA CAPTURADA E AGUARDANDO PROCESSAMENTO!\n\nFaça o login ou crie sua conta agora para que a Inteligência Artificial possa preencher o seu currículo.');
+            mostrarAviso('Sua vaga já foi capturada e está aguardando processamento.\n\nFaça login ou crie sua conta agora para que a Inteligência Artificial preencha o seu currículo.', {
+                title: 'Vaga aguardando você'
+            });
         }
         irPara('tela-landing');
     }
@@ -230,6 +246,7 @@ window.addEventListener('load', async () => {
         if (event === 'SIGNED_IN' && session) {
             appState.usuarioAtual = session.user;
             localStorage.setItem('ultima_atividade_app', Date.now());
+            await sincronizarCurriculoPadraoPersistido();
             atualizarInfosUsuarioTopo();
             verificarAdmin();
 

@@ -43,7 +43,13 @@ Se a selecao estiver vazia ou curta demais, a extensao envia ate 8000 caracteres
 Producao atual:
 
 ```txt
-https://curriculo-edi.vercel.app
+https://cvedipro.vercel.app
+```
+
+Preview estavel recomendado:
+
+```txt
+https://cvedipro-preview.vercel.app
 ```
 
 Validacao da vaga:
@@ -111,7 +117,7 @@ const MODO_CONFIGURACAO_AMBIENTE = true;
 4. No bloco `Ambiente de teste`, cole a URL de preview:
 
 ```txt
-https://sua-preview.vercel.app
+https://cvedipro-preview.vercel.app
 ```
 
 5. Clique em `Salvar`.
