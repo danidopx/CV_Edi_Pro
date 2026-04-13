@@ -1,5 +1,5 @@
 const MODO_CONFIGURACAO_AMBIENTE = true;
-const SITE_PRODUCAO_URL = 'https://curriculo-edi.vercel.app';
+const SITE_PRODUCAO_URL = 'https://cvedipro.vercel.app';
 const STORAGE_SITE_URL_KEY = 'ediProSiteUrl';
 const MAX_TEXTO_VAGA_LENGTH = 8000;
 const MIN_TEXTO_VAGA_LENGTH = 80;

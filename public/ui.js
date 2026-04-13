@@ -138,6 +138,12 @@ export function voltarTela() {
 
     if (appState.historicoTelas.length > 0) {
         const id = appState.historicoTelas.pop();
+
+        if (id === 'tela-lista' && typeof window.abrirCurriculosSalvos === 'function') {
+            window.abrirCurriculosSalvos();
+            return;
+        }
+
         document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
         const dest = document.getElementById(id);
         if (dest) dest.classList.add('ativa');

@@ -4,7 +4,17 @@ import {
     regexSenha,
     DEFAULT_PROMPTS_BY_NAME
 } from './config.js';
-import { carregarConfiguracaoIA, carregarTodosPromptsIA, getPromptCatalog, inicializarModeloIA } from './api.js';
+import {
+    carregarConfiguracaoIA,
+    carregarTodosPromptsIA,
+    getPromptCatalog,
+    inicializarModeloIA,
+    atualizarVisibilidadePainelDebug,
+    detectarAmbienteAtual,
+    carregarVersaoAtualApp,
+    carregarHistoricoVersoesApp,
+    registrarVersaoApp
+} from './api.js';
 import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
 
 function getAuthRedirectUrl() {
@@ -44,12 +54,113 @@ function atualizarControlesContaAdmin() {
     });
 }
 
+function formatarDataHoraInput(valor) {
+    if (!valor) return '';
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) return '';
+    const local = new Date(data.getTime() - data.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+}
+
+function formatarDataHoraTabela(valor) {
+    if (!valor) return '—';
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) return '—';
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function extrairVersaoDoRotuloAtual() {
+    const texto = document.querySelector('[data-app-version-label]')?.textContent || '';
+    const match = texto.match(/v(\d+\.\d+\.\d+)/i);
+    return match ? match[1] : '';
+}
+
+function calcularVersaoAnteriorSugerida(versaoAtual) {
+    const partes = String(versaoAtual || '').split('.').map(Number);
+    if (partes.length !== 3 || partes.some(Number.isNaN)) return '';
+    const [major, minor, patch] = partes;
+    if (patch > 0) return `${major}.${minor}.${patch - 1}`;
+    return '';
+}
+
+async function preencherPainelVersionamentoAdmin() {
+    const ambienteAtual = detectarAmbienteAtual();
+    const selectAmbiente = document.getElementById('admin-versao-ambiente');
+    if (selectAmbiente) selectAmbiente.value = ambienteAtual;
+
+    const infoAtual = document.getElementById('admin-versao-atual-info');
+    const historicoBody = document.getElementById('admin-versoes-historico');
+
+    try {
+        const [versaoAtual, historico] = await Promise.all([
+            carregarVersaoAtualApp(ambienteAtual),
+            carregarHistoricoVersoesApp()
+        ]);
+
+        if (infoAtual) {
+            if (versaoAtual) {
+                const responsavel = versaoAtual.responsible_name || versaoAtual.responsible_email || 'Não informado';
+                infoAtual.innerHTML = `<strong>Versão atual em ${ambienteAtual === 'production' ? 'Produção' : 'Preview'}:</strong> v${escaparHtml(versaoAtual.current_version)} | ${formatarDataHoraTabela(versaoAtual.release_date)} | ${escaparHtml(responsavel)}`;
+            } else {
+                infoAtual.innerHTML = '<strong>Nenhuma versão cadastrada ainda</strong> para este ambiente.';
+            }
+        }
+
+        const versaoSugerida = versaoAtual?.current_version || extrairVersaoDoRotuloAtual();
+        const versaoAnteriorSugerida = versaoAtual?.current_version || calcularVersaoAnteriorSugerida(versaoSugerida);
+
+        setValSafe('admin-versao-atual', versaoSugerida);
+        setValSafe('admin-versao-anterior', versaoAnteriorSugerida);
+        setValSafe('admin-versao-responsavel', appState.usuarioAtual?.user_metadata?.full_name || appState.usuarioAtual?.user_metadata?.name || '');
+        setValSafe('admin-versao-email', appState.usuarioAtual?.email || '');
+        setValSafe('admin-versao-url', window.location.origin);
+        setValSafe('admin-versao-commit', '');
+        setValSafe('admin-versao-observacoes', '');
+        setValSafe('admin-versao-data', formatarDataHoraInput(new Date().toISOString()));
+
+        if (historicoBody) {
+            historicoBody.innerHTML = historico.length === 0
+                ? '<tr><td colspan="6" style="text-align: center;">Nenhum registro encontrado.</td></tr>'
+                : historico.map(item => {
+                    const ambiente = item.environment_name === 'production' ? 'Produção' : 'Preview';
+                    const responsavel = item.responsible_name || item.responsible_email || '—';
+                    return `
+                        <tr>
+                            <td>${ambiente}</td>
+                            <td><strong>v${escaparHtml(item.current_version)}</strong></td>
+                            <td>${escaparHtml(item.previous_version || '—')}</td>
+                            <td>${formatarDataHoraTabela(item.release_date)}</td>
+                            <td>${escaparHtml(responsavel)}</td>
+                            <td>${item.is_current ? '<span style="color: var(--accent); font-weight: bold;">Atual</span>' : 'Histórico'}</td>
+                        </tr>
+                    `;
+                }).join('');
+        }
+    } catch (error) {
+        if (infoAtual) {
+            infoAtual.innerHTML = `<span style="color: var(--danger);">Erro ao carregar versionamento: ${escaparHtml(error.message)}</span>`;
+        }
+        if (historicoBody) {
+            historicoBody.innerHTML = `<tr><td colspan="6" style="color: var(--danger); text-align: center;">Erro ao carregar histórico: ${escaparHtml(error.message)}</td></tr>`;
+        }
+    }
+}
+
 export function validarSenha(senha) {
     return regexSenha.test(senha);
 }
 
 export function verificarAdmin() {
-    if (usuarioEhAdmin()) {
+    const admin = usuarioEhAdmin();
+    atualizarVisibilidadePainelDebug(admin);
+
+    if (admin) {
         const c = document.getElementById('btn-admin-config');
         const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'flex';
@@ -153,6 +264,7 @@ export async function abrirConfigAdmin() {
     }
 
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
+    await preencherPainelVersionamentoAdmin();
     document.getElementById('modal-admin').style.display = 'flex';
 }
 
@@ -225,6 +337,36 @@ export function adicionarPromptAdmin() {
         </div>
     `;
     lista.appendChild(bloco);
+}
+
+export async function registrarVersaoAdmin() {
+    const environment_name = getValSafe('admin-versao-ambiente').trim();
+    const current_version = getValSafe('admin-versao-atual').trim();
+
+    if (!environment_name || !current_version) {
+        alert('Preencha ao menos o ambiente e a versão atual.');
+        return;
+    }
+
+    try {
+        await registrarVersaoApp({
+            environment_name,
+            current_version,
+            previous_version: getValSafe('admin-versao-anterior').trim(),
+            release_date: getValSafe('admin-versao-data') ? new Date(getValSafe('admin-versao-data')).toISOString() : new Date().toISOString(),
+            responsible_name: getValSafe('admin-versao-responsavel').trim(),
+            responsible_email: getValSafe('admin-versao-email').trim(),
+            deployment_url: getValSafe('admin-versao-url').trim(),
+            commit_ref: getValSafe('admin-versao-commit').trim(),
+            release_notes: getValSafe('admin-versao-observacoes').trim(),
+            source: 'manual'
+        });
+
+        await preencherPainelVersionamentoAdmin();
+        showToast('Versionamento atualizado!');
+    } catch (error) {
+        alert('Erro ao registrar versão: ' + error.message);
+    }
 }
 
 export async function abrirGestaoUsuarios() {

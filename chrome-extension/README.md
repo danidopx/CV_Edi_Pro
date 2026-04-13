@@ -43,7 +43,7 @@ Se a selecao estiver vazia ou curta demais, a extensao envia ate 8000 caracteres
 Producao atual:
 
 ```txt
-https://curriculo-edi.vercel.app
+https://cvedipro.vercel.app
 ```
 
 Validacao da vaga:

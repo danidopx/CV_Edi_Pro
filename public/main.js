@@ -1,5 +1,5 @@
 import { sb, appState } from './config.js';
-import { logDebug, initDebugPanel, inicializarModeloIA } from './api.js';
+import { logDebug, initDebugPanel, inicializarModeloIA, sincronizarVersaoAppNaTela } from './api.js';
 import {
     applyTheme,
     irPara,
@@ -26,6 +26,7 @@ import {
     abrirConfigAdmin,
     adicionarPromptAdmin,
     salvarConfigAdmin,
+    registrarVersaoAdmin,
     abrirGestaoUsuarios,
     deletarUsuarioAdmin,
     reabilitarUsuarioAdmin,
@@ -44,16 +45,16 @@ import {
     recuperarEstadoTela,
     receberVagaExterna,
     receberVagaMobile,
-    fluxoNovo,
+    abrirFluxoEditorCurriculo,
+    abrirCurriculosSalvos,
     salvarOnboardingEContinuar,
     definirPadrao,
-    fluxoLista,
     duplicar,
     salvarComo,
     salvar,
     carregar,
     deletar,
-    abrirTelaVaga,
+    abrirFluxoAnaliseVaga,
     verificarCurriculoBase,
     extrairDadosIA,
     acionarRecalculoATS,
@@ -83,6 +84,7 @@ function bindWindowGlobals() {
         adicionarPromptAdmin,
         abrirGestaoUsuarios,
         salvarConfigAdmin,
+        registrarVersaoAdmin,
         fecharOnboarding,
         mascaraWhats,
         calcularIdadeOnboarding,
@@ -96,9 +98,9 @@ function bindWindowGlobals() {
         alternarModoLogin,
         fazerLoginGoogle,
         fazerLogout,
-        fluxoNovo,
-        fluxoLista,
-        abrirTelaVaga,
+        abrirFluxoEditorCurriculo,
+        abrirCurriculosSalvos,
+        abrirFluxoAnaliseVaga,
         atualizarNomeConta,
         atualizarEmail,
         atualizarSenhaConta,
@@ -151,6 +153,7 @@ window.addEventListener('beforeunload', function (e) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initDebugPanel();
+    sincronizarVersaoAppNaTela().catch(() => {});
 
     const editorPanel = document.getElementById('editor');
     if (editorPanel) {

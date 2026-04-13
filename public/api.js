@@ -9,6 +9,12 @@ export const PROMPT_NAMES = {
     extracaoTextoCv: 'extracao_texto_cv'
 };
 
+function detectarAmbienteAtualPeloHost(hostname) {
+    const host = String(hostname || '').toLowerCase();
+    if (host === 'cvedipro.vercel.app' || host === 'curriculo-edi.vercel.app') return 'production';
+    return 'preview';
+}
+
 const ORDEM_PREFERENCIA_MODELOS = [
     'gemini-2.5-flash',
     'gemini-2.5-flash-lite',
@@ -18,6 +24,9 @@ const ORDEM_PREFERENCIA_MODELOS = [
     'gemini-1.5-pro',
     'gemini-pro'
 ];
+
+const TIPOS_SUGESTAO_ACEITOS = new Set(['resumo', 'experiencia', 'habilidade', 'formacao', 'idioma', 'contato', 'geral']);
+const PRIORIDADES_SUGESTAO_ACEITAS = new Set(['alta', 'media', 'baixa']);
 
 function escolherModeloPreferido(modelosDisponiveis) {
     for (const id of ORDEM_PREFERENCIA_MODELOS) {
@@ -31,6 +40,275 @@ function escolherModeloPreferido(modelosDisponiveis) {
 
 export function getPromptCatalog() {
     return DEFAULT_PROMPTS_BY_NAME;
+}
+
+export function detectarAmbienteAtual() {
+    return detectarAmbienteAtualPeloHost(window.location.hostname);
+}
+
+function formatarDataVersao(valor) {
+    if (!valor) return '';
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) return '';
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function montarRotuloVersao(registro) {
+    const ambiente = registro?.environment_name === 'production' ? 'Produção' : 'Preview';
+    const versao = registro?.current_version || '0.0.0';
+    return `CV Edi Pro v${versao}${ambiente === 'Preview' ? ' - Preview' : ''}`;
+}
+
+export async function carregarVersaoAtualApp(environmentName = detectarAmbienteAtual()) {
+    const { data, error } = await sb
+        .from('app_versions')
+        .select('id, app_name, environment_name, current_version, previous_version, release_date, responsible_name, responsible_email, deployment_url, commit_ref, release_notes, source, is_current')
+        .eq('environment_name', environmentName)
+        .eq('is_current', true)
+        .order('release_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        logDebug(`[ERRO Supabase] Falha ao buscar versão atual do app: ${error.message}`, true);
+        return null;
+    }
+
+    return data || null;
+}
+
+export async function carregarHistoricoVersoesApp(environmentName) {
+    let query = sb
+        .from('app_versions')
+        .select('id, app_name, environment_name, current_version, previous_version, release_date, responsible_name, responsible_email, deployment_url, commit_ref, release_notes, source, is_current')
+        .order('release_date', { ascending: false })
+        .limit(20);
+
+    if (environmentName) {
+        query = query.eq('environment_name', environmentName);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        throw error;
+    }
+
+    return data || [];
+}
+
+export async function registrarVersaoApp(payload) {
+    const environmentName = payload.environment_name;
+
+    const { data: atualAtual, error: atualError } = await sb
+        .from('app_versions')
+        .select('id, current_version')
+        .eq('environment_name', environmentName)
+        .eq('is_current', true)
+        .order('release_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (atualError) {
+        throw atualError;
+    }
+
+    if (atualAtual?.id) {
+        const { error: limparAtualError } = await sb
+            .from('app_versions')
+            .update({ is_current: false })
+            .eq('id', atualAtual.id);
+
+        if (limparAtualError) {
+            throw limparAtualError;
+        }
+    }
+
+    const registro = {
+        app_name: payload.app_name || 'CV Edi Pro',
+        environment_name: environmentName,
+        current_version: payload.current_version,
+        previous_version: payload.previous_version || atualAtual?.current_version || null,
+        release_date: payload.release_date || new Date().toISOString(),
+        responsible_name: payload.responsible_name || null,
+        responsible_email: payload.responsible_email || null,
+        deployment_url: payload.deployment_url || null,
+        commit_ref: payload.commit_ref || null,
+        release_notes: payload.release_notes || null,
+        source: payload.source || 'manual',
+        is_current: true,
+        is_public: true,
+        created_by: appState.usuarioAtual?.id || null
+    };
+
+    const { data, error } = await sb
+        .from('app_versions')
+        .insert(registro)
+        .select('id, app_name, environment_name, current_version, previous_version, release_date, responsible_name, responsible_email, deployment_url, commit_ref, release_notes, source, is_current')
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+
+export async function sincronizarVersaoAppNaTela() {
+    const rotulos = document.querySelectorAll('[data-app-version-label]');
+    const metas = document.querySelectorAll('[data-app-version-meta]');
+    if (rotulos.length === 0) return null;
+
+    const registro = await carregarVersaoAtualApp();
+    if (!registro) return null;
+
+    const label = montarRotuloVersao(registro);
+    const dataFormatada = formatarDataVersao(registro.release_date);
+    const ambiente = registro.environment_name === 'production' ? 'Produção' : 'Preview';
+    const responsavel = registro.responsible_name || registro.responsible_email || 'Não informado';
+    const meta = `${ambiente} | ${dataFormatada || 'Data não informada'} | Responsável: ${responsavel}`;
+    const exibirMeta = registro.environment_name !== 'production';
+
+    rotulos.forEach(el => {
+        el.textContent = label;
+    });
+    metas.forEach(el => {
+        if (exibirMeta) {
+            el.textContent = meta;
+            el.style.display = 'block';
+        } else {
+            el.textContent = '';
+            el.style.display = 'none';
+        }
+    });
+
+    return registro;
+}
+
+function normalizarListaTexto(valor) {
+    if (!Array.isArray(valor)) return [];
+    return valor
+        .map(item => typeof item === 'string' ? item.trim() : '')
+        .filter(Boolean);
+}
+
+function inferirTipoSugestao(descricao) {
+    const texto = String(descricao || '').toLowerCase();
+    if (/(resumo|perfil profissional|objetivo)/.test(texto)) return 'resumo';
+    if (/(experien|atividade|resultado|realiza|atuou|historico profissional)/.test(texto)) return 'experiencia';
+    if (/(habilidade|competenc|tecnolog|ferramenta|skill)/.test(texto)) return 'habilidade';
+    if (/(forma[cç][aã]o|curso|gradu|faculdade|certifica)/.test(texto)) return 'formacao';
+    if (/(idioma|ingles|ingl[eê]s|espanhol|flu[eê]ncia)/.test(texto)) return 'idioma';
+    if (/(telefone|whats|email|linkedin|contato)/.test(texto)) return 'contato';
+    return 'geral';
+}
+
+function inferirAlvoSugestao(tipo) {
+    switch (tipo) {
+        case 'resumo': return 'resumo';
+        case 'experiencia': return 'experiencias';
+        case 'habilidade': return 'habilidades';
+        case 'formacao': return 'escolaridades';
+        case 'idioma': return 'idiomas';
+        case 'contato': return 'dados_pessoais';
+        default: return 'curriculo';
+    }
+}
+
+function inferirPrioridadeSugestao(descricao) {
+    const texto = String(descricao || '').toLowerCase();
+    if (/(urgente|essencial|prioridade|obrigat[oó]ri|ausente|faltando|incluir)/.test(texto)) return 'alta';
+    if (/(melhorar|refor[cç]ar|detalhar|ajustar|destacar)/.test(texto)) return 'media';
+    return 'baixa';
+}
+
+function normalizarSugestaoEstruturada(item) {
+    if (typeof item === 'string') {
+        const descricao = item.trim();
+        const tipo = inferirTipoSugestao(descricao);
+        return {
+            tipo,
+            alvo: inferirAlvoSugestao(tipo),
+            descricao,
+            prioridade: inferirPrioridadeSugestao(descricao),
+            aplicavel_automaticamente: false
+        };
+    }
+
+    if (!item || typeof item !== 'object') {
+        return null;
+    }
+
+    const descricao = String(item.descricao || item.texto || item.sugestao || '').trim();
+    if (!descricao) return null;
+
+    const tipoInferido = inferirTipoSugestao(descricao);
+    const tipoBruto = String(item.tipo || '').trim().toLowerCase();
+    const tipo = TIPOS_SUGESTAO_ACEITOS.has(tipoBruto) ? tipoBruto : tipoInferido;
+
+    const prioridadeBruta = String(item.prioridade || '').trim().toLowerCase();
+    const prioridade = PRIORIDADES_SUGESTAO_ACEITAS.has(prioridadeBruta)
+        ? prioridadeBruta
+        : inferirPrioridadeSugestao(descricao);
+
+    const alvo = String(item.alvo || '').trim() || inferirAlvoSugestao(tipo);
+
+    return {
+        tipo,
+        alvo,
+        descricao,
+        prioridade,
+        aplicavel_automaticamente: Boolean(item.aplicavel_automaticamente) && false
+    };
+}
+
+function pareceRespostaATS(parsedJson) {
+    if (!parsedJson || typeof parsedJson !== 'object' || Array.isArray(parsedJson)) {
+        return false;
+    }
+
+    return [
+        'score',
+        'risco',
+        'motivo_risco',
+        'pontos_fortes',
+        'pontos_medios',
+        'pontos_fracos',
+        'sugestoes',
+        'sugestoes_estruturadas'
+    ].some(chave => chave in parsedJson);
+}
+
+export function normalizarRespostaATS(parsedJson) {
+    if (!pareceRespostaATS(parsedJson)) {
+        return parsedJson;
+    }
+
+    const sugestoesTexto = normalizarListaTexto(parsedJson.sugestoes);
+    const sugestoesEstruturadasBrutas = Array.isArray(parsedJson.sugestoes_estruturadas)
+        ? parsedJson.sugestoes_estruturadas
+        : sugestoesTexto;
+
+    const sugestoesEstruturadas = sugestoesEstruturadasBrutas
+        .map(item => normalizarSugestaoEstruturada(item))
+        .filter(Boolean);
+
+    return {
+        ...parsedJson,
+        pontos_fortes: normalizarListaTexto(parsedJson.pontos_fortes),
+        pontos_medios: normalizarListaTexto(parsedJson.pontos_medios),
+        pontos_fracos: normalizarListaTexto(parsedJson.pontos_fracos),
+        sugestoes: sugestoesTexto.length > 0
+            ? sugestoesTexto
+            : sugestoesEstruturadas.map(item => item.descricao),
+        sugestoes_estruturadas: sugestoesEstruturadas
+    };
 }
 
 function erroDeModeloInvalido(mensagem) {
@@ -77,11 +355,12 @@ export function logDebug(mensagem, erro = false) {
 }
 
 export function initDebugPanel() {
+    if (document.getElementById('painel-debug-edi')) return;
     const painel = document.createElement('div');
     painel.id = 'painel-debug-edi';
     const versao = document.querySelector('.footer-info strong')?.innerText || 'CV Edi Pro';
     painel.dataset.expandido = 'false';
-    painel.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 260px; height: 38px; background: rgba(0,0,0,0.88); color: #fff; font-family: monospace; font-size: 11px; padding: 8px; overflow: hidden; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
+    painel.style.cssText = 'display: none; position: fixed; bottom: 10px; right: 10px; width: 260px; height: 38px; background: rgba(0,0,0,0.88); color: #fff; font-family: monospace; font-size: 11px; padding: 8px; overflow: hidden; z-index: 99999; border-radius: 8px; border: 1px solid #6c5ce7; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
     painel.innerHTML = `
         <div style="color: #a29bfe; font-weight: bold; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
             <button id="painel-debug-toggle" type="button" style="background: transparent; color: #a29bfe; border: 0; cursor: pointer; font-weight: bold;">+</button>
@@ -112,6 +391,12 @@ export function initDebugPanel() {
         if (conteudo) conteudo.innerHTML += `<div style="color: #a29bfe; margin-bottom: 4px;">${l}</div>`;
     });
     if (conteudo) conteudo.scrollTop = conteudo.scrollHeight;
+}
+
+export function atualizarVisibilidadePainelDebug(visivel) {
+    const painel = document.getElementById('painel-debug-edi');
+    if (!painel) return;
+    painel.style.display = visivel ? 'block' : 'none';
 }
 
 export async function inicializarModeloIA() {
@@ -258,6 +543,7 @@ export async function processarIA(promptOrContent, options = {}) {
         if (inicioJson !== -1 && fimJson !== -1) {
             try {
                 parsedJson = JSON.parse(respostaBruta.substring(inicioJson, fimJson + 1));
+                parsedJson = normalizarRespostaATS(parsedJson);
             } catch (e) {
                 logDebug(`[ERRO JSON Parse] Falha ao fazer parse do JSON: ${e.message}`, true);
             }
