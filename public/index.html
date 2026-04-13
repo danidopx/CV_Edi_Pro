@@ -31,6 +31,31 @@
 
     <div id="toast">✔ Operação realizada com sucesso!</div>
 
+    <div id="modal-aviso"
+        onclick="if(event.target===this)fecharAviso()"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:10020; align-items:center; justify-content:center; padding:18px;">
+        <div style="width:min(460px, 94vw); background:var(--bg-panel); border:1px solid var(--border-color); border-radius:18px; box-shadow:var(--shadow); padding:24px;">
+            <div id="modal-aviso-titulo" style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-bottom:10px;">Aviso</div>
+            <div id="modal-aviso-mensagem" style="color:var(--text-main); line-height:1.6; font-size:0.98rem; margin-bottom:18px;"></div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button id="modal-aviso-botao" class="btn-base btn-accent" onclick="fecharAviso()">Entendi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacao"
+        onclick="if(event.target===this)fecharConfirmacao()"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:10021; align-items:center; justify-content:center; padding:18px;">
+        <div style="width:min(480px, 94vw); background:var(--bg-panel); border:1px solid var(--border-color); border-radius:18px; box-shadow:var(--shadow); padding:24px;">
+            <div id="modal-confirmacao-titulo" style="font-size:1.15rem; font-weight:800; color:var(--danger); margin-bottom:10px;">Deseja continuar?</div>
+            <div id="modal-confirmacao-mensagem" style="color:var(--text-main); line-height:1.6; font-size:0.98rem; margin-bottom:18px;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                <button id="modal-confirmacao-cancelar" class="btn-base btn-neutral" onclick="responderConfirmacao(false)">Cancelar</button>
+                <button id="modal-confirmacao-confirmar" class="btn-base btn-danger" onclick="responderConfirmacao(true)">Continuar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-alteracoes"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10003; justify-content: center; align-items: center; padding: 15px;">
         <div

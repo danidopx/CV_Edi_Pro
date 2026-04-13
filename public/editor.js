@@ -21,7 +21,9 @@ import {
     ajustarZoomMobile,
     fecharAbaPai,
     fecharFullscreenSeguro,
-    iniciarTour
+    iniciarTour,
+    mostrarAviso,
+    mostrarConfirmacao
 } from './ui.js';
 
 export function marcarAlteracao() {
@@ -62,7 +64,7 @@ export function salvarOnboardingEContinuar() {
     const n = getValSafe('onb-nome');
     const e = getValSafe('onb-email');
     const w = getValSafe('onb-whats');
-    if (!n || !e || w === undefined) return alert('Por favor, preencha os campos obrigatórios para criar a base do seu currículo.');
+    if (!n || !e || w === undefined) return mostrarAviso('Preencha os campos obrigatórios para criar a base do seu currículo.');
 
     setValSafe('inNome', n);
     setValSafe('inEmail', e);
@@ -166,7 +168,7 @@ export async function duplicar(idOriginal) {
     if (data) {
         const payload = { identificador: novoId, user_id: appState.usuarioAtual.id, conteudo: data.conteudo };
         const { error } = await sb.from('curriculos_saas').insert(payload);
-        if (error) alert('Erro ao duplicar: O nome já deve existir.');
+        if (error) mostrarAviso('Não foi possível duplicar este currículo. O nome informado provavelmente já existe.', { tone: 'erro' });
         else {
             showToast();
             abrirCurriculosSalvos();
@@ -175,7 +177,7 @@ export async function duplicar(idOriginal) {
 }
 
 export async function salvarComo() {
-    if (!appState.idAtual) return alert('Por favor, guarde o currículo normalmente primeiro antes de criar uma cópia.');
+    if (!appState.idAtual) return mostrarAviso('Salve o currículo normalmente primeiro para depois criar uma cópia.');
     const novoId = prompt('Guardar como nova versão. Escreva o novo nome:', appState.idAtual + ' - v2');
     if (!novoId) return;
     appState.idAtual = novoId;
@@ -230,7 +232,7 @@ export async function salvar() {
         appState.temAlteracoesNaoSalvas = false;
         showToast();
     } else {
-        alert('Erro ao salvar.');
+        mostrarAviso('Não foi possível salvar o currículo agora.', { tone: 'erro' });
     }
 }
 
@@ -327,10 +329,15 @@ export async function carregar(id) {
 }
 
 export async function deletar(id) {
-    if (confirm(`Tem certeza que deseja apagar o currículo "${id}" definitivamente?`)) {
+    if (await mostrarConfirmacao(`Tem certeza que deseja apagar o currículo "${id}" definitivamente?`, {
+        title: 'Apagar currículo',
+        confirmLabel: 'Apagar',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.from('curriculos_saas').delete().eq('identificador', id).eq('user_id', appState.usuarioAtual.id);
         if (error) {
-            alert('Erro ao apagar: ' + error.message);
+            mostrarAviso('Não foi possível apagar o currículo.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         } else {
             showToast('🗑️ Currículo apagado com sucesso!');
             abrirCurriculosSalvos();
@@ -340,7 +347,7 @@ export async function deletar(id) {
 
 export async function extrairDadosIA() {
     const txt = getValSafe('texto-ia');
-    if (!txt) return alert('Cole texto!');
+    if (!txt) return mostrarAviso('Cole o texto do currículo antes de pedir a extração pela IA.');
 
     mostrarCarregamento();
     document.getElementById('loading-text').innerText = 'Processando Inteligência Artificial...';
@@ -364,7 +371,7 @@ export async function extrairDadosIA() {
         preencherEditor(extraido);
         marcarAlteracao();
     } catch (err) {
-        if (err.message !== 'Erro JSON.') alert('Erro: ' + err.message);
+        if (err.message !== 'Erro JSON.') mostrarAviso('Não foi possível extrair os dados pela IA.\n\nDetalhe: ' + err.message, { tone: 'erro' });
     } finally {
         ocultarCarregamento();
     }
@@ -812,7 +819,7 @@ export function initEditorFieldGuards() {
         inEmail.addEventListener('blur', function () {
             const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (this.value && !regexEmail.test(this.value)) {
-                alert('⚠️ Por favor, insira um e-mail válido.');
+                mostrarAviso('Digite um e-mail válido para continuar.');
                 this.value = '';
                 syncContato();
             }

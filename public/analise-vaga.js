@@ -16,7 +16,8 @@ import {
     mostrarCarregamento,
     atualizarStatusOrigem,
     renderizarATS,
-    mostrarCarregamentoATS
+    mostrarCarregamentoATS,
+    mostrarAviso
 } from './ui.js';
 import { abrirGestaoUsuarios, usuarioEhAdmin } from './auth.js';
 import { carregar, abrirCurriculosSalvos, limparTudo, marcarAlteracao, preencherEditor } from './editor.js';
@@ -128,7 +129,9 @@ export async function receberVagaExterna(idTransferencia) {
         const motivoInativa = detectarVagaInativa(textoVaga);
         if (motivoInativa) {
             logDebug(`⛔ Vaga bloqueada por validação local: ${motivoInativa}`, true);
-            alert(`⚠️ Esta vaga não será importada.\n\n${motivoInativa}`);
+            mostrarAviso(`Esta vaga não será importada.\n\n${motivoInativa}`, {
+                title: 'Vaga encerrada ou inválida'
+            });
             localStorage.removeItem('vaga_pendente_importacao');
             await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
             irPara('tela-menu');
@@ -137,7 +140,9 @@ export async function receberVagaExterna(idTransferencia) {
 
         const temCurriculo = await usuarioTemCurriculoBase();
         if (!temCurriculo) {
-            alert('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente pela extensão para análise.');
+            mostrarAviso('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente pela extensão para análise.', {
+                title: 'Falta seu currículo base'
+            });
             localStorage.removeItem('vaga_pendente_importacao');
             await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
             irPara('tela-menu');
@@ -153,7 +158,9 @@ export async function receberVagaExterna(idTransferencia) {
 
         if (validacao && validacao.valida === false) {
             logDebug('⛔ IA reprovou o conteúdo da vaga.', true);
-            alert(`⚠️ Ops! Não foi possível importar esta vaga.\n\nMotivo apontado pela IA: ${validacao.motivo || 'Conteúdo não reconhecido como vaga de emprego.'}\n\nSe a vaga for real, tente copiar e colar o texto manualmente.`);
+            mostrarAviso(`Não foi possível importar esta vaga.\n\nMotivo apontado pela IA: ${validacao.motivo || 'Conteúdo não reconhecido como vaga de emprego.'}\n\nSe a vaga for real, tente copiar e colar o texto manualmente.`, {
+                title: 'Importação bloqueada'
+            });
             localStorage.removeItem('vaga_pendente_importacao');
             irPara('tela-menu');
             return;
@@ -190,12 +197,16 @@ export async function receberVagaMobile(textoCompleto) {
     registrarVagaCapturadaAdmin(textoCompleto);
     const motivoInativa = detectarVagaInativa(textoCompleto);
     if (motivoInativa) {
-        alert(`⚠️ Esta vaga não será importada.\n\n${motivoInativa}`);
+        mostrarAviso(`Esta vaga não será importada.\n\n${motivoInativa}`, {
+            title: 'Vaga encerrada ou inválida'
+        });
         irPara('tela-menu');
         return;
     }
     if (!await usuarioTemCurriculoBase()) {
-        alert('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente para análise.');
+        mostrarAviso('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente para análise.', {
+            title: 'Falta seu currículo base'
+        });
         irPara('tela-menu');
         return;
     }
@@ -269,11 +280,13 @@ export async function ajustarCurriculoVaga() {
     const idBase = getValSafe('select-curriculo-base');
     const textoVaga = getValSafe('texto-vaga');
     const nivelAjuste = getValSafe('nivel-ajuste');
-    if (!idBase) return alert('Cadastre ou selecione um currículo base antes de ajustar a vaga.');
-    if (!textoVaga) return alert('Cole ou envie uma descrição de vaga antes de gerar o ajuste.');
+    if (!idBase) return mostrarAviso('Cadastre ou selecione um currículo base antes de ajustar a vaga.');
+    if (!textoVaga) return mostrarAviso('Cole ou envie uma descrição de vaga antes de gerar o ajuste.');
 
     const motivoInativa = detectarVagaInativa(textoVaga);
-    if (motivoInativa) return alert(`⚠️ Esta vaga não parece ativa.\n\n${motivoInativa}`);
+    if (motivoInativa) return mostrarAviso(`Esta vaga não parece ativa.\n\n${motivoInativa}`, {
+        title: 'Vaga encerrada ou inválida'
+    });
 
     mostrarCarregamento();
 
@@ -287,7 +300,9 @@ export async function ajustarCurriculoVaga() {
 
         if (validacao && validacao.valida === false) {
             ocultarCarregamento();
-            alert(`⚠️ Aviso da IA sobre a vaga:\n\n${validacao.motivo || 'O texto inserido não parece conter os dados de uma vaga de emprego.'}`);
+            mostrarAviso(`Aviso da IA sobre a vaga:\n\n${validacao.motivo || 'O texto inserido não parece conter os dados de uma vaga de emprego.'}`, {
+                title: 'Não foi possível seguir'
+            });
             return;
         }
 
@@ -376,7 +391,7 @@ export async function ajustarCurriculoVaga() {
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
         if (btnRecalcular) btnRecalcular.style.display = 'none';
     } catch (err) {
-        if (err.message !== 'Erro JSON.') alert('Erro: ' + err.message);
+        if (err.message !== 'Erro JSON.') mostrarAviso('Não foi possível ajustar o currículo para essa vaga.\n\nDetalhe: ' + err.message, { tone: 'erro' });
     } finally {
         ocultarCarregamento();
     }

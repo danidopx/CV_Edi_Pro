@@ -15,7 +15,7 @@ import {
     carregarHistoricoVersoesApp,
     registrarVersaoApp
 } from './api.js';
-import { getValSafe, setValSafe, showToast, irPara } from './ui.js';
+import { getValSafe, setValSafe, showToast, irPara, mostrarAviso, mostrarConfirmacao } from './ui.js';
 
 function getAuthRedirectUrl() {
     const host = String(window.location.hostname || '').toLowerCase();
@@ -41,8 +41,14 @@ function escaparHtml(valor) {
 
 function bloquearSeAdmin() {
     if (!usuarioEhAdmin()) return false;
-    alert('Por segurança, os dados cadastrais da conta admin principal não podem ser alterados por esta tela.');
+    mostrarAviso('Por segurança, os dados cadastrais da conta admin principal não podem ser alterados por esta tela.', {
+        title: 'Acesso protegido'
+    });
     return true;
+}
+
+function mensagemSenhaSegura() {
+    return 'Crie uma senha com pelo menos 8 caracteres, incluindo 1 letra maiúscula e 1 número.';
 }
 
 function atualizarControlesContaAdmin() {
@@ -195,10 +201,10 @@ export function atualizarInfosUsuarioTopo() {
 export async function atualizarNomeConta() {
     if (bloquearSeAdmin()) return;
     const novoNome = getValSafe('novo-nome');
-    if (!novoNome) return alert('Digite o nome desejado.');
+    if (!novoNome) return mostrarAviso('Digite o nome que você deseja usar na conta.');
     const { data, error } = await sb.auth.updateUser({ data: { full_name: novoNome } });
     if (error) {
-        alert('Erro ao atualizar nome: ' + error.message);
+        mostrarAviso('Não foi possível atualizar o nome agora.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
         appState.usuarioAtual = data.user;
         atualizarInfosUsuarioTopo();
@@ -299,7 +305,7 @@ export async function salvarConfigAdmin() {
         const { error } = await sb.from('ai_prompts').upsert(promptsParaSalvar, { onConflict: 'prompt_name' });
 
         if (error) {
-            alert('Erro ao salvar prompts no banco: ' + error.message);
+            mostrarAviso('Não foi possível salvar os prompts no banco.\n\nDetalhe: ' + error.message, { tone: 'erro' });
             return;
         }
 
@@ -312,7 +318,7 @@ export async function salvarConfigAdmin() {
         }, { onConflict: 'setting_key' });
 
         if (settingError) {
-            alert('Erro ao salvar modelo da IA no banco: ' + settingError.message);
+            mostrarAviso('Não foi possível salvar o modelo da IA no banco.\n\nDetalhe: ' + settingError.message, { tone: 'erro' });
             return;
         }
 
@@ -322,7 +328,7 @@ export async function salvarConfigAdmin() {
         document.getElementById('modal-admin').style.display = 'none';
         showToast();
     } else {
-        alert('Os prompts não podem ficar vazios.');
+        mostrarAviso('Os prompts não podem ficar vazios.');
     }
 }
 
@@ -350,7 +356,7 @@ export async function registrarVersaoAdmin() {
     const current_version = getValSafe('admin-versao-atual').trim();
 
     if (!environment_name || !current_version) {
-        alert('Preencha ao menos o ambiente e a versão atual.');
+        mostrarAviso('Preencha ao menos o ambiente e a versão atual.');
         return;
     }
 
@@ -371,7 +377,7 @@ export async function registrarVersaoAdmin() {
         await preencherPainelVersionamentoAdmin();
         showToast('Versionamento atualizado!');
     } catch (error) {
-        alert('Erro ao registrar versão: ' + error.message);
+        mostrarAviso('Não foi possível registrar a versão.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     }
 }
 
@@ -408,9 +414,14 @@ export async function abrirGestaoUsuarios() {
 }
 
 export async function deletarUsuarioAdmin(userId, userEmail) {
-    if (confirm(`ATENÇÃO: Deseja suspender o acesso de ${userEmail}?`)) {
+    if (await mostrarConfirmacao(`Deseja suspender o acesso de ${userEmail}?`, {
+        title: 'Desativar usuário',
+        confirmLabel: 'Desativar',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.rpc('admin_deletar_usuario', { alvo_id: userId });
-        if (error) alert('Erro: ' + error.message);
+        if (error) mostrarAviso('Não foi possível desativar o usuário.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         else {
             showToast('Usuário desativado!');
             abrirGestaoUsuarios();
@@ -419,10 +430,15 @@ export async function deletarUsuarioAdmin(userId, userEmail) {
 }
 
 export async function reabilitarUsuarioAdmin(userId, userEmail) {
-    if (confirm(`Deseja REABILITAR o acesso de ${userEmail}?`)) {
+    if (await mostrarConfirmacao(`Deseja reabilitar o acesso de ${userEmail}?`, {
+        title: 'Reabilitar usuário',
+        confirmLabel: 'Reabilitar',
+        cancelLabel: 'Cancelar',
+        tone: 'sucesso'
+    })) {
         const { error } = await sb.rpc('admin_reabilitar_usuario', { alvo_id: userId });
         if (error) {
-            alert('Erro: O banco de dados não encontrou a função admin_reabilitar_usuario. Certifique-se de criá-la no Supabase.');
+            mostrarAviso('Não foi possível reabilitar o usuário.\n\nO banco não encontrou a função admin_reabilitar_usuario. Verifique essa função no Supabase.', { tone: 'erro' });
         } else {
             showToast('Usuário reabilitado com sucesso!');
             abrirGestaoUsuarios();
@@ -431,9 +447,14 @@ export async function reabilitarUsuarioAdmin(userId, userEmail) {
 }
 
 export async function excluirUsuarioDefinitivo(userId, userEmail) {
-    if (confirm(`⚠️ CUIDADO! Você está prestes a EXCLUIR DEFINITIVAMENTE o usuário:\n\n${userEmail}\n\nEsta ação apagará a conta do banco de dados e NÃO PODE SER DESFEITA. Deseja continuar?`)) {
+    if (await mostrarConfirmacao(`Você está prestes a excluir definitivamente o usuário:\n\n${userEmail}\n\nEssa ação apagará a conta do banco e não pode ser desfeita.`, {
+        title: 'Excluir usuário definitivamente',
+        confirmLabel: 'Excluir definitivamente',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.rpc('admin_excluir_usuario_definitivo', { alvo_id: userId });
-        if (error) alert('Erro ao excluir: ' + error.message);
+        if (error) mostrarAviso('Não foi possível excluir o usuário definitivamente.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         else {
             showToast('Usuário excluído permanentemente do sistema!');
             abrirGestaoUsuarios();
@@ -458,29 +479,34 @@ export function alternarModoLogin() {
 export async function processarFormularioLogin() {
     const email = getValSafe('login-email');
     const password = getValSafe('login-senha');
-    if (!email || !password) return alert('Preencha e-mail e senha.');
+    if (!email || !password) return mostrarAviso('Preencha e-mail e senha para continuar.');
     const msgLog = document.getElementById('msg-login');
     if (msgLog) msgLog.style.display = 'block';
 
     if (appState.modoCriarConta) {
         const conf = getValSafe('login-senha-conf');
         if (password !== conf) {
-            alert('As senhas não coincidem.');
+            mostrarAviso('As senhas informadas não coincidem. Revise e tente novamente.');
             if (msgLog) msgLog.style.display = 'none';
             return;
         }
         if (!validarSenha(password)) {
-            alert('A senha deve ter no mínimo 8 caracteres, contendo pelo menos 1 número e 1 letra maiúscula.');
+            mostrarAviso(mensagemSenhaSegura(), {
+                title: 'Senha mais forte'
+            });
             if (msgLog) msgLog.style.display = 'none';
             return;
         }
         const { data, error } = await sb.auth.signUp({ email, password });
         if (error) {
-            alert('Erro: ' + error.message);
+            mostrarAviso('Não foi possível criar sua conta agora.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-            alert('E-mail já em uso.');
+            mostrarAviso('Este e-mail já está em uso. Tente entrar ou recuperar a senha.');
         } else {
-            alert('✉️ Link de confirmação enviado! Verifique seu e-mail.');
+            mostrarAviso('Enviamos um link de confirmação para o seu e-mail. Verifique a caixa de entrada para concluir o cadastro.', {
+                title: 'Quase lá',
+                tone: 'sucesso'
+            });
             setValSafe('login-email', '');
             setValSafe('login-senha', '');
             setValSafe('login-senha-conf', '');
@@ -495,7 +521,10 @@ export async function processarFormularioLogin() {
                 document.getElementById('texto-email-suporte').innerText = emailSuporte;
                 document.getElementById('modal-bloqueado').style.display = 'flex';
             } else {
-                alert('Erro: E-mail ou senha incorretos.');
+                mostrarAviso('E-mail ou senha incorretos. Revise os dados e tente novamente.', {
+                    title: 'Não foi possível entrar',
+                    tone: 'erro'
+                });
             }
         }
     }
@@ -507,21 +536,27 @@ export async function recuperarSenha() {
     if (!email) return;
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl() });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível enviar o link de recuperação.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
-        alert('✉️ Link enviado se o e-mail existir no sistema.');
+        mostrarAviso('Se o e-mail existir no sistema, você receberá um link para redefinir a senha.', {
+            title: 'Verifique seu e-mail',
+            tone: 'sucesso'
+        });
     }
 }
 
 export async function atualizarEmail() {
     if (bloquearSeAdmin()) return;
     const novoEmail = getValSafe('novo-email');
-    if (!novoEmail) return alert('Digite o novo e-mail.');
+    if (!novoEmail) return mostrarAviso('Digite o novo e-mail para continuar.');
     const { error } = await sb.auth.updateUser({ email: novoEmail });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível atualizar o e-mail.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
-        alert('✉️ Links enviados para confirmar a troca.');
+        mostrarAviso('Enviamos os links de confirmação para concluir a troca de e-mail.', {
+            title: 'Confirmação enviada',
+            tone: 'sucesso'
+        });
         setValSafe('novo-email', '');
     }
 }
@@ -530,13 +565,16 @@ export async function atualizarSenhaConta() {
     if (bloquearSeAdmin()) return;
     const s1 = getValSafe('nova-senha');
     const s2 = getValSafe('nova-senha-conf');
-    if (s1 !== s2) return alert('As senhas não coincidem.');
-    if (!validarSenha(s1)) return alert('A senha deve ter no mínimo 8 caracteres, 1 número e 1 letra maiúscula.');
+    if (s1 !== s2) return mostrarAviso('As senhas informadas não coincidem. Revise e tente novamente.');
+    if (!validarSenha(s1)) return mostrarAviso(mensagemSenhaSegura(), { title: 'Senha mais forte' });
     const { error } = await sb.auth.updateUser({ password: s1 });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível atualizar a senha.\n\nDetalhe: ' + error.message, { tone: 'erro' });
     } else {
-        alert('Senha atualizada!');
+        mostrarAviso('Sua senha foi atualizada com sucesso.', {
+            title: 'Senha atualizada',
+            tone: 'sucesso'
+        });
         setValSafe('nova-senha', '');
         setValSafe('nova-senha-conf', '');
     }
@@ -544,14 +582,22 @@ export async function atualizarSenhaConta() {
 
 export async function solicitarExclusao() {
     if (usuarioEhAdmin()) {
-        return alert('A conta de administrador principal não pode ser excluída.');
+        return mostrarAviso('A conta de administrador principal não pode ser excluída.');
     }
-    if (confirm('TEM CERTEZA? O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.')) {
+    if (await mostrarConfirmacao('O acesso à sua conta será bloqueado permanentemente e todos os currículos atrelados ao seu e-mail ficarão inacessíveis.', {
+        title: 'Desativar minha conta',
+        confirmLabel: 'Desativar conta',
+        cancelLabel: 'Cancelar',
+        tone: 'erro'
+    })) {
         const { error } = await sb.rpc('desativar_minha_conta');
-        if (error) alert('Erro ao desativar: ' + error.message);
+        if (error) mostrarAviso('Não foi possível desativar a conta.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         else {
             await fazerLogout();
-            alert('Conta desativada com sucesso.');
+            mostrarAviso('Sua conta foi desativada com sucesso.', {
+                title: 'Conta desativada',
+                tone: 'sucesso'
+            });
         }
     }
 }
@@ -564,7 +610,7 @@ export async function fazerLoginGoogle() {
         options: { redirectTo: getAuthRedirectUrl() }
     });
     if (error) {
-        alert('Erro: ' + error.message);
+        mostrarAviso('Não foi possível iniciar o login com Google.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         if (msg) msg.style.display = 'none';
     }
 }

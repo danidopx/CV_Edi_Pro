@@ -1,5 +1,7 @@
 import { appState, tourTextos } from './config.js';
 
+let resolverConfirmacaoAtual = null;
+
 export function setValSafe(id, val) {
     const el = document.getElementById(id);
     if (el) el.value = val || '';
@@ -82,6 +84,100 @@ export function showToast(msg) {
     }
 }
 
+function escaparHtmlAviso(valor) {
+    return String(valor || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+export function mostrarAviso(mensagem, options = {}) {
+    const modal = document.getElementById('modal-aviso');
+    const titulo = document.getElementById('modal-aviso-titulo');
+    const corpo = document.getElementById('modal-aviso-mensagem');
+    const botao = document.getElementById('modal-aviso-botao');
+    const tone = options.tone || 'info';
+
+    if (!modal || !titulo || !corpo || !botao) {
+        window.alert(mensagem);
+        return;
+    }
+
+    const tituloPadrao = tone === 'erro'
+        ? 'Algo precisa da sua atenção'
+        : tone === 'sucesso'
+            ? 'Tudo certo'
+            : 'Aviso';
+
+    const cores = {
+        info: 'var(--primary)',
+        erro: 'var(--danger)',
+        sucesso: 'var(--accent)'
+    };
+
+    titulo.textContent = options.title || tituloPadrao;
+    titulo.style.color = cores[tone] || cores.info;
+    corpo.innerHTML = escaparHtmlAviso(mensagem).replace(/\n/g, '<br>');
+    botao.textContent = options.buttonLabel || 'Entendi';
+    modal.style.display = 'flex';
+}
+
+export function fecharAviso() {
+    const modal = document.getElementById('modal-aviso');
+    if (modal) modal.style.display = 'none';
+}
+
+export function mostrarConfirmacao(mensagem, options = {}) {
+    const modal = document.getElementById('modal-confirmacao');
+    const titulo = document.getElementById('modal-confirmacao-titulo');
+    const corpo = document.getElementById('modal-confirmacao-mensagem');
+    const botaoConfirmar = document.getElementById('modal-confirmacao-confirmar');
+    const botaoCancelar = document.getElementById('modal-confirmacao-cancelar');
+    const tone = options.tone || 'info';
+
+    if (!modal || !titulo || !corpo || !botaoConfirmar || !botaoCancelar) {
+        return Promise.resolve(window.confirm(mensagem));
+    }
+
+    if (resolverConfirmacaoAtual) {
+        resolverConfirmacaoAtual(false);
+        resolverConfirmacaoAtual = null;
+    }
+
+    const tituloPadrao = tone === 'erro' ? 'Confirme esta ação' : 'Deseja continuar?';
+    const cores = {
+        info: 'var(--primary)',
+        erro: 'var(--danger)',
+        sucesso: 'var(--accent)'
+    };
+
+    titulo.textContent = options.title || tituloPadrao;
+    titulo.style.color = cores[tone] || cores.info;
+    corpo.innerHTML = escaparHtmlAviso(mensagem).replace(/\n/g, '<br>');
+    botaoConfirmar.textContent = options.confirmLabel || 'Continuar';
+    botaoCancelar.textContent = options.cancelLabel || 'Cancelar';
+    botaoConfirmar.className = `btn-base ${tone === 'erro' ? 'btn-danger' : 'btn-accent'}`;
+    modal.style.display = 'flex';
+
+    return new Promise(resolve => {
+        resolverConfirmacaoAtual = resolve;
+    });
+}
+
+export function responderConfirmacao(confirmado) {
+    const modal = document.getElementById('modal-confirmacao');
+    if (modal) modal.style.display = 'none';
+    if (resolverConfirmacaoAtual) {
+        resolverConfirmacaoAtual(Boolean(confirmado));
+        resolverConfirmacaoAtual = null;
+    }
+}
+
+export function fecharConfirmacao() {
+    responderConfirmacao(false);
+}
+
 export function applyTheme(theme) {
     if (theme === 'dark') {
         document.body.classList.add('dark-mode');
@@ -100,12 +196,21 @@ export function toggleTheme() {
     applyTheme(newTheme);
 }
 
-export function irPara(id) {
+async function confirmarSaidaComAlteracoes() {
+    return mostrarConfirmacao('Existem alterações não salvas. Deseja sair desta tela mesmo assim?', {
+        title: 'Alterações não salvas',
+        confirmLabel: 'Sair mesmo assim',
+        cancelLabel: 'Continuar editando',
+        tone: 'erro'
+    });
+}
+
+export async function irPara(id) {
     const telaEditor = document.getElementById('tela-editor');
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa') && id !== 'tela-editor';
 
     if (saindoDoEditor && appState.temAlteracoesNaoSalvas) {
-        if (!confirm('Existem alterações não salvas. Deseja sair desta tela mesmo assim?')) return;
+        if (!await confirmarSaidaComAlteracoes()) return;
         appState.temAlteracoesNaoSalvas = false;
     }
 
@@ -127,12 +232,12 @@ export function irPara(id) {
     setTimeout(ajustarZoomMobile, 50);
 }
 
-export function voltarTela() {
+export async function voltarTela() {
     const telaEditor = document.getElementById('tela-editor');
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa');
 
     if (saindoDoEditor && appState.temAlteracoesNaoSalvas) {
-        if (!confirm('Existem alterações não salvas. Deseja sair desta tela mesmo assim?')) return;
+        if (!await confirmarSaidaComAlteracoes()) return;
         appState.temAlteracoesNaoSalvas = false;
     }
 

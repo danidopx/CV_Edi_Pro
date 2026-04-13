@@ -17,7 +17,11 @@ import {
     syncContato,
     voltarTela,
     mostrarAlteracoes,
-    toggleFullscreenCV
+    toggleFullscreenCV,
+    mostrarAviso,
+    fecharAviso,
+    fecharConfirmacao,
+    responderConfirmacao
 } from './ui.js';
 import {
     verificarAdmin,
@@ -136,7 +140,10 @@ function bindWindowGlobals() {
         reabilitarUsuarioAdmin,
         excluirUsuarioDefinitivo,
         atualizarBotaoVagaCapturadaAdmin,
-        alternarModalVagaCapturadaAdmin
+        alternarModalVagaCapturadaAdmin,
+        fecharAviso,
+        fecharConfirmacao,
+        responderConfirmacao
     });
 }
 
@@ -223,7 +230,9 @@ window.addEventListener('load', async () => {
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
         if (idVagaPendente || textoMobilePendente) {
             logDebug('Exibindo alerta de login obrigatório para o usuário.');
-            alert('⚠️ VAGA CAPTURADA E AGUARDANDO PROCESSAMENTO!\n\nFaça o login ou crie sua conta agora para que a Inteligência Artificial possa preencher o seu currículo.');
+            mostrarAviso('Sua vaga já foi capturada e está aguardando processamento.\n\nFaça login ou crie sua conta agora para que a Inteligência Artificial preencha o seu currículo.', {
+                title: 'Vaga aguardando você'
+            });
         }
         irPara('tela-landing');
     }
