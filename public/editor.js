@@ -60,6 +60,57 @@ export function abrirFluxoEditorCurriculo() {
     fluxoNovo();
 }
 
+function obterChaveCurriculoPadraoLocal() {
+    return appState.usuarioAtual ? `cv_padrao_${appState.usuarioAtual.id}` : '';
+}
+
+function obterCurriculoPadraoMetadata() {
+    const valor = appState.usuarioAtual?.user_metadata?.cv_padrao_id;
+    return typeof valor === 'string' && valor.trim() ? valor.trim() : '';
+}
+
+function salvarCurriculoPadraoLocal(id) {
+    const chave = obterChaveCurriculoPadraoLocal();
+    if (!chave) return;
+    if (id) localStorage.setItem(chave, id);
+    else localStorage.removeItem(chave);
+}
+
+export function obterCurriculoPadraoId() {
+    const metadataId = obterCurriculoPadraoMetadata();
+    if (metadataId) {
+        salvarCurriculoPadraoLocal(metadataId);
+        return metadataId;
+    }
+
+    const chave = obterChaveCurriculoPadraoLocal();
+    return chave ? (localStorage.getItem(chave) || '') : '';
+}
+
+export async function sincronizarCurriculoPadraoPersistido() {
+    if (!appState.usuarioAtual) return '';
+
+    const metadataId = obterCurriculoPadraoMetadata();
+    const localId = obterCurriculoPadraoId();
+
+    if (metadataId) return metadataId;
+    if (!localId) return '';
+
+    const { data, error } = await sb.auth.updateUser({
+        data: {
+            ...appState.usuarioAtual.user_metadata,
+            cv_padrao_id: localId
+        }
+    });
+
+    if (!error && data?.user) {
+        appState.usuarioAtual = data.user;
+    }
+
+    salvarCurriculoPadraoLocal(localId);
+    return localId;
+}
+
 export function salvarOnboardingEContinuar() {
     const n = getValSafe('onb-nome');
     const e = getValSafe('onb-email');
@@ -96,10 +147,30 @@ export function salvarOnboardingEContinuar() {
     iniciarTour();
 }
 
-export function definirPadrao(id) {
+export async function definirPadrao(id) {
     if (!appState.usuarioAtual) return;
-    localStorage.setItem('cv_padrao_' + appState.usuarioAtual.id, id);
-    showToast('⭐ Currículo Padrão atualizado!');
+
+    const { data, error } = await sb.auth.updateUser({
+        data: {
+            ...appState.usuarioAtual.user_metadata,
+            cv_padrao_id: id
+        }
+    });
+
+    if (error) {
+        mostrarAviso('Não foi possível fixar o currículo padrão agora. Tente novamente em alguns instantes.', {
+            title: 'Currículo padrão',
+            tone: 'erro'
+        });
+        return;
+    }
+
+    if (data?.user) {
+        appState.usuarioAtual = data.user;
+    }
+
+    salvarCurriculoPadraoLocal(id);
+    showToast('⭐ Currículo padrão fixado na sua conta!');
     abrirCurriculosSalvos();
 }
 
@@ -109,7 +180,7 @@ export async function fluxoLista() {
     if (!grid) return;
     grid.innerHTML = '<p>Carregando...</p>';
 
-    const padraoId = localStorage.getItem('cv_padrao_' + appState.usuarioAtual.id);
+    const padraoId = await sincronizarCurriculoPadraoPersistido();
 
     const { data } = await sb.from('curriculos_saas').select('identificador, conteudo').eq('user_id', appState.usuarioAtual.id).order('identificador', { ascending: true });
     grid.innerHTML = '';

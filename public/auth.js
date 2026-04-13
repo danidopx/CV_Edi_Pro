@@ -51,6 +51,82 @@ function mensagemSenhaSegura() {
     return 'Crie uma senha com pelo menos 8 caracteres, incluindo 1 letra maiúscula e 1 número.';
 }
 
+function obterStatusSenhaCadastro() {
+    const senha = getValSafe('login-senha');
+    const confirmacao = getValSafe('login-senha-conf');
+    const temConteudo = Boolean(senha || confirmacao);
+    const temTamanho = senha.length >= 8;
+    const temMaiuscula = /[A-Z]/.test(senha);
+    const temNumero = /\d/.test(senha);
+    const senhasCoincidem = !confirmacao || senha === confirmacao;
+
+    return {
+        senha,
+        confirmacao,
+        temConteudo,
+        temTamanho,
+        temMaiuscula,
+        temNumero,
+        senhasCoincidem,
+        senhaValida: temTamanho && temMaiuscula && temNumero
+    };
+}
+
+function atualizarItemValidacaoSenha(id, valido, rotulo) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = `${valido ? '✓' : '•'} ${rotulo}`;
+    el.style.color = valido ? 'var(--accent)' : 'var(--text-light)';
+}
+
+export function atualizarValidacaoSenhaCadastro() {
+    const box = document.getElementById('box-validacao-senha');
+    const resumo = document.getElementById('login-senha-resumo');
+    const status = obterStatusSenhaCadastro();
+
+    if (!box || !resumo) return status;
+
+    box.style.display = appState.modoCriarConta ? 'block' : 'none';
+
+    atualizarItemValidacaoSenha('senha-regra-tamanho', status.temTamanho, 'Pelo menos 8 caracteres');
+    atualizarItemValidacaoSenha('senha-regra-maiuscula', status.temMaiuscula, '1 letra maiúscula');
+    atualizarItemValidacaoSenha('senha-regra-numero', status.temNumero, '1 número');
+    atualizarItemValidacaoSenha('senha-regra-coincide', status.senhasCoincidem && Boolean(status.confirmacao), 'Senhas iguais');
+
+    if (!appState.modoCriarConta || !status.temConteudo) {
+        resumo.textContent = 'Sua senha ficará protegida pelo Supabase Auth.';
+        resumo.style.color = 'var(--text-light)';
+        return status;
+    }
+
+    if (status.senhaValida && status.senhasCoincidem && status.confirmacao) {
+        resumo.textContent = 'Senha pronta para criar a conta.';
+        resumo.style.color = 'var(--accent)';
+    } else if (!status.senhaValida) {
+        resumo.textContent = mensagemSenhaSegura();
+        resumo.style.color = 'var(--text-light)';
+    } else if (status.confirmacao && !status.senhasCoincidem) {
+        resumo.textContent = 'As duas senhas ainda não coincidem.';
+        resumo.style.color = 'var(--danger)';
+    } else {
+        resumo.textContent = 'Confirme a senha para concluir o cadastro.';
+        resumo.style.color = 'var(--text-light)';
+    }
+
+    return status;
+}
+
+export function initCadastroSenhaEmTempoReal() {
+    ['login-senha', 'login-senha-conf'].forEach(id => {
+        const campo = document.getElementById(id);
+        if (!campo || campo.dataset.validacaoSenhaInit === 'true') return;
+        campo.dataset.validacaoSenhaInit = 'true';
+        campo.addEventListener('input', atualizarValidacaoSenhaCadastro);
+    });
+
+    atualizarValidacaoSenhaCadastro();
+}
+
 function atualizarControlesContaAdmin() {
     const admin = usuarioEhAdmin();
     const aviso = document.getElementById('aviso-conta-admin');
@@ -474,6 +550,7 @@ export function alternarModoLogin() {
             ? `Já tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Entrar</a>`
             : `Não tem conta? <a href="#" onclick="alternarModoLogin(); return false;" style="color: var(--primary); font-weight: bold; text-decoration: none;">Criar agora</a>`;
     }
+    atualizarValidacaoSenhaCadastro();
 }
 
 export async function processarFormularioLogin() {
@@ -484,13 +561,13 @@ export async function processarFormularioLogin() {
     if (msgLog) msgLog.style.display = 'block';
 
     if (appState.modoCriarConta) {
-        const conf = getValSafe('login-senha-conf');
-        if (password !== conf) {
+        const statusSenha = atualizarValidacaoSenhaCadastro();
+        if (password !== statusSenha.confirmacao) {
             mostrarAviso('As senhas informadas não coincidem. Revise e tente novamente.');
             if (msgLog) msgLog.style.display = 'none';
             return;
         }
-        if (!validarSenha(password)) {
+        if (!statusSenha.senhaValida) {
             mostrarAviso(mensagemSenhaSegura(), {
                 title: 'Senha mais forte'
             });
@@ -511,6 +588,7 @@ export async function processarFormularioLogin() {
             setValSafe('login-senha', '');
             setValSafe('login-senha-conf', '');
             alternarModoLogin();
+            atualizarValidacaoSenhaCadastro();
         }
     } else {
         const { error } = await sb.auth.signInWithPassword({ email, password });

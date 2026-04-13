@@ -20,7 +20,7 @@ import {
     mostrarAviso
 } from './ui.js';
 import { abrirGestaoUsuarios, usuarioEhAdmin } from './auth.js';
-import { carregar, abrirCurriculosSalvos, limparTudo, marcarAlteracao, preencherEditor } from './editor.js';
+import { carregar, abrirCurriculosSalvos, limparTudo, marcarAlteracao, preencherEditor, sincronizarCurriculoPadraoPersistido } from './editor.js';
 
 function normalizarTextoBusca(texto) {
     return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -234,7 +234,7 @@ export async function abrirTelaVaga() {
         return;
     }
 
-    const padraoId = localStorage.getItem('cv_padrao_' + appState.usuarioAtual.id);
+    const padraoId = await sincronizarCurriculoPadraoPersistido();
 
     select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>";
     data.forEach(item => {

@@ -3,6 +3,8 @@ export {
     marcarAlteracao,
     abrirFluxoEditorCurriculo,
     abrirCurriculosSalvos,
+    obterCurriculoPadraoId,
+    sincronizarCurriculoPadraoPersistido,
     fluxoNovo,
     salvarOnboardingEContinuar,
     definirPadrao,

@@ -401,6 +401,11 @@
                 onclick="voltarTela()">← Voltar</button>
         </div>
         <div id="login-box">
+            <div style="display:flex; justify-content:flex-end; margin-bottom: 8px;">
+                <button class="btn-base btn-neutral"
+                    style="padding: 8px 12px; font-size: 12px; border:none; box-shadow:none;"
+                    onclick="irPara('tela-landing')">⌂ Voltar ao início</button>
+            </div>
             <h1 style="color: var(--primary); margin-top: 0; font-weight: 800; font-size: 32px;">Acessar Sistema</h1>
             <p style="color: var(--text-light); margin-bottom: 25px;">Entre ou crie sua conta para guardar seus
                 currículos.</p>
@@ -417,6 +422,14 @@
                         autocomplete="new-password">
                     <small style="color: var(--text-light); text-align: left; font-size: 11px;">Mínimo 8 caracteres, 1
                         número e 1 letra maiúscula.</small>
+                    <div id="box-validacao-senha"
+                        style="display:none; text-align:left; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; margin-top: 4px;">
+                        <div id="login-senha-resumo" style="font-size: 12px; margin-bottom: 8px; color: var(--text-light);">Sua senha ficará protegida pelo Supabase Auth.</div>
+                        <div id="senha-regra-tamanho" style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• Pelo menos 8 caracteres</div>
+                        <div id="senha-regra-maiuscula" style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• 1 letra maiúscula</div>
+                        <div id="senha-regra-numero" style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• 1 número</div>
+                        <div id="senha-regra-coincide" style="font-size: 11px; color: var(--text-light);">• Senhas iguais</div>
+                    </div>
                 </div>
 
                 <button type="submit" id="btn-acao-login" class="btn-base btn-primary"

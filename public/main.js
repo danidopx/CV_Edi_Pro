@@ -38,6 +38,7 @@ import {
     alternarModoLogin,
     processarFormularioLogin,
     recuperarSenha,
+    initCadastroSenhaEmTempoReal,
     atualizarEmail,
     atualizarSenhaConta,
     solicitarExclusao,
@@ -73,6 +74,7 @@ import {
     adicionarIdioma,
     editarHabilidade,
     adicionarHabilidade,
+    sincronizarCurriculoPadraoPersistido,
     initEditorFieldGuards,
     atualizarBotaoVagaCapturadaAdmin,
     alternarModalVagaCapturadaAdmin
@@ -161,6 +163,7 @@ window.addEventListener('beforeunload', function (e) {
 document.addEventListener('DOMContentLoaded', () => {
     initDebugPanel();
     sincronizarVersaoAppNaTela().catch(() => {});
+    initCadastroSenhaEmTempoReal();
 
     const editorPanel = document.getElementById('editor');
     if (editorPanel) {
@@ -207,6 +210,7 @@ window.addEventListener('load', async () => {
         logDebug('Usuário LOGADO detectado.');
         appState.usuarioAtual = session.user;
         localStorage.setItem('ultima_atividade_app', Date.now());
+        await sincronizarCurriculoPadraoPersistido();
         atualizarInfosUsuarioTopo();
         verificarAdmin();
         atualizarBotaoVagaCapturadaAdmin();
@@ -242,6 +246,7 @@ window.addEventListener('load', async () => {
         if (event === 'SIGNED_IN' && session) {
             appState.usuarioAtual = session.user;
             localStorage.setItem('ultima_atividade_app', Date.now());
+            await sincronizarCurriculoPadraoPersistido();
             atualizarInfosUsuarioTopo();
             verificarAdmin();
 
