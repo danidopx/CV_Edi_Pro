@@ -120,6 +120,24 @@ jobs:
 
           git push origin HEAD:${GITHUB_REF_NAME}
 
+      - name: Definir metadados de versionamento
+        id: version_meta
+        shell: bash
+        run: |
+          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
+            echo "environment_name=production" >> "$GITHUB_OUTPUT"
+            echo "target_version=${{ steps.tag_version.outputs.new_tag }}" >> "$GITHUB_OUTPUT"
+            echo "deployment_url=https://cvedipro.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "release_notes=Registro automático de versão de produção pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+          else
+            echo "environment_name=preview" >> "$GITHUB_OUTPUT"
+            echo "target_version=${{ steps.preview_version.outputs.value }}" >> "$GITHUB_OUTPUT"
+            echo "deployment_url=https://cvedipro-preview.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "release_notes=Registro automático de versão de preview pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Instalar Supabase CLI
         uses: supabase/setup-cli@v1
 
@@ -129,5 +147,60 @@ jobs:
           supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+      - name: Registrar versão no banco
+        shell: bash
+        run: |
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" <<SQL
+          WITH previous_current AS (
+              SELECT id, current_version
+              FROM public.app_versions
+              WHERE environment_name = '${{ steps.version_meta.outputs.environment_name }}'
+                AND is_current = true
+              ORDER BY release_date DESC
+              LIMIT 1
+          ),
+          clear_current AS (
+              UPDATE public.app_versions
+              SET is_current = false
+              WHERE id IN (SELECT id FROM previous_current)
+          )
+          INSERT INTO public.app_versions (
+              app_name,
+              environment_name,
+              current_version,
+              previous_version,
+              release_date,
+              responsible_name,
+              responsible_email,
+              deployment_url,
+              commit_ref,
+              release_notes,
+              source,
+              is_current,
+              is_public,
+              created_by
+          )
+          VALUES (
+              'CV Edi Pro',
+              '${{ steps.version_meta.outputs.environment_name }}',
+              '${{ steps.version_meta.outputs.target_version }}',
+              COALESCE((SELECT current_version FROM previous_current), NULL),
+              NOW(),
+              'GitHub Action',
+              'action@github.com',
+              '${{ steps.version_meta.outputs.deployment_url }}',
+              '${{ steps.version_meta.outputs.commit_sha }}',
+              '${{ steps.version_meta.outputs.release_notes }}',
+              'github_actions',
+              true,
+              true,
+              NULL
+          );
+          SQL
+        env:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
