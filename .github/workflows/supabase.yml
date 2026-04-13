@@ -44,8 +44,20 @@ jobs:
         run: |
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
 
-          PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '0.0.0');" | tr -d '[:space:]')
-          PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '0.0.0');" | tr -d '[:space:]')
+          set +e
+          PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+          PREVIEW_STATUS=$?
+          PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+          PRODUCTION_STATUS=$?
+          set -e
+
+          if [[ $PREVIEW_STATUS -ne 0 || -z "$PREVIEW_CURRENT" ]]; then
+            PREVIEW_CURRENT=$(git log --format=%s | sed -n 's/^chore: preview v\([0-9.]*\) \[skip ci\]$/\1/p' | head -n 1)
+          fi
+
+          if [[ $PRODUCTION_STATUS -ne 0 || -z "$PRODUCTION_CURRENT" ]]; then
+            PRODUCTION_CURRENT=$(git tag --sort=-version:refname | head -n 1)
+          fi
 
           echo "preview_current=${PREVIEW_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
           echo "production_current=${PRODUCTION_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
