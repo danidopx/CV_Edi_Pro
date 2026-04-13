@@ -10,6 +10,7 @@
   ],
   "host_permissions": [
     "https://cvedipro.vercel.app/*",
+    "https://cvedipro-preview.vercel.app/*",
     "https://curriculo-edi.vercel.app/*",
     "https://*.vercel.app/*"
   ],

@@ -12,6 +12,7 @@ export const PROMPT_NAMES = {
 function detectarAmbienteAtualPeloHost(hostname) {
     const host = String(hostname || '').toLowerCase();
     if (host === 'cvedipro.vercel.app' || host === 'curriculo-edi.vercel.app') return 'production';
+    if (host === 'cvedipro-preview.vercel.app') return 'preview';
     return 'preview';
 }
 
