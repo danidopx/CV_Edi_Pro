@@ -489,6 +489,8 @@
         <div class="menu-botoes" style="display:flex; gap: 20px; justify-content: center;">
             <button class="btn-base btn-primary" onclick="abrirFluxoEditorCurriculo()" style="padding: 30px 45px; font-size: 16px;">➕
                 EDITOR DE CURRÍCULO</button>
+            <button class="btn-base btn-neutral" onclick="abrirFluxoRevisaoCurriculo()" style="padding: 30px 45px; font-size: 16px;">✨
+                REVISÃO DO CURRÍCULO</button>
             <button class="btn-base btn-accent" onclick="abrirCurriculosSalvos()" style="padding: 30px 45px; font-size: 16px;">📂
                 CURRÍCULOS SALVOS</button>
             <button class="btn-base btn-ia" onclick="abrirFluxoAnaliseVaga()" style="padding: 30px 45px; font-size: 16px;">🎯
@@ -569,6 +571,29 @@
         </div>
     </div>
 
+    <div id="tela-revisao-curriculo" class="tela">
+        <div
+            style="width: 100%; max-width: 760px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
+            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
+            <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">✨ Revisão do Currículo</h2>
+            <p style="font-size: 15px; margin-bottom: 18px;">Use esta etapa para revisar o seu currículo-base antes de continuar editando.</p>
+            <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+                <div style="font-size: 12px; color: var(--text-light); margin-bottom: 6px;">Currículo carregado</div>
+                <div id="revisao-curriculo-identificador" style="font-size: 18px; font-weight: 700; color: var(--text-main);">Currículo não identificado</div>
+                <div id="revisao-curriculo-origem" style="font-size: 13px; color: var(--text-light); margin-top: 8px;">Origem atual: currículo salvo</div>
+            </div>
+            <div style="display:flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-base btn-primary" onclick="irPara('tela-editor')" style="padding: 14px 22px;">📝 Abrir no Editor</button>
+                <button class="btn-base btn-neutral" onclick="abrirCurriculosSalvos()" style="padding: 14px 22px;">📂 Escolher outro currículo</button>
+            </div>
+            <div style="margin-top: 22px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px;">
+                <div style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 10px;">Checklist de revisão</div>
+                <p id="revisao-curriculo-vazio" style="margin: 0; color: var(--text-light); line-height: 1.6;">Abra a revisão para ver os pontos básicos do currículo-base.</p>
+                <ul id="revisao-curriculo-lista" style="margin: 0; padding-left: 20px; color: var(--text-main);"></ul>
+            </div>
+        </div>
+    </div>
+
     <div id="tela-vaga" class="tela">
         <div
             style="width: 100%; max-width: 800px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
@@ -625,6 +650,7 @@
                 <button id="btn-ver-alteracoes" class="btn-base"
                     style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);"
                     onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
+                <button class="btn-base btn-neutral" onclick="abrirFluxoRevisaoCurriculo()">🔎 Revisar Currículo</button>
                 <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑
                     Salvar Cópia</button>
                 <button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar</button>
@@ -721,7 +747,8 @@
                     <summary>📝 Resumo Profissional</summary>
                     <div class="input-group"><textarea id="resIn"
                             placeholder="Descreva o seu perfil de forma impactante..."
-                            style="height: 120px;"></textarea><button id="btn-add-res"
+                            style="height: 120px;"></textarea><button class="btn-base btn-neutral"
+                            onclick="melhorarResumoProfissional()">✨ Melhorar Resumo</button><button id="btn-add-res"
                             class="btn-base btn-primary btn-add-block" onclick="adicionarResumo()">+ Adicionar
                             Resumo</button></div>
                 </details>
@@ -737,7 +764,8 @@
                                 onchange="const f = document.getElementById('expFim'); f.disabled = this.checked; if(this.checked) f.value = '';">
                             Trabalho Atual</label><textarea id="expDes"
                             placeholder="Atividades e conquistas principais..."
-                            style="height: 100px;"></textarea><button id="btn-add-exp"
+                            style="height: 100px;"></textarea><button class="btn-base btn-neutral"
+                            onclick="melhorarDescricaoExperiencia()">✨ Melhorar Descrição</button><button id="btn-add-exp"
                             class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar
                             Experiência</button>
                     </div>

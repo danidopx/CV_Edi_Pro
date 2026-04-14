@@ -29,7 +29,7 @@ export const appState = {
     passoTour: 0
 };
 
-function clonarSugestaoAts(sugestao) {
+export function normalizarSugestaoAtsEstruturada(sugestao) {
     if (!sugestao || typeof sugestao !== 'object') return null;
 
     return {
@@ -47,7 +47,7 @@ export function atualizarSugestoesAtsEstruturadas(origem) {
         : [];
 
     appState.sugestoesAtsEstruturadas = sugestoes
-        .map(clonarSugestaoAts)
+        .map(normalizarSugestaoAtsEstruturada)
         .filter(item => item && item.descricao);
 
     return appState.sugestoesAtsEstruturadas;
@@ -59,7 +59,7 @@ export function limparSugestoesAtsEstruturadas() {
 
 export function obterSugestoesAtsEstruturadas() {
     return appState.sugestoesAtsEstruturadas
-        .map(clonarSugestaoAts)
+        .map(normalizarSugestaoAtsEstruturada)
         .filter(item => item && item.descricao);
 }
 
@@ -99,6 +99,8 @@ export const DEFAULT_PROMPT_VALIDAR_VAGA_IMPORTADA = `Aja como um classificador 
 export const DEFAULT_PROMPT_VALIDAR_VAGA_AJUSTE = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: {{TEXTO_VAGA}}`;
 
 export const DEFAULT_PROMPT_EXTRACAO = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "status":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } STATUS FORMAÇÃO: Obrigatório retornar um dos: "Concluído", "Cursando", "Trancado". Texto: {{TEXTO_BRUTO}}`;
+export const DEFAULT_PROMPT_MELHORAR_RESUMO = `Você é um especialista em currículos. Reescreva o resumo profissional abaixo em português do Brasil, com linguagem clara, profissional e objetiva. Preserve os fatos informados, sem inventar experiências, cargos, empresas ou resultados. Responda somente JSON válido no formato {"resumo":"texto revisado"}. Texto base: {{RESUMO_BASE}}`;
+export const DEFAULT_PROMPT_MELHORAR_EXPERIENCIA = `Você é um especialista em currículos. Reescreva a descrição de experiência abaixo em português do Brasil, com linguagem clara, profissional e objetiva. Preserve os fatos informados, sem inventar responsabilidades, sistemas, empresas, cargos ou resultados não mencionados. Responda somente JSON válido no formato {"descricao":"texto revisado"}. Cargo: {{CARGO}}. Empresa: {{EMPRESA}}. Descrição atual: {{DESCRICAO_BASE}}`;
 
 export const DEFAULT_PROMPTS_BY_NAME = {
     ajuste_simples: {
@@ -130,6 +132,16 @@ export const DEFAULT_PROMPTS_BY_NAME = {
         label: 'Extração de Texto em CV',
         description: 'Converte texto bruto de currículo/LinkedIn em JSON estruturado.',
         content: DEFAULT_PROMPT_EXTRACAO
+    },
+    melhorar_resumo: {
+        label: 'Melhorar Resumo',
+        description: 'Reescreve o resumo profissional com linguagem mais clara, profissional e objetiva.',
+        content: DEFAULT_PROMPT_MELHORAR_RESUMO
+    },
+    melhorar_experiencia: {
+        label: 'Melhorar Experiência',
+        description: 'Reescreve a descrição de uma experiência profissional sem alterar os fatos informados.',
+        content: DEFAULT_PROMPT_MELHORAR_EXPERIENCIA
     }
 };
 

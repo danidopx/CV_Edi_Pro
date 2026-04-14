@@ -79,6 +79,7 @@ import {
     atualizarBotaoVagaCapturadaAdmin,
     alternarModalVagaCapturadaAdmin
 } from './cv-builder.js';
+import { abrirFluxoRevisaoCurriculo } from './editor.js';
 import { gerarPDF } from './pdf.js';
 
 function bindWindowGlobals() {
@@ -105,6 +106,7 @@ function bindWindowGlobals() {
         fazerLoginGoogle,
         fazerLogout,
         abrirFluxoEditorCurriculo,
+        abrirFluxoRevisaoCurriculo,
         abrirCurriculosSalvos,
         abrirFluxoAnaliseVaga,
         atualizarNomeConta,

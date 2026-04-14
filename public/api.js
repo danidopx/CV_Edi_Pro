@@ -6,7 +6,9 @@ export const PROMPT_NAMES = {
     ats: 'analise_ats',
     validarVagaImportada: 'validar_vaga_importada',
     validarVagaAjuste: 'validar_vaga_ajuste',
-    extracaoTextoCv: 'extracao_texto_cv'
+    extracaoTextoCv: 'extracao_texto_cv',
+    melhorarResumo: 'melhorar_resumo',
+    melhorarExperiencia: 'melhorar_experiencia'
 };
 
 function detectarAmbienteAtualPeloHost(hostname) {
