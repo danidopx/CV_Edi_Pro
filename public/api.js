@@ -68,6 +68,23 @@ function montarRotuloVersao(registro) {
     return `CV Edi Pro v${versao}${ambiente === 'Preview' ? ' - Preview' : ''}`;
 }
 
+function extrairVersaoDoRotulo(texto) {
+    const match = String(texto || '').match(/v(\d+\.\d+\.\d+)/i);
+    return match ? match[1] : '';
+}
+
+function compararVersoesSemver(a, b) {
+    const partesA = String(a || '0.0.0').split('.').map(n => Number(n) || 0);
+    const partesB = String(b || '0.0.0').split('.').map(n => Number(n) || 0);
+
+    for (let i = 0; i < 3; i += 1) {
+        if ((partesA[i] || 0) > (partesB[i] || 0)) return 1;
+        if ((partesA[i] || 0) < (partesB[i] || 0)) return -1;
+    }
+
+    return 0;
+}
+
 export async function carregarVersaoAtualApp(environmentName = detectarAmbienteAtual()) {
     const { data, error } = await sb
         .from('app_versions')
@@ -179,8 +196,13 @@ export async function sincronizarVersaoAppNaTela() {
     const metas = document.querySelectorAll('[data-app-version-meta]');
     if (rotulos.length === 0) return null;
 
+    const fallbackRotulo = rotulos[0]?.textContent || '';
+    const fallbackVersao = extrairVersaoDoRotulo(fallbackRotulo);
     const registro = await carregarVersaoAtualApp();
-    if (!registroVersaoCombinaComDeployAtual(registro)) {
+    const versaoBanco = registro?.current_version || '';
+    const bancoEstaAtrasado = fallbackVersao && versaoBanco && compararVersoesSemver(fallbackVersao, versaoBanco) > 0;
+
+    if (!registroVersaoCombinaComDeployAtual(registro) || bancoEstaAtrasado) {
         metas.forEach(el => {
             el.textContent = '';
             el.style.display = 'none';
