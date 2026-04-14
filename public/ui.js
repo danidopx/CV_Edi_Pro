@@ -1,6 +1,7 @@
 import { appState, tourTextos } from './config.js';
 
 let resolverConfirmacaoAtual = null;
+let valorConfirmacaoSecundaria = 'secondary';
 
 export function setValSafe(id, val) {
     const el = document.getElementById(id);
@@ -134,9 +135,10 @@ export function mostrarConfirmacao(mensagem, options = {}) {
     const corpo = document.getElementById('modal-confirmacao-mensagem');
     const botaoConfirmar = document.getElementById('modal-confirmacao-confirmar');
     const botaoCancelar = document.getElementById('modal-confirmacao-cancelar');
+    const botaoSecundario = document.getElementById('modal-confirmacao-secundario');
     const tone = options.tone || 'info';
 
-    if (!modal || !titulo || !corpo || !botaoConfirmar || !botaoCancelar) {
+    if (!modal || !titulo || !corpo || !botaoConfirmar || !botaoCancelar || !botaoSecundario) {
         return Promise.resolve(window.confirm(mensagem));
     }
 
@@ -158,6 +160,13 @@ export function mostrarConfirmacao(mensagem, options = {}) {
     botaoConfirmar.textContent = options.confirmLabel || 'Continuar';
     botaoCancelar.textContent = options.cancelLabel || 'Cancelar';
     botaoConfirmar.className = `btn-base ${tone === 'erro' ? 'btn-danger' : 'btn-accent'}`;
+    valorConfirmacaoSecundaria = options.secondaryValue ?? 'secondary';
+    if (options.secondaryLabel) {
+        botaoSecundario.textContent = options.secondaryLabel;
+        botaoSecundario.style.display = 'inline-flex';
+    } else {
+        botaoSecundario.style.display = 'none';
+    }
     modal.style.display = 'flex';
 
     return new Promise(resolve => {
@@ -169,7 +178,11 @@ export function responderConfirmacao(confirmado) {
     const modal = document.getElementById('modal-confirmacao');
     if (modal) modal.style.display = 'none';
     if (resolverConfirmacaoAtual) {
-        resolverConfirmacaoAtual(Boolean(confirmado));
+        if (confirmado === 'secondary') {
+            resolverConfirmacaoAtual(valorConfirmacaoSecundaria);
+        } else {
+            resolverConfirmacaoAtual(confirmado);
+        }
         resolverConfirmacaoAtual = null;
     }
 }
@@ -199,7 +212,9 @@ export function toggleTheme() {
 async function confirmarSaidaComAlteracoes() {
     return mostrarConfirmacao('Existem alterações não salvas. Deseja sair desta tela mesmo assim?', {
         title: 'Alterações não salvas',
-        confirmLabel: 'Sair mesmo assim',
+        confirmLabel: 'Salvar e sair',
+        secondaryLabel: 'Sair sem salvar',
+        secondaryValue: 'discard',
         cancelLabel: 'Continuar editando',
         tone: 'erro'
     });
@@ -210,8 +225,14 @@ export async function irPara(id) {
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa') && id !== 'tela-editor';
 
     if (saindoDoEditor && appState.temAlteracoesNaoSalvas) {
-        if (!await confirmarSaidaComAlteracoes()) return;
-        appState.temAlteracoesNaoSalvas = false;
+        const acaoSaida = await confirmarSaidaComAlteracoes();
+        if (!acaoSaida) return;
+        if (acaoSaida === true) {
+            const salvou = await window.salvar?.();
+            if (!salvou) return;
+        } else if (acaoSaida === 'discard') {
+            appState.temAlteracoesNaoSalvas = false;
+        }
     }
 
     const telaAtiva = document.querySelector('.tela.ativa');
@@ -237,8 +258,14 @@ export async function voltarTela() {
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa');
 
     if (saindoDoEditor && appState.temAlteracoesNaoSalvas) {
-        if (!await confirmarSaidaComAlteracoes()) return;
-        appState.temAlteracoesNaoSalvas = false;
+        const acaoSaida = await confirmarSaidaComAlteracoes();
+        if (!acaoSaida) return;
+        if (acaoSaida === true) {
+            const salvou = await window.salvar?.();
+            if (!salvou) return;
+        } else if (acaoSaida === 'discard') {
+            appState.temAlteracoesNaoSalvas = false;
+        }
     }
 
     if (appState.historicoTelas.length > 0) {

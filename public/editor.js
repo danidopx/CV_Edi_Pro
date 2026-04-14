@@ -61,7 +61,7 @@ export function fluxoNovo() {
     localStorage.removeItem('cvRecuperacao');
     limparTudo();
     const st = document.getElementById('status-nome');
-    if (st) st.innerText = '📄 Currículo: NOVO';
+    if (st) st.innerText = '📄 Novo Currículo';
 
     if (appState.usuarioAtual) {
         setValSafe('onb-email', appState.usuarioAtual.email);
@@ -601,7 +601,7 @@ export async function salvarComo() {
 
 export async function salvar() {
     const id = appState.idAtual || prompt('Nome do currículo (ex: TI Banco Itaú):');
-    if (!id) return;
+    if (!id) return false;
     const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
     const dataAtualizacao = new Date().toISOString();
     const payload = {
@@ -644,10 +644,13 @@ export async function salvar() {
         localStorage.setItem('cvRecuperacao', appState.idAtual);
         const sn = document.getElementById('status-nome');
         if (sn) sn.innerText = '📄 Currículo: ' + id;
+        atualizarStatusUltimoSalvamento(dataAtualizacao);
         appState.temAlteracoesNaoSalvas = false;
         showToast();
+        return true;
     } else {
         mostrarAviso('Não foi possível salvar o currículo agora.', { tone: 'erro' });
+        return false;
     }
 }
 
@@ -664,6 +667,7 @@ export async function carregar(id, options = {}) {
 
         appState.origemAtual = c.origem || 'Não identificada';
         atualizarStatusOrigem();
+        atualizarStatusUltimoSalvamento(c.data_atualizacao || '');
 
         appState.vagaOriginalAtual = c.vaga_original || '';
 
@@ -783,7 +787,7 @@ export async function extrairDadosIA() {
         appState.idAtual = null;
         localStorage.removeItem('cvRecuperacao');
         const sn = document.getElementById('status-nome');
-        if (sn) sn.innerText = '📄 Currículo: NOVO';
+        if (sn) sn.innerText = '📄 Novo Currículo';
 
         appState.origemAtual = 'Extraído via IA (Texto colado)';
         atualizarStatusOrigem();
@@ -1184,6 +1188,7 @@ export function limparTudo() {
 
     appState.origemAtual = 'Criado do zero';
     atualizarStatusOrigem();
+    atualizarStatusUltimoSalvamento('');
 
     appState.editResumoNode = null;
     appState.editExpNode = null;
@@ -1214,6 +1219,20 @@ export function limparTudo() {
     if (btnRecalcular) btnRecalcular.style.display = 'none';
 
     setTimeout(ajustarZoomMobile, 100);
+}
+
+function formatarDataUltimoSalvamento(dataIso) {
+    if (!dataIso) return 'Último salvamento: ainda não salvo';
+    const data = new Date(dataIso);
+    if (Number.isNaN(data.getTime())) return 'Último salvamento: ainda não salvo';
+    const dataFormatada = data.toLocaleDateString('pt-BR');
+    const horaFormatada = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `Último salvamento: ${dataFormatada} às ${horaFormatada}`;
+}
+
+function atualizarStatusUltimoSalvamento(dataIso) {
+    const statusSave = document.getElementById('status-save');
+    if (statusSave) statusSave.innerText = formatarDataUltimoSalvamento(dataIso);
 }
 
 function higienizarTexto(texto) {
