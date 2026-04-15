@@ -1,7 +1,118 @@
-import { appState, tourTextos } from './config.js';
+import { appState, tourTextos, tourMenuPrincipal } from './config.js';
 
 let resolverConfirmacaoAtual = null;
 let valorConfirmacaoSecundaria = 'secondary';
+let indiceTourMenuAtual = 0;
+let tourMenuAtivo = false;
+
+function obterPainelTour() {
+    return document.getElementById('tour-panel');
+}
+
+function obterTituloPainelTour() {
+    return obterPainelTour()?.querySelector('h3');
+}
+
+function limparDestaqueTourMenu() {
+    document.querySelectorAll('[data-tour-menu-highlight="true"]').forEach(el => {
+        el.removeAttribute('data-tour-menu-highlight');
+        el.style.outline = '';
+        el.style.boxShadow = '';
+        el.style.position = '';
+        el.style.zIndex = '';
+    });
+}
+
+function destacarBotaoTourMenu(el) {
+    if (!el) return;
+    limparDestaqueTourMenu();
+    el.setAttribute('data-tour-menu-highlight', 'true');
+    el.style.outline = '3px solid rgba(108, 92, 231, 0.35)';
+    el.style.boxShadow = '0 0 0 6px rgba(108, 92, 231, 0.12)';
+    el.style.position = 'relative';
+    el.style.zIndex = '10002';
+}
+
+function posicionarPainelTourMenu(alvo) {
+    const painel = obterPainelTour();
+    if (!painel || !alvo) return;
+
+    const rect = alvo.getBoundingClientRect();
+    const larguraPainel = Math.min(320, Math.max(260, window.innerWidth - 32));
+    const margem = 16;
+    let top = rect.bottom + 12;
+    let left = rect.left;
+
+    painel.style.maxWidth = `${larguraPainel}px`;
+
+    if (left + larguraPainel > window.innerWidth - margem) {
+        left = window.innerWidth - larguraPainel - margem;
+    }
+    if (left < margem) left = margem;
+
+    const alturaEstimativa = 220;
+    if (top + alturaEstimativa > window.innerHeight - margem) {
+        top = Math.max(margem, rect.top - alturaEstimativa - 12);
+    }
+
+    painel.style.top = `${top}px`;
+    painel.style.left = `${left}px`;
+    painel.style.right = 'auto';
+    painel.style.bottom = 'auto';
+}
+
+function renderizarPassoTourMenu() {
+    const passo = tourMenuPrincipal[indiceTourMenuAtual];
+    const painel = obterPainelTour();
+    const titulo = obterTituloPainelTour();
+    const texto = document.getElementById('tour-text');
+    if (!passo || !painel || !titulo || !texto) return;
+
+    const alvo = document.getElementById(passo.targetId);
+    if (!alvo) {
+        fecharTourMenuPrincipal();
+        return;
+    }
+
+    titulo.textContent = '✨ Guia rápido do menu';
+    texto.innerHTML = `<b>${passo.title}</b><br><br>${passo.text}`;
+    painel.style.display = 'block';
+    destacarBotaoTourMenu(alvo);
+    posicionarPainelTourMenu(alvo);
+}
+
+export function iniciarTourMenuPrincipal() {
+    if (localStorage.getItem('tourMenuPrincipalV1') === 'concluido') return;
+    const telaMenu = document.getElementById('tela-menu');
+    if (!telaMenu || !telaMenu.classList.contains('ativa')) return;
+    indiceTourMenuAtual = 0;
+    tourMenuAtivo = true;
+    renderizarPassoTourMenu();
+}
+
+export function proximoTourMenuPrincipal() {
+    indiceTourMenuAtual += 1;
+    if (indiceTourMenuAtual >= tourMenuPrincipal.length) {
+        fecharTourMenuPrincipal();
+        return;
+    }
+    renderizarPassoTourMenu();
+}
+
+export function fecharTourMenuPrincipal() {
+    const painel = obterPainelTour();
+    if (painel) {
+        painel.style.display = 'none';
+        painel.style.top = '';
+        painel.style.left = '';
+        painel.style.right = '';
+        painel.style.bottom = '';
+        painel.style.maxWidth = '';
+    }
+    limparDestaqueTourMenu();
+    tourMenuAtivo = false;
+    localStorage.setItem('tourMenuPrincipalV1', 'concluido');
+}
 
 export function setValSafe(id, val) {
     const el = document.getElementById(id);
@@ -251,6 +362,11 @@ export async function irPara(id) {
 
     window.scrollTo(0, 0);
     setTimeout(ajustarZoomMobile, 50);
+    if (id === 'tela-menu') {
+        setTimeout(iniciarTourMenuPrincipal, 120);
+    } else if (tourMenuAtivo) {
+        fecharTourMenuPrincipal();
+    }
 }
 
 export async function voltarTela() {
@@ -286,6 +402,11 @@ export async function voltarTela() {
 
         window.scrollTo(0, 0);
         setTimeout(ajustarZoomMobile, 50);
+        if (id === 'tela-menu') {
+            setTimeout(iniciarTourMenuPrincipal, 120);
+        } else if (tourMenuAtivo) {
+            fecharTourMenuPrincipal();
+        }
     } else {
         irPara('tela-menu');
     }
@@ -455,6 +576,10 @@ export function mostrarPassoTour() {
 }
 
 export function proximoTour() {
+    if (tourMenuAtivo) {
+        proximoTourMenuPrincipal();
+        return;
+    }
     appState.passoTour++;
     if (appState.passoTour >= tourTextos.length) {
         fecharTour();
@@ -464,6 +589,10 @@ export function proximoTour() {
 }
 
 export function fecharTour() {
+    if (tourMenuAtivo) {
+        fecharTourMenuPrincipal();
+        return;
+    }
     document.getElementById('tour-panel').style.display = 'none';
     localStorage.setItem('tourV2', 'concluido');
 }

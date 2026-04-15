@@ -5,9 +5,13 @@ on:
     branches:
       - '**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   versionar_e_deploy:
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -52,7 +56,7 @@ jobs:
           set -e
 
           if [[ $PREVIEW_STATUS -ne 0 || -z "$PREVIEW_CURRENT" ]]; then
-            PREVIEW_CURRENT=$(git log --format=%s | sed -n 's/^chore: preview v\([0-9.]*\) \[skip ci\]$/\1/p' | head -n 1)
+            PREVIEW_CURRENT=$(git log --format=%s | sed -n 's/^chore: preview v\([0-9.]*\) \[skip .*\]$/\1/p' | head -n 1)
           fi
 
           if [[ $PRODUCTION_STATUS -ne 0 || -z "$PRODUCTION_CURRENT" ]]; then
@@ -82,7 +86,6 @@ jobs:
             echo "environment_name=production" >> "$GITHUB_OUTPUT"
             echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
             echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-            echo "deployment_url=https://cvedipro.vercel.app" >> "$GITHUB_OUTPUT"
             echo "release_notes=Registro automático de versão de produção pelo GitHub Actions." >> "$GITHUB_OUTPUT"
           else
             CURRENT_VERSION="${{ steps.db_versions.outputs.preview_current }}"
@@ -90,7 +93,6 @@ jobs:
             echo "environment_name=preview" >> "$GITHUB_OUTPUT"
             echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
             echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-            echo "deployment_url=https://cvedipro-preview.vercel.app" >> "$GITHUB_OUTPUT"
             echo "release_notes=Registro automático de versão de preview pelo GitHub Actions." >> "$GITHUB_OUTPUT"
           fi
 
@@ -121,6 +123,7 @@ jobs:
           sed -i "s|const CACHE_NAME = '[^']*';|const CACHE_NAME = 'cv-edi-pro-v$CACHE_ID-preview';|" public/sw.js
 
       - name: Commitar e enviar alterações automáticas
+        id: git_version_commit
         shell: bash
         run: |
           git config --local user.email "action@github.com"
@@ -129,6 +132,7 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "No changes"
+            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -141,18 +145,7 @@ jobs:
           fi
 
           git push origin HEAD:${GITHUB_REF_NAME}
-
-      - name: Criar tag da produção
-        if: steps.context.outputs.is_release_branch == 'true'
-        shell: bash
-        run: |
-          TARGET_VER=${{ steps.next_version.outputs.target_version }}
-          if git rev-parse "$TARGET_VER" >/dev/null 2>&1; then
-            echo "Tag $TARGET_VER já existe localmente."
-          else
-            git tag "$TARGET_VER"
-            git push origin "$TARGET_VER"
-          fi
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Instalar Supabase CLI
         uses: supabase/setup-cli@v1
@@ -165,6 +158,56 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+      - name: Instalar Vercel CLI
+        shell: bash
+        run: npm install --global vercel@latest
+
+      - name: Publicar deploy na Vercel
+        id: vercel_deploy
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_kSnfsgEE6vY2cjGK7ZzNPemP
+          VERCEL_PROJECT_ID: prj_FEcy11K266dsq53dzVmZcepeR4Ch
+          VERCEL_SCOPE: dopjr82-6869s-projects
+        run: |
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo "VERCEL_TOKEN não configurado."
+            exit 1
+          fi
+
+          COMMIT_SHA="${{ steps.git_version_commit.outputs.commit_sha }}"
+          DEPLOYMENT_URL=""
+          PUBLIC_URL=""
+
+          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
+            DEPLOYMENT_URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
+            PUBLIC_URL="https://cvedipro.vercel.app"
+          else
+            DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
+            PUBLIC_URL="https://${DEPLOYMENT_URL}"
+
+            if [[ "${GITHUB_REF_NAME}" == "codex/supabase-ajustes" ]]; then
+              vercel alias set "$DEPLOYMENT_URL" cvedipro-preview.vercel.app --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
+              PUBLIC_URL="https://cvedipro-preview.vercel.app"
+            fi
+          fi
+
+          echo "deployment_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
+          echo "deployment_inspect_url=https://${DEPLOYMENT_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Criar tag da produção
+        if: steps.context.outputs.is_release_branch == 'true'
+        shell: bash
+        run: |
+          TARGET_VER=${{ steps.next_version.outputs.target_version }}
+          if git rev-parse "$TARGET_VER" >/dev/null 2>&1; then
+            echo "Tag $TARGET_VER já existe localmente."
+          else
+            git tag "$TARGET_VER"
+            git push origin "$TARGET_VER"
+          fi
 
       - name: Registrar versão no banco
         shell: bash
@@ -208,8 +251,8 @@ jobs:
               NOW(),
               'GitHub Action',
               'action@github.com',
-              '${{ steps.next_version.outputs.deployment_url }}',
-              '$(git rev-parse HEAD)',
+              '${{ steps.vercel_deploy.outputs.deployment_url }}',
+              '${{ steps.git_version_commit.outputs.commit_sha }}',
               '${{ steps.next_version.outputs.release_notes }}',
               'github_actions',
               true,

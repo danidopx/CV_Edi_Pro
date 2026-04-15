@@ -151,3 +151,26 @@ export const tourTextos = [
     '<b>3. Gere uma versão ajustada</b><br><br>Escolha o currículo base, confira a vaga capturada e clique em gerar. O Edi Pro adapta o conteúdo e também cria uma análise ATS.',
     '<b>4. Salve, revise e exporte</b><br><br>Use <b>Salvar Cópia</b> para manter versões diferentes por vaga. Quando estiver pronto, gere o PDF e revise o resultado final.'
 ];
+
+export const tourMenuPrincipal = [
+    {
+        targetId: 'btn-menu-novo-curriculo',
+        title: '➕ Novo Currículo',
+        text: 'Use este botão para começar um currículo do zero e preencher seus dados no editor.'
+    },
+    {
+        targetId: 'btn-menu-revisao-curriculo',
+        title: '✨ Revisão do Currículo',
+        text: 'Aqui você revisa rapidamente seu currículo-base antes de editar ou exportar.'
+    },
+    {
+        targetId: 'btn-menu-curriculos-salvos',
+        title: '📂 Currículos Salvos',
+        text: 'Abra seus currículos já salvos para continuar editando, duplicar ou definir um como padrão.'
+    },
+    {
+        targetId: 'btn-menu-analise-vaga',
+        title: '🎯 Análise da Vaga',
+        text: 'Entre neste fluxo para cruzar uma vaga com seu currículo-base e gerar uma versão ajustada.'
+    }
+];
