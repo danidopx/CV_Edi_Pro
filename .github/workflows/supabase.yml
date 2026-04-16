@@ -218,6 +218,8 @@ jobs:
           COMMIT_SHA="${{ steps.git_version_commit.outputs.commit_sha }}"
           DEPLOYMENT_URL=""
           PUBLIC_URL=""
+          PREVIEW_BRANCH="${STABLE_PREVIEW_BRANCH:-codex/supabase-ajustes}"
+          PREVIEW_ALIAS="${VERCEL_PREVIEW_ALIAS:-cvedipro-preview.vercel.app}"
 
           if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
             DEPLOYMENT_URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
@@ -226,9 +228,9 @@ jobs:
             DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
             PUBLIC_URL="https://${DEPLOYMENT_URL}"
 
-            if [[ -n "$STABLE_PREVIEW_BRANCH" && -n "$VERCEL_PREVIEW_ALIAS" && "${GITHUB_REF_NAME}" == "$STABLE_PREVIEW_BRANCH" ]]; then
-              vercel alias set "$DEPLOYMENT_URL" "$VERCEL_PREVIEW_ALIAS" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-              PUBLIC_URL="https://$VERCEL_PREVIEW_ALIAS"
+            if [[ "${GITHUB_REF_NAME}" == "$PREVIEW_BRANCH" ]]; then
+              vercel alias set "$DEPLOYMENT_URL" "$PREVIEW_ALIAS" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
+              PUBLIC_URL="https://$PREVIEW_ALIAS"
             fi
           fi
 
