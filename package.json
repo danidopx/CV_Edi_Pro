@@ -3,6 +3,7 @@
   "version": "0.0.50",
   "private": true,
   "scripts": {
-    "start": "vercel dev"
+    "start": "vercel dev",
+    "ci:validate": "node scripts/ci-validate.mjs"
   }
 }

@@ -3,15 +3,35 @@ name: Deploy & Versionamento CV Edi Pro
 on:
   push:
     branches:
-      - '**'
+      - main
+      - master
+      - codex/**
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  validar_projeto:
+    if: ${{ github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]')) }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validar estrutura e sintaxe
+        run: npm run ci:validate
+
   versionar_e_deploy:
-    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]')) }}
+    needs: validar_projeto
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,6 +57,27 @@ jobs:
             echo "is_release_branch=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_release_branch=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validar segredos obrigatórios
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          missing=()
+
+          for secret_name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID VERCEL_TOKEN; do
+            if [[ -z "${!secret_name}" ]]; then
+              missing+=("$secret_name")
+            fi
+          done
+
+          if (( ${#missing[@]} > 0 )); then
+            echo "Segredos ausentes: ${missing[*]}"
+            exit 1
           fi
 
       - name: Ler versões atuais no banco
@@ -171,12 +212,9 @@ jobs:
           VERCEL_ORG_ID: team_kSnfsgEE6vY2cjGK7ZzNPemP
           VERCEL_PROJECT_ID: prj_FEcy11K266dsq53dzVmZcepeR4Ch
           VERCEL_SCOPE: dopjr82-6869s-projects
+          STABLE_PREVIEW_BRANCH: ${{ vars.STABLE_PREVIEW_BRANCH }}
+          VERCEL_PREVIEW_ALIAS: ${{ vars.VERCEL_PREVIEW_ALIAS }}
         run: |
-          if [[ -z "$VERCEL_TOKEN" ]]; then
-            echo "VERCEL_TOKEN não configurado."
-            exit 1
-          fi
-
           COMMIT_SHA="${{ steps.git_version_commit.outputs.commit_sha }}"
           DEPLOYMENT_URL=""
           PUBLIC_URL=""
@@ -188,9 +226,9 @@ jobs:
             DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
             PUBLIC_URL="https://${DEPLOYMENT_URL}"
 
-            if [[ "${GITHUB_REF_NAME}" == "codex/supabase-ajustes" ]]; then
-              vercel alias set "$DEPLOYMENT_URL" cvedipro-preview.vercel.app --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-              PUBLIC_URL="https://cvedipro-preview.vercel.app"
+            if [[ -n "$STABLE_PREVIEW_BRANCH" && -n "$VERCEL_PREVIEW_ALIAS" && "${GITHUB_REF_NAME}" == "$STABLE_PREVIEW_BRANCH" ]]; then
+              vercel alias set "$DEPLOYMENT_URL" "$VERCEL_PREVIEW_ALIAS" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
+              PUBLIC_URL="https://$VERCEL_PREVIEW_ALIAS"
             fi
           fi
 

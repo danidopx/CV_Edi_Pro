@@ -45,6 +45,115 @@ function detectarVagaInativa(texto) {
     return '';
 }
 
+function extrairPrimeiraUrl(texto) {
+    const match = String(texto || '').match(/https?:\/\/[^\s<>"')]+/i);
+    return match ? match[0].trim() : '';
+}
+
+function ehUrlValida(url) {
+    try {
+        const parsed = new URL(String(url || '').trim());
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function textoSemUrls(texto) {
+    return String(texto || '')
+        .replace(/https?:\/\/[^\s<>"')]+/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function moverLinkDoTextoParaCampo({ silencioso = false } = {}) {
+    const campoTexto = document.getElementById('texto-vaga');
+    const campoLink = document.getElementById('link-vaga');
+    if (!campoTexto || !campoLink) return false;
+
+    const textoAtual = String(campoTexto.value || '').trim();
+    if (!textoAtual) return false;
+
+    const url = extrairPrimeiraUrl(textoAtual);
+    if (!ehUrlValida(url)) return false;
+
+    const restante = textoSemUrls(textoAtual);
+    if (restante.length > 20) return false;
+
+    campoLink.value = campoLink.value.trim() || url;
+    campoTexto.value = restante;
+
+    if (!silencioso) {
+        showToast('Link detectado e movido para o campo de URL da vaga.');
+    }
+
+    return true;
+}
+
+export function configurarEntradaLinkVaga() {
+    const campoTexto = document.getElementById('texto-vaga');
+    if (!campoTexto || campoTexto.dataset.linkBindingReady === 'true') return;
+
+    campoTexto.dataset.linkBindingReady = 'true';
+    campoTexto.addEventListener('blur', () => {
+        moverLinkDoTextoParaCampo();
+    });
+    campoTexto.addEventListener('paste', () => {
+        setTimeout(() => {
+            moverLinkDoTextoParaCampo();
+        }, 0);
+    });
+}
+
+async function obterTextoVagaParaAnalise() {
+    moverLinkDoTextoParaCampo({ silencioso: true });
+
+    const textoManual = getValSafe('texto-vaga').trim();
+    const linkVaga = getValSafe('link-vaga').trim();
+
+    if (!textoManual && !linkVaga) {
+        return { ok: false, error: 'Cole a descrição da vaga ou informe o link antes de gerar o ajuste.' };
+    }
+
+    if (textoManual && !linkVaga) {
+        return { ok: true, textoVaga: textoManual, origem: 'Texto copiado' };
+    }
+
+    if (linkVaga && !ehUrlValida(linkVaga)) {
+        return { ok: false, error: 'O link informado não é válido.' };
+    }
+
+    if (!linkVaga) {
+        return { ok: true, textoVaga: textoManual, origem: 'Texto copiado' };
+    }
+
+    document.getElementById('loading-text').innerText = 'Lendo a vaga pelo link...';
+
+    const response = await fetch('/api/extrair-vaga-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: linkVaga })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.ok || !payload?.texto) {
+        return {
+            ok: false,
+            error: payload?.error || 'Não foi possível ler a vaga pelo link informado.'
+        };
+    }
+
+    const textoFinal = textoManual
+        ? `${textoManual}\n\n[LINK DA VAGA: ${payload.url}]\n\n${payload.texto}`.trim()
+        : `[ORIGEM DA VAGA: Link]\n[LINK DA VAGA: ${payload.url}]\n\n${payload.texto}`.trim();
+
+    return {
+        ok: true,
+        textoVaga: textoFinal,
+        origem: payload.url
+    };
+}
+
 async function usuarioTemCurriculoBase() {
     const { data, error } = await sb
         .from('curriculos_saas')
@@ -243,6 +352,8 @@ export async function abrirTelaVaga() {
     });
 
     if (padraoId) verificarCurriculoBase();
+
+    moverLinkDoTextoParaCampo({ silencioso: true });
 }
 
 export async function abrirFluxoAnaliseVaga() {
@@ -278,19 +389,34 @@ export async function verificarCurriculoBase() {
 
 export async function ajustarCurriculoVaga() {
     const idBase = getValSafe('select-curriculo-base');
-    const textoVaga = getValSafe('texto-vaga');
     const nivelAjuste = getValSafe('nivel-ajuste');
     if (!idBase) return mostrarAviso('Cadastre ou selecione um currículo base antes de ajustar a vaga.');
-    if (!textoVaga) return mostrarAviso('Cole ou envie uma descrição de vaga antes de gerar o ajuste.');
-
-    const motivoInativa = detectarVagaInativa(textoVaga);
-    if (motivoInativa) return mostrarAviso(`Esta vaga não parece ativa.\n\n${motivoInativa}`, {
-        title: 'Vaga encerrada ou inválida'
-    });
 
     mostrarCarregamento();
 
     try {
+        const cargaVaga = await obterTextoVagaParaAnalise();
+        if (!cargaVaga.ok) {
+            ocultarCarregamento();
+            mostrarAviso(cargaVaga.error, { title: 'Não foi possível seguir' });
+            return;
+        }
+
+        const textoVaga = cargaVaga.textoVaga;
+        const campoTextoVaga = document.getElementById('texto-vaga');
+        if (campoTextoVaga) {
+            campoTextoVaga.value = textoVaga;
+        }
+
+        const motivoInativa = detectarVagaInativa(textoVaga);
+        if (motivoInativa) {
+            ocultarCarregamento();
+            mostrarAviso(`Esta vaga não parece ativa.\n\n${motivoInativa}`, {
+                title: 'Vaga encerrada ou inválida'
+            });
+            return;
+        }
+
         document.getElementById('loading-text').innerText = 'Analisando a vaga...';
         const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: ${textoVaga.substring(0, 1500)}`;
         const validacao = await processarIA(promptValidacao, {
@@ -360,7 +486,12 @@ export async function ajustarCurriculoVaga() {
         }
 
         const matchOrigem = textoVaga.match(/\[ORIGEM DA VAGA: (.*?)\]/);
-        appState.origemAtual = matchOrigem ? `Adaptado da vaga (${matchOrigem[1]})` : 'Adaptado da vaga (Texto copiado)';
+        const matchLink = textoVaga.match(/\[LINK DA VAGA: (.*?)\]/);
+        appState.origemAtual = matchOrigem
+            ? `Adaptado da vaga (${matchOrigem[1]})`
+            : matchLink
+                ? `Adaptado da vaga (${matchLink[1]})`
+                : 'Adaptado da vaga (Texto copiado)';
         atualizarStatusOrigem();
 
         const primeiroNome = (extraido.nome || 'Candidato').split(' ')[0];
@@ -459,6 +590,7 @@ export const FLUXO_ANALISE_VAGA = Object.freeze({
     receberVagaExterna,
     receberVagaMobile,
     abrirTelaVaga,
+    configurarEntradaLinkVaga,
     verificarCurriculoBase,
     acionarRecalculoATS,
     ajustarCurriculoVaga

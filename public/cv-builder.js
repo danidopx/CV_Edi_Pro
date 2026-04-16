@@ -39,6 +39,7 @@ export {
     receberVagaExterna,
     receberVagaMobile,
     abrirTelaVaga,
+    configurarEntradaLinkVaga,
     verificarCurriculoBase,
     acionarRecalculoATS,
     ajustarCurriculoVaga

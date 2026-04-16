@@ -624,7 +624,11 @@
             </select>
             <label style="font-weight: bold; margin-bottom: 8px;">3. Cole a Descrição da Vaga
                 (Requisitos/Perfil):</label><textarea id="texto-vaga"
-                style="height: 200px; margin-bottom: 25px;"></textarea>
+                placeholder="Cole o texto da vaga aqui. Se colar apenas um link, ele será movido automaticamente para o campo abaixo."
+                style="height: 200px; margin-bottom: 12px;"></textarea>
+            <label style="font-weight: bold; margin-bottom: 8px;">4. Ou envie a vaga por link:</label>
+            <input id="link-vaga" type="url" placeholder="https://empresa.com/vaga" style="margin-bottom: 6px;">
+            <small id="ajuda-link-vaga" style="display:block; color: var(--text-light); margin-bottom: 25px;">Use o link da página da vaga se preferir. O sistema vai tentar ler o conteúdo automaticamente.</small>
             <button id="btn-gerar-vaga" class="btn-base btn-ia" onclick="ajustarCurriculoVaga()"
                 style="width: 100%; padding: 18px; font-size: 16px;">✨ ANALISAR VAGA E GERAR CURRÍCULO AJUSTADO</button>
         </div>

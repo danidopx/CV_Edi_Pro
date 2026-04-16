@@ -61,6 +61,7 @@ import {
     carregar,
     deletar,
     abrirFluxoAnaliseVaga,
+    configurarEntradaLinkVaga,
     verificarCurriculoBase,
     extrairDadosIA,
     acionarRecalculoATS,
@@ -111,6 +112,7 @@ function bindWindowGlobals() {
         abrirFluxoRevisaoCurriculo,
         abrirCurriculosSalvos,
         abrirFluxoAnaliseVaga,
+        configurarEntradaLinkVaga,
         atualizarNomeConta,
         atualizarEmail,
         atualizarSenhaConta,
@@ -175,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initEditorFieldGuards();
+    configurarEntradaLinkVaga();
 });
 
 window.addEventListener('load', async () => {
