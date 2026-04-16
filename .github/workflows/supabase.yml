@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - codex/supabase-ajustes
       - codex/**
   workflow_dispatch:
 
