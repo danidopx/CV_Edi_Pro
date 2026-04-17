@@ -70,7 +70,9 @@ function formatarDataVersao(valor) {
 function montarRotuloVersao(registro) {
     const ambiente = registro?.environment_name === 'production' ? 'Produção' : 'Preview';
     const versao = registro?.current_version || '0.0.0';
-    return `CV Edi Pro v${versao}${ambiente === 'Preview' ? ' - Preview' : ''}`;
+    const commitCurto = String(registro?.commit_ref || '').trim().slice(0, 7);
+    const buildSuffix = registro?.source === 'runtime_build' && commitCurto ? `+${commitCurto}` : '';
+    return `CV Edi Pro v${versao}${buildSuffix}${ambiente === 'Preview' ? ' - Preview' : ''}`;
 }
 
 function extrairVersaoDoRotulo(texto) {
@@ -106,6 +108,16 @@ export async function carregarVersaoAtualApp(environmentName = detectarAmbienteA
     }
 
     return data || null;
+}
+
+export async function carregarVersaoBuildAtual() {
+    try {
+        const resposta = await fetch('/api/build-version', { cache: 'no-store' });
+        if (!resposta.ok) return null;
+        return await resposta.json();
+    } catch {
+        return null;
+    }
 }
 
 function registroVersaoCombinaComDeployAtual(registro) {
@@ -203,9 +215,33 @@ export async function sincronizarVersaoAppNaTela() {
 
     const fallbackRotulo = rotulos[0]?.textContent || '';
     const fallbackVersao = extrairVersaoDoRotulo(fallbackRotulo);
+    const versaoBuild = await carregarVersaoBuildAtual();
     const registro = await carregarVersaoAtualApp();
     const versaoBanco = registro?.current_version || '';
     const bancoEstaAtrasado = fallbackVersao && versaoBanco && compararVersoesSemver(fallbackVersao, versaoBanco) > 0;
+    const usarVersaoBuild = versaoBuild && !registroVersaoCombinaComDeployAtual(registro);
+
+    if (usarVersaoBuild) {
+        const labelBuild = montarRotuloVersao(versaoBuild);
+        const branch = String(versaoBuild.branch_name || '').trim();
+        const commitCurto = String(versaoBuild.commit_ref || '').trim().slice(0, 7);
+        const metaBuild = [branch, commitCurto && `Commit: ${commitCurto}`].filter(Boolean).join(' | ');
+
+        rotulos.forEach(el => {
+            el.textContent = labelBuild;
+        });
+        metas.forEach(el => {
+            if (metaBuild) {
+                el.textContent = metaBuild;
+                el.style.display = 'block';
+            } else {
+                el.textContent = '';
+                el.style.display = 'none';
+            }
+        });
+
+        return versaoBuild;
+    }
 
     if (!registroVersaoCombinaComDeployAtual(registro) || bancoEstaAtrasado) {
         metas.forEach(el => {
