@@ -3,7 +3,10 @@ import {
     appState,
     atualizarSugestoesAtsEstruturadas,
     limparSugestoesAtsEstruturadas,
-    obterSugestoesAtsEstruturadas
+    obterSugestoesAtsEstruturadas,
+    normalizarSugestaoAtsEstruturada,
+    DEFAULT_PROMPT_MELHORAR_RESUMO,
+    DEFAULT_PROMPT_MELHORAR_EXPERIENCIA
 } from './config.js';
 import { processarIA, PROMPT_NAMES } from './api.js';
 import {
@@ -28,14 +31,107 @@ import {
 
 export function marcarAlteracao() {
     appState.temAlteracoesNaoSalvas = true;
-    if (appState.analiseAtsAtual && appState.vagaOriginalAtual) {
+    if (appState.analiseAtsAtual) {
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
         if (btnRecalcular) btnRecalcular.style.display = 'flex';
     }
+    atualizarBarraPreenchimentoCurriculo();
+}
+
+function textoPreenchido(valor) {
+    return String(valor || '').trim();
+}
+
+function existeTextoNosElementos(seletor) {
+    return Array.from(document.querySelectorAll(seletor))
+        .some(el => textoPreenchido(el.innerText || el.textContent));
+}
+
+function obterMensagemPreenchimento(percentual) {
+    if (percentual >= 100) return 'Cadastro completo e pronto para revisão final.';
+    if (percentual >= 80) return 'Quase lá. Revise os últimos pontos antes de salvar ou adaptar.';
+    if (percentual >= 50) return 'Boa base montada. Vale completar as seções restantes.';
+    if (percentual > 0) return 'Bom começo. Continue preenchendo seu Histórico Profissional.';
+    return 'Comece pelos dados essenciais do seu Histórico Profissional.';
+}
+
+function calcularProgressoPreenchimentoCurriculo() {
+    const dadosPessoaisEssenciais = [
+        getValSafe('inNome'),
+        getValSafe('inEmail'),
+        getValSafe('inWhats'),
+        getValSafe('inEnd')
+    ];
+
+    const resumoPreenchido = Boolean(
+        textoPreenchido(getValSafe('resIn')) || existeTextoNosElementos('#preRes .texto-justificado')
+    );
+    const experienciaPreenchida = Boolean(
+        existeTextoNosElementos('#preExp .bloco-exp')
+        || textoPreenchido(getValSafe('expC'))
+        || textoPreenchido(getValSafe('expE'))
+        || textoPreenchido(getValSafe('expDes'))
+    );
+    const formacaoPreenchida = Boolean(
+        existeTextoNosElementos('#preEsc .item-lista')
+        || textoPreenchido(getValSafe('escC'))
+        || textoPreenchido(getValSafe('escI'))
+    );
+    const habilidadePreenchida = Boolean(
+        existeTextoNosElementos('#preHab .item-lista')
+        || textoPreenchido(getValSafe('habIn'))
+    );
+    const idiomaPreenchido = Boolean(
+        existeTextoNosElementos('#preIdi .item-lista')
+        || textoPreenchido(getValSafe('idiIn'))
+    );
+
+    const grupos = [
+        dadosPessoaisEssenciais.filter(textoPreenchido).length / dadosPessoaisEssenciais.length,
+        resumoPreenchido ? 1 : 0,
+        experienciaPreenchida ? 1 : 0,
+        formacaoPreenchida ? 1 : 0,
+        habilidadePreenchida ? 1 : 0,
+        idiomaPreenchido ? 1 : 0
+    ];
+
+    const percentual = Math.round((grupos.reduce((total, valor) => total + valor, 0) / grupos.length) * 100);
+    return {
+        percentual,
+        mensagem: obterMensagemPreenchimento(percentual)
+    };
+}
+
+function atualizarBarraPreenchimentoCurriculo() {
+    const barra = document.getElementById('progresso-preenchimento-fill');
+    const percentualEl = document.getElementById('texto-percentual-preenchimento');
+    const mensagemEl = document.getElementById('mensagem-preenchimento-curriculo');
+
+    if (!barra || !percentualEl || !mensagemEl) return;
+
+    const { percentual, mensagem } = calcularProgressoPreenchimentoCurriculo();
+    barra.style.width = `${percentual}%`;
+    percentualEl.innerText = `${percentual}%`;
+    mensagemEl.innerText = mensagem;
+}
+
+function estruturarSugestaoAtsParaEditor(sugestao) {
+    const item = normalizarSugestaoAtsEstruturada(sugestao);
+    if (!item || !item.descricao) return null;
+
+    return {
+        tipo: item.tipo,
+        alvo: item.alvo,
+        descricao: item.descricao,
+        prioridade: item.prioridade,
+        aplicavel_automaticamente: item.aplicavel_automaticamente
+    };
 }
 
 export function obterSugestoesAtsParaEditor() {
-    return obterSugestoesAtsEstruturadas();
+    return obterSugestoesAtsEstruturadas()
+        .map(estruturarSugestaoAtsParaEditor)
+        .filter(Boolean);
 }
 
 export function fluxoNovo() {
@@ -43,7 +139,7 @@ export function fluxoNovo() {
     localStorage.removeItem('cvRecuperacao');
     limparTudo();
     const st = document.getElementById('status-nome');
-    if (st) st.innerText = '📄 Currículo: NOVO';
+    if (st) st.innerText = '📄 Novo Currículo';
 
     if (appState.usuarioAtual) {
         setValSafe('onb-email', appState.usuarioAtual.email);
@@ -58,6 +154,332 @@ export function fluxoNovo() {
 
 export function abrirFluxoEditorCurriculo() {
     fluxoNovo();
+}
+
+function obterResumoBaseParaMelhoria() {
+    const resumoDigitado = getValSafe('resIn').trim();
+    if (resumoDigitado) return resumoDigitado;
+
+    const resumosSalvos = Array.from(document.querySelectorAll('#preRes .texto-justificado'))
+        .map(el => {
+            const raw = el.dataset.raw ? JSON.parse(el.dataset.raw) : null;
+            return raw?.texto || el.innerText || '';
+        })
+        .map(texto => String(texto || '').trim())
+        .filter(Boolean);
+
+    return resumosSalvos.join('\n\n').trim();
+}
+
+export async function melhorarResumoProfissional() {
+    const resumoBase = obterResumoBaseParaMelhoria();
+    if (!resumoBase) {
+        mostrarAviso('Escreva um resumo ou carregue um currículo com resumo antes de pedir a melhoria.', {
+            title: 'Melhorar resumo',
+            tone: 'info'
+        });
+        return;
+    }
+
+    mostrarCarregamento();
+    const loadingText = document.getElementById('loading-text');
+    if (loadingText) loadingText.innerText = 'Melhorando resumo profissional...';
+
+    const prompt = DEFAULT_PROMPT_MELHORAR_RESUMO.replace('{{RESUMO_BASE}}', resumoBase);
+
+    try {
+        const resposta = await processarIA(prompt, {
+            promptNameFallback: PROMPT_NAMES.melhorarResumo,
+            transformPromptContent: template => template.replace('{{RESUMO_BASE}}', resumoBase)
+        });
+
+        const resumoSugerido = String(resposta?.resumo || '').trim();
+        if (!resumoSugerido) {
+            throw new Error('A IA não retornou um resumo válido.');
+        }
+
+        setValSafe('resIn', resumoSugerido);
+        showToast('✨ Sugestão de resumo pronta para sua revisão!');
+    } catch (err) {
+        mostrarAviso(`Não foi possível melhorar o resumo agora.\n\nDetalhe: ${err.message}`, {
+            title: 'Melhorar resumo',
+            tone: 'erro'
+        });
+    } finally {
+        ocultarCarregamento();
+    }
+}
+
+export async function melhorarDescricaoExperiencia() {
+    const cargo = getValSafe('expC').trim();
+    const empresa = getValSafe('expE').trim();
+    const descricaoBase = getValSafe('expDes').trim();
+
+    if (!cargo || !empresa || !descricaoBase) {
+        mostrarAviso('Preencha cargo, empresa e descrição antes de pedir a melhoria da experiência.', {
+            title: 'Melhorar descrição',
+            tone: 'info'
+        });
+        return;
+    }
+
+    mostrarCarregamento();
+    const loadingText = document.getElementById('loading-text');
+    if (loadingText) loadingText.innerText = 'Melhorando descrição da experiência...';
+
+    const prompt = DEFAULT_PROMPT_MELHORAR_EXPERIENCIA
+        .replace('{{CARGO}}', cargo)
+        .replace('{{EMPRESA}}', empresa)
+        .replace('{{DESCRICAO_BASE}}', descricaoBase);
+
+    try {
+        const resposta = await processarIA(prompt, {
+            promptNameFallback: PROMPT_NAMES.melhorarExperiencia,
+            transformPromptContent: template => template
+                .replace('{{CARGO}}', cargo)
+                .replace('{{EMPRESA}}', empresa)
+                .replace('{{DESCRICAO_BASE}}', descricaoBase)
+        });
+
+        const descricaoSugerida = String(resposta?.descricao || '').trim();
+        if (!descricaoSugerida) {
+            throw new Error('A IA não retornou uma descrição válida.');
+        }
+
+        setValSafe('expDes', descricaoSugerida);
+        showToast('✨ Sugestão de descrição pronta para sua revisão!');
+    } catch (err) {
+        mostrarAviso(`Não foi possível melhorar a descrição agora.\n\nDetalhe: ${err.message}`, {
+            title: 'Melhorar descrição',
+            tone: 'erro'
+        });
+    } finally {
+        ocultarCarregamento();
+    }
+}
+
+function atualizarTelaRevisaoCurriculo(identificador) {
+    const nome = document.getElementById('revisao-curriculo-identificador');
+    const origem = document.getElementById('revisao-curriculo-origem');
+
+    if (nome) {
+        nome.innerText = identificador || 'Currículo não identificado';
+    }
+
+    if (origem) {
+        origem.innerText = appState.origemAtual
+            ? `Origem atual: ${appState.origemAtual}`
+            : 'Origem atual: histórico salvo';
+    }
+}
+
+function contarPalavras(texto) {
+    return String(texto || '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function analisarDataExperiencia(valor) {
+    const texto = String(valor || '').trim();
+    if (!texto) return { ok: true, score: 0 };
+    if (/^até o momento$/i.test(texto) || /^atual$/i.test(texto)) return { ok: true, score: 999999 };
+
+    const matchMesAno = texto.match(/^(\d{1,2})\/(\d{4})$/);
+    if (matchMesAno) {
+        const mes = Number(matchMesAno[1]);
+        const ano = Number(matchMesAno[2]);
+        const anoAtual = new Date().getFullYear() + 1;
+        return {
+            ok: mes >= 1 && mes <= 12 && ano >= 1950 && ano <= anoAtual,
+            score: ano * 100 + mes
+        };
+    }
+
+    const matchAno = texto.match(/^(\d{4})$/);
+    if (matchAno) {
+        const ano = Number(matchAno[1]);
+        const anoAtual = new Date().getFullYear() + 1;
+        return {
+            ok: ano >= 1950 && ano <= anoAtual,
+            score: ano * 100
+        };
+    }
+
+    return { ok: false, score: 0 };
+}
+
+function obterResumoEmEdicao() {
+    return getValSafe('resIn').trim();
+}
+
+function obterExperienciaEmEdicao() {
+    const cargo = getValSafe('expC').trim();
+    const empresa = getValSafe('expE').trim();
+    const ini = getValSafe('expIni').trim();
+    const fim = (document.getElementById('expAtual')?.checked ? 'Até o momento' : getValSafe('expFim').trim());
+    const desc = getValSafe('expDes').trim();
+    const temRascunho = Boolean(cargo || empresa || ini || fim || desc);
+
+    if (!temRascunho) return null;
+
+    return { cargo, empresa, ini, fim, desc, emEdicao: true };
+}
+
+function obterFormacaoEmEdicao() {
+    const curso = getValSafe('escC').trim();
+    const inst = getValSafe('escI').trim();
+    const ini = getValSafe('escIni').trim();
+    const status = getValSafe('escStatus').trim();
+    return Boolean(curso || inst || ini || status);
+}
+
+function obterHabilidadeEmEdicao() {
+    return getValSafe('habIn').trim();
+}
+
+function coletarDiagnosticoCurriculoAtual() {
+    const resumos = Array.from(document.querySelectorAll('#preRes .texto-justificado'))
+        .map(el => el.innerText.trim())
+        .filter(Boolean);
+
+    const resumoEmEdicao = obterResumoEmEdicao();
+    if (resumoEmEdicao) {
+        resumos.push(resumoEmEdicao);
+    }
+
+    const experiencias = Array.from(document.querySelectorAll('#preExp .bloco-exp')).map((el, index) => {
+        const raw = el.dataset.raw ? JSON.parse(el.dataset.raw) : {};
+        return {
+            index: index + 1,
+            cargo: raw.cargo || '',
+            empresa: raw.empresa || '',
+            ini: raw.ini || '',
+            fim: raw.fim || '',
+            desc: raw.desc || ''
+        };
+    });
+
+    const experienciaEmEdicao = obterExperienciaEmEdicao();
+    if (experienciaEmEdicao) {
+        experiencias.push({
+            index: experiencias.length + 1,
+            ...experienciaEmEdicao
+        });
+    }
+
+    const habilidades = Array.from(document.querySelectorAll('#preHab .item-lista'))
+        .map(el => el.innerText.trim())
+        .filter(Boolean);
+
+    const habilidadeEmEdicao = obterHabilidadeEmEdicao();
+    if (habilidadeEmEdicao) {
+        habilidades.push(habilidadeEmEdicao);
+    }
+
+    const formacoes = Array.from(document.querySelectorAll('#preEsc .item-lista'))
+        .map(el => el.innerText.trim())
+        .filter(Boolean);
+
+    if (obterFormacaoEmEdicao()) {
+        formacoes.push('[Formação em edição]');
+    }
+
+    return { resumos, experiencias, habilidades, formacoes };
+}
+
+export function gerarRevisaoCurriculoBase() {
+    const { resumos, experiencias, habilidades } = coletarDiagnosticoCurriculoAtual();
+    const apontamentos = [];
+
+    if (resumos.length === 0) {
+        apontamentos.push('Adicione um resumo profissional para apresentar seu perfil logo no início do currículo.');
+    } else {
+        const resumoPrincipal = resumos.join(' ').trim();
+        if (contarPalavras(resumoPrincipal) < 25) {
+            apontamentos.push('Seu resumo está curto. Vale explicar melhor especialidade, tempo de experiência e principais resultados.');
+        }
+    }
+
+    if (experiencias.length === 0) {
+        apontamentos.push('Cadastre pelo menos uma experiência profissional para dar contexto ao seu histórico.');
+    }
+
+    if (habilidades.length === 0) {
+        apontamentos.push('Inclua habilidades técnicas ou comportamentais para reforçar seus pontos fortes.');
+    }
+
+    experiencias.forEach(exp => {
+        const inicio = analisarDataExperiencia(exp.ini);
+        const fim = analisarDataExperiencia(exp.fim);
+        const titulo = exp.cargo || exp.empresa || `experiência ${exp.index}`;
+
+        if ((exp.ini && !inicio.ok) || (exp.fim && !fim.ok)) {
+            apontamentos.push(`Revise as datas da ${titulo}: use formatos como MM/AAAA, AAAA ou "Até o momento".`);
+        } else if (inicio.ok && fim.ok && inicio.score && fim.score && fim.score !== 999999 && inicio.score > fim.score) {
+            apontamentos.push(`As datas da ${titulo} parecem invertidas. Verifique início e fim.`);
+        }
+
+        if (contarPalavras(exp.desc) > 0 && contarPalavras(exp.desc) < 12) {
+            apontamentos.push(`A descrição da ${titulo} está curta. Tente detalhar atividades, entregas ou resultados.`);
+        }
+    });
+
+    return apontamentos;
+}
+
+function renderizarRevisaoCurriculoBase() {
+    const lista = document.getElementById('revisao-curriculo-lista');
+    const vazio = document.getElementById('revisao-curriculo-vazio');
+    if (!lista || !vazio) return;
+
+    const apontamentos = gerarRevisaoCurriculoBase();
+    lista.innerHTML = '';
+
+    if (apontamentos.length === 0) {
+        vazio.style.display = 'block';
+        vazio.innerText = 'Nenhum alerta básico encontrado. Seu currículo-base já tem uma boa estrutura para seguir revisando.';
+        return;
+    }
+
+    vazio.style.display = 'none';
+    apontamentos.forEach(texto => {
+        const item = document.createElement('li');
+        item.style.marginBottom = '10px';
+        item.style.lineHeight = '1.6';
+        item.textContent = texto;
+        lista.appendChild(item);
+    });
+}
+
+async function recuperarCurriculoParaRevisao() {
+    if (appState.idAtual) {
+        return appState.idAtual;
+    }
+
+    const cvRecuperacao = localStorage.getItem('cvRecuperacao') || '';
+    const cvPadrao = obterCurriculoPadraoId();
+    const candidatoId = cvRecuperacao || cvPadrao;
+
+    if (!candidatoId) {
+        return '';
+    }
+
+    await carregar(candidatoId, { irParaEditor: false, iniciarTourDepois: false });
+    return appState.idAtual || '';
+}
+
+export async function abrirFluxoRevisaoCurriculo() {
+    const identificador = await recuperarCurriculoParaRevisao();
+
+    if (!identificador) {
+        mostrarAviso('Crie ou carregue um currículo antes de iniciar a revisão.', {
+            title: 'Revisão do currículo',
+            tone: 'info'
+        });
+        return;
+    }
+
+    atualizarTelaRevisaoCurriculo(identificador);
+    irPara('tela-revisao-curriculo');
+    renderizarRevisaoCurriculoBase();
 }
 
 function obterChaveCurriculoPadraoLocal() {
@@ -158,8 +580,8 @@ export async function definirPadrao(id) {
     });
 
     if (error) {
-        mostrarAviso('Não foi possível fixar o currículo padrão agora. Tente novamente em alguns instantes.', {
-            title: 'Currículo padrão',
+        mostrarAviso('Não foi possível fixar este Histórico Profissional principal agora. Tente novamente em alguns instantes.', {
+            title: 'Histórico Profissional principal',
             tone: 'erro'
         });
         return;
@@ -170,7 +592,7 @@ export async function definirPadrao(id) {
     }
 
     salvarCurriculoPadraoLocal(id);
-    showToast('⭐ Currículo padrão fixado na sua conta!');
+    showToast('⭐ Histórico Profissional principal definido na sua conta!');
     abrirCurriculosSalvos();
 }
 
@@ -192,15 +614,15 @@ export async function fluxoLista() {
 
     grid.innerHTML = `
             <div style="grid-column: 1 / -1; background: var(--primary-dim); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: var(--text-main);">
-                <strong>💡 Dica de Mestre:</strong> Crie um currículo contendo <b>todas</b> as suas experiências, habilidades e formações (mesmo que fique grande). Salve-o e depois clique em <b>"⭐ Definir Padrão"</b>. Ele será a sua base oficial para a IA gerar currículos perfeitos para cada vaga!
+                <strong>💡 Dica de Mestre:</strong> Crie um currículo contendo <b>todas</b> as suas experiências, habilidades e formações (mesmo que fique grande). Salve-o e depois clique em <b>"⭐ Definir como Principal"</b>. Ele será o seu Cadastro de Histórico Profissional oficial para a IA gerar currículos adaptados para cada vaga!
             </div>
         `;
 
     data.forEach(item => {
         const isPadrao = item.identificador === padraoId;
         const btnPadrao = isPadrao
-            ? '<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>'
-            : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
+            ? '<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Histórico Principal</span>'
+            : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir como Principal</button>`;
 
         let linhaAtualizado = 'Atualizado: —';
         if (item.conteudo && item.conteudo.data_atualizacao) {
@@ -257,7 +679,7 @@ export async function salvarComo() {
 
 export async function salvar() {
     const id = appState.idAtual || prompt('Nome do currículo (ex: TI Banco Itaú):');
-    if (!id) return;
+    if (!id) return false;
     const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
     const dataAtualizacao = new Date().toISOString();
     const payload = {
@@ -268,6 +690,10 @@ export async function salvar() {
             data_atualizacao: dataAtualizacao,
             analise_ats: appState.analiseAtsAtual,
             vaga_original: appState.vagaOriginalAtual,
+            vaga_vinculada: appState.vagaVinculadaAtual ? {
+                ...appState.vagaVinculadaAtual,
+                texto: appState.vagaOriginalAtual || appState.vagaVinculadaAtual.texto || ''
+            } : null,
             pessoais: {
                 nome: getValSafe('inNome'),
                 data: getValSafe('inData'),
@@ -300,14 +726,17 @@ export async function salvar() {
         localStorage.setItem('cvRecuperacao', appState.idAtual);
         const sn = document.getElementById('status-nome');
         if (sn) sn.innerText = '📄 Currículo: ' + id;
+        atualizarStatusUltimoSalvamento(dataAtualizacao);
         appState.temAlteracoesNaoSalvas = false;
         showToast();
+        return true;
     } else {
         mostrarAviso('Não foi possível salvar o currículo agora.', { tone: 'erro' });
+        return false;
     }
 }
 
-export async function carregar(id) {
+export async function carregar(id, options = {}) {
     const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', id).eq('user_id', appState.usuarioAtual.id).single();
     if (data) {
         limparTudo();
@@ -320,8 +749,19 @@ export async function carregar(id) {
 
         appState.origemAtual = c.origem || 'Não identificada';
         atualizarStatusOrigem();
+        atualizarStatusUltimoSalvamento(c.data_atualizacao || '');
 
         appState.vagaOriginalAtual = c.vaga_original || '';
+        appState.vagaAnalisadaAtual = c.vaga_original || '';
+        appState.vagaVinculadaAtual = c.vaga_vinculada || (c.vaga_original ? {
+            texto: c.vaga_original,
+            origem_tipo: 'legado',
+            origem_label: 'Vaga recuperada do currículo salvo',
+            link: '',
+            motivo_validacao: '',
+            data_vinculacao: c.data_atualizacao || ''
+        } : null);
+        appState.historicoProfissionalAlvoId = id;
 
         appState.analiseAtsAtual = c.analise_ats || null;
         atualizarSugestoesAtsEstruturadas(appState.analiseAtsAtual);
@@ -394,8 +834,15 @@ export async function carregar(id) {
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
         if (btnRecalcular) btnRecalcular.style.display = 'none';
 
-        irPara('tela-editor');
-        iniciarTour();
+        if (options.irParaEditor !== false) {
+            irPara('tela-editor');
+        }
+
+        if (options.iniciarTourDepois !== false) {
+            iniciarTour();
+        }
+
+        atualizarBarraPreenchimentoCurriculo();
     }
 }
 
@@ -434,7 +881,7 @@ export async function extrairDadosIA() {
         appState.idAtual = null;
         localStorage.removeItem('cvRecuperacao');
         const sn = document.getElementById('status-nome');
-        if (sn) sn.innerText = '📄 Currículo: NOVO';
+        if (sn) sn.innerText = '📄 Novo Currículo';
 
         appState.origemAtual = 'Extraído via IA (Texto colado)';
         atualizarStatusOrigem();
@@ -826,6 +1273,9 @@ export function limparTudo() {
     appState.ultimasAlteracoesIA = '';
     appState.analiseAtsAtual = null;
     appState.vagaOriginalAtual = '';
+    appState.vagaAnalisadaAtual = '';
+    appState.vagaVinculadaAtual = null;
+    appState.historicoProfissionalAlvoId = '';
     limparSugestoesAtsEstruturadas();
 
     document.getElementById('btn-ver-alteracoes').style.display = 'none';
@@ -835,6 +1285,7 @@ export function limparTudo() {
 
     appState.origemAtual = 'Criado do zero';
     atualizarStatusOrigem();
+    atualizarStatusUltimoSalvamento('');
 
     appState.editResumoNode = null;
     appState.editExpNode = null;
@@ -864,7 +1315,22 @@ export function limparTudo() {
     const btnRecalcular = document.getElementById('btn-recalcular-ats');
     if (btnRecalcular) btnRecalcular.style.display = 'none';
 
+    atualizarBarraPreenchimentoCurriculo();
     setTimeout(ajustarZoomMobile, 100);
+}
+
+function formatarDataUltimoSalvamento(dataIso) {
+    if (!dataIso) return 'Último salvamento: ainda não salvo';
+    const data = new Date(dataIso);
+    if (Number.isNaN(data.getTime())) return 'Último salvamento: ainda não salvo';
+    const dataFormatada = data.toLocaleDateString('pt-BR');
+    const horaFormatada = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `Último salvamento: ${dataFormatada} às ${horaFormatada}`;
+}
+
+function atualizarStatusUltimoSalvamento(dataIso) {
+    const statusSave = document.getElementById('status-save');
+    if (statusSave) statusSave.innerText = formatarDataUltimoSalvamento(dataIso);
 }
 
 function higienizarTexto(texto) {
@@ -931,6 +1397,9 @@ export function initEditorFieldGuards() {
         });
     }
 }
+
+window.melhorarResumoProfissional = melhorarResumoProfissional;
+window.melhorarDescricaoExperiencia = melhorarDescricaoExperiencia;
 
 export const FLUXO_EDITOR_CURRICULO = Object.freeze({
     marcarAlteracao,

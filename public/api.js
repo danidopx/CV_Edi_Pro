@@ -4,9 +4,16 @@ export const PROMPT_NAMES = {
     simples: 'ajuste_simples',
     agressivo: 'ajuste_agressivo',
     ats: 'analise_ats',
+    atsGeral: 'analise_ats_geral',
+    aplicarAjustes: 'aplicar_ajustes',
     validarVagaImportada: 'validar_vaga_importada',
     validarVagaAjuste: 'validar_vaga_ajuste',
-    extracaoTextoCv: 'extracao_texto_cv'
+    extracaoTextoCv: 'extracao_texto_cv',
+    gerarCurriculoHistorico: 'gerar_curriculo_historico',
+    melhorarResumo: 'melhorar_resumo',
+    melhorarResumoAlvo: 'melhorar_resumo_alvo',
+    melhorarExperiencia: 'melhorar_experiencia',
+    reescreverExperienciaVaga: 'reescrever_experiencia_vaga'
 };
 
 function detectarAmbienteAtualPeloHost(hostname) {
@@ -63,7 +70,26 @@ function formatarDataVersao(valor) {
 function montarRotuloVersao(registro) {
     const ambiente = registro?.environment_name === 'production' ? 'Produção' : 'Preview';
     const versao = registro?.current_version || '0.0.0';
-    return `CV Edi Pro v${versao}${ambiente === 'Preview' ? ' - Preview' : ''}`;
+    const commitCurto = String(registro?.commit_ref || '').trim().slice(0, 7);
+    const buildSuffix = registro?.source === 'runtime_build' && commitCurto ? `+${commitCurto}` : '';
+    return `CV Edi Pro v${versao}${buildSuffix}${ambiente === 'Preview' ? ' - Preview' : ''}`;
+}
+
+function extrairVersaoDoRotulo(texto) {
+    const match = String(texto || '').match(/v(\d+\.\d+\.\d+)/i);
+    return match ? match[1] : '';
+}
+
+function compararVersoesSemver(a, b) {
+    const partesA = String(a || '0.0.0').split('.').map(n => Number(n) || 0);
+    const partesB = String(b || '0.0.0').split('.').map(n => Number(n) || 0);
+
+    for (let i = 0; i < 3; i += 1) {
+        if ((partesA[i] || 0) > (partesB[i] || 0)) return 1;
+        if ((partesA[i] || 0) < (partesB[i] || 0)) return -1;
+    }
+
+    return 0;
 }
 
 export async function carregarVersaoAtualApp(environmentName = detectarAmbienteAtual()) {
@@ -82,6 +108,16 @@ export async function carregarVersaoAtualApp(environmentName = detectarAmbienteA
     }
 
     return data || null;
+}
+
+export async function carregarVersaoBuildAtual() {
+    try {
+        const resposta = await fetch('/api/build-version', { cache: 'no-store' });
+        if (!resposta.ok) return null;
+        return await resposta.json();
+    } catch {
+        return null;
+    }
 }
 
 function registroVersaoCombinaComDeployAtual(registro) {
@@ -177,8 +213,37 @@ export async function sincronizarVersaoAppNaTela() {
     const metas = document.querySelectorAll('[data-app-version-meta]');
     if (rotulos.length === 0) return null;
 
+    const fallbackRotulo = rotulos[0]?.textContent || '';
+    const fallbackVersao = extrairVersaoDoRotulo(fallbackRotulo);
+    const versaoBuild = await carregarVersaoBuildAtual();
     const registro = await carregarVersaoAtualApp();
-    if (!registroVersaoCombinaComDeployAtual(registro)) {
+    const versaoBanco = registro?.current_version || '';
+    const bancoEstaAtrasado = fallbackVersao && versaoBanco && compararVersoesSemver(fallbackVersao, versaoBanco) > 0;
+    const usarVersaoBuild = versaoBuild && !registroVersaoCombinaComDeployAtual(registro);
+
+    if (usarVersaoBuild) {
+        const labelBuild = montarRotuloVersao(versaoBuild);
+        const branch = String(versaoBuild.branch_name || '').trim();
+        const commitCurto = String(versaoBuild.commit_ref || '').trim().slice(0, 7);
+        const metaBuild = [branch, commitCurto && `Commit: ${commitCurto}`].filter(Boolean).join(' | ');
+
+        rotulos.forEach(el => {
+            el.textContent = labelBuild;
+        });
+        metas.forEach(el => {
+            if (metaBuild) {
+                el.textContent = metaBuild;
+                el.style.display = 'block';
+            } else {
+                el.textContent = '';
+                el.style.display = 'none';
+            }
+        });
+
+        return versaoBuild;
+    }
+
+    if (!registroVersaoCombinaComDeployAtual(registro) || bancoEstaAtrasado) {
         metas.forEach(el => {
             el.textContent = '';
             el.style.display = 'none';

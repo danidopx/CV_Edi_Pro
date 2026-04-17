@@ -1,6 +1,96 @@
-import { getValSafe } from './ui.js';
+import { getValSafe, mostrarConfirmacao } from './ui.js';
 
-export function gerarPDF() {
+function obterTextoLimpo(selector) {
+    return Array.from(document.querySelectorAll(selector))
+        .map(el => (el.innerText || '').trim())
+        .filter(Boolean);
+}
+
+function obterResumoEmEdicao() {
+    return (getValSafe('resIn') || '').trim();
+}
+
+function obterExperienciaEmEdicao() {
+    const campos = [
+        getValSafe('expC'),
+        getValSafe('expE'),
+        getValSafe('expIni'),
+        getValSafe('expFim'),
+        getValSafe('expDes')
+    ].map(valor => String(valor || '').trim());
+
+    if (document.getElementById('expAtual')?.checked) {
+        campos.push('Até o momento');
+    }
+
+    return campos.some(Boolean);
+}
+
+function obterFormacaoEmEdicao() {
+    return [
+        getValSafe('escC'),
+        getValSafe('escI'),
+        getValSafe('escIni'),
+        getValSafe('escStatus')
+    ].map(valor => String(valor || '').trim()).some(Boolean);
+}
+
+function revisarCurriculoAntesDoPdf() {
+    const pendencias = [];
+    const nome = (getValSafe('inNome') || '').trim();
+    const email = (getValSafe('inEmail') || '').trim();
+    const whats = (getValSafe('inWhats') || '').trim();
+    const linkedin = (getValSafe('inLinkedin') || '').trim();
+    const localidade = (getValSafe('inEnd') || '').trim();
+    const resumos = obterTextoLimpo('#preRes .texto-justificado');
+    const experiencias = document.querySelectorAll('#preExp .bloco-exp');
+    const formacoes = document.querySelectorAll('#preEsc .item-lista');
+    const resumoEmEdicao = obterResumoEmEdicao();
+    const experienciaEmEdicao = obterExperienciaEmEdicao();
+    const formacaoEmEdicao = obterFormacaoEmEdicao();
+
+    if (!nome) {
+        pendencias.push('Preencha o nome antes de exportar o currículo.');
+    }
+
+    if (!email && !whats && !linkedin && !localidade) {
+        pendencias.push('Inclua pelo menos uma informação de contato, como e-mail, WhatsApp, LinkedIn ou cidade.');
+    }
+
+    if (!resumos.length && !resumoEmEdicao && !experiencias.length && !experienciaEmEdicao) {
+        pendencias.push('Adicione um resumo profissional ou pelo menos uma experiência antes de gerar o PDF.');
+    }
+
+    if (!experiencias.length && !experienciaEmEdicao && !formacoes.length && !formacaoEmEdicao) {
+        pendencias.push('Cadastre ao menos uma experiência profissional ou uma formação acadêmica.');
+    }
+
+    return pendencias;
+}
+
+async function confirmarGeracaoComPendencias(pendencias) {
+    if (!pendencias.length) return true;
+
+    const mensagem = [
+        'Encontramos alguns pontos importantes antes da exportação:',
+        '',
+        ...pendencias.map(item => `• ${item}`),
+        '',
+        'Deseja gerar o PDF mesmo assim?'
+    ].join('\n');
+
+    return mostrarConfirmacao(mensagem, {
+        title: 'Revisão rápida antes do PDF',
+        confirmLabel: 'Gerar mesmo assim',
+        cancelLabel: 'Voltar para corrigir',
+        tone: 'erro'
+    });
+}
+
+export async function gerarPDF() {
+    const podeContinuar = await confirmarGeracaoComPendencias(revisarCurriculoAntesDoPdf());
+    if (!podeContinuar) return;
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     doc.setLineHeightFactor(1.4);

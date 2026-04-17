@@ -39,7 +39,10 @@ export {
     receberVagaExterna,
     receberVagaMobile,
     abrirTelaVaga,
+    configurarEntradaLinkVaga,
     verificarCurriculoBase,
+    analisarVagaATS,
+    aplicarAjustesVaga,
     acionarRecalculoATS,
     ajustarCurriculoVaga
 } from './analise-vaga.js';

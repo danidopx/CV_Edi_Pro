@@ -21,6 +21,9 @@ export const appState = {
     analiseAtsAtual: null,
     sugestoesAtsEstruturadas: [],
     vagaOriginalAtual: '',
+    vagaAnalisadaAtual: '',
+    vagaVinculadaAtual: null,
+    historicoProfissionalAlvoId: '',
     origemAtual: 'Criado do zero',
     historicoTelas: [],
     modeloIAPreferido: 'gemini-2.5-flash',
@@ -29,7 +32,7 @@ export const appState = {
     passoTour: 0
 };
 
-function clonarSugestaoAts(sugestao) {
+export function normalizarSugestaoAtsEstruturada(sugestao) {
     if (!sugestao || typeof sugestao !== 'object') return null;
 
     return {
@@ -47,7 +50,7 @@ export function atualizarSugestoesAtsEstruturadas(origem) {
         : [];
 
     appState.sugestoesAtsEstruturadas = sugestoes
-        .map(clonarSugestaoAts)
+        .map(normalizarSugestaoAtsEstruturada)
         .filter(item => item && item.descricao);
 
     return appState.sugestoesAtsEstruturadas;
@@ -59,46 +62,29 @@ export function limparSugestoesAtsEstruturadas() {
 
 export function obterSugestoesAtsEstruturadas() {
     return appState.sugestoesAtsEstruturadas
-        .map(clonarSugestaoAts)
+        .map(normalizarSugestaoAtsEstruturada)
         .filter(item => item && item.descricao);
 }
 
 export const regexSenha = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-export const DEFAULT_PROMPT_SIMPLES = `Você é um especialista em RH. Ajuste o currículo sutilmente. MANTENHA a estrutura e experiências. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou e melhorou" }`;
+export const DEFAULT_PROMPT_SIMPLES = `Aja como especialista em currículos. Ajuste o currículo para a vaga com mudanças pequenas, preservando estrutura, fatos e experiências. Responda somente JSON válido no formato {"titulo_vaga":"","nome":"","endereco":"","cep":"","email":"","whatsapp":"","linkedin":"","resumo":"","experiencias":[{"cargo":"","empresa":"","ini":"","fim":"","desc":""}],"formacao":[{"curso":"","inst":"","ini":"","fim":""}],"idiomas":[{"nome":"","nivel":""}],"habilidades":[""],"email_envio_vaga":"","resumo_alteracoes":""}.`;
 
-export const DEFAULT_PROMPT_AGRESSIVO = `Você é um especialista em recrutamento. Ajuste o currículo para ter o MAIOR MATCH POSSÍVEL. Seja agressivo no resumo. Retorne APENAS um objeto JSON válido. Formato EXATO: { "titulo_vaga": "Nome", "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "fim":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill"], "email_envio_vaga": "extraia o e-mail para envio de currículo se houver na vaga, senao vazio", "resumo_alteracoes": "O que você focou, cortou ou adicionou" }`;
+export const DEFAULT_PROMPT_AGRESSIVO = `Aja como especialista em recrutamento. Ajuste o currículo para maximizar aderência à vaga, preservando apenas fatos plausíveis do histórico informado. Responda somente JSON válido no formato {"titulo_vaga":"","nome":"","endereco":"","cep":"","email":"","whatsapp":"","linkedin":"","resumo":"","experiencias":[{"cargo":"","empresa":"","ini":"","fim":"","desc":""}],"formacao":[{"curso":"","inst":"","ini":"","fim":""}],"idiomas":[{"nome":"","nivel":""}],"habilidades":[""],"email_envio_vaga":"","resumo_alteracoes":""}.`;
 
-export const DEFAULT_PROMPT_ATS = `Você é um sistema de triagem de currículos baseado em ATS (Applicant Tracking System) com análise complementar de recrutador humano.
-Sua tarefa é analisar a compatibilidade entre uma VAGA e o CURRÍCULO AJUSTADO.
-Considere critérios reais utilizados por plataformas como InfoJobs, Indeed e Glassdoor: Palavras-chave, Experiência relevante, Clareza e Aderência geral ao cargo.
-
-ETAPA 1 — Extração da vaga Identifique Cargo principal, responsabilidades, requisitos obrigatórios e palavras-chave.
-ETAPA 2 — Extração do currículo Identifique Experiências, tempo de exp, hard skills, soft skills.
-ETAPA 3 — Análise de compatibilidade Compare vaga vs currículo e defina Pontos Fortes, Pontos Médios e Pontos Fracos (Gaps).
-ETAPA 4 — Score geral Dê uma nota de 0 a 100 baseada na aderência.
-ETAPA 5 — Risco de eliminação automática Informe: Alto / Médio / Baixo.
-ETAPA 6 — Sugestões práticas de melhoria Diga exatamente o que ajustar no currículo (se necessário).
-
-IMPORTANTE: Retorne APENAS um objeto JSON válido. NÃO use markdown ou blocos de código (\`\`\`json).
-Formato EXATO obrigatório:
-{
-  "pontos_fortes": ["Ponto 1"],
-  "pontos_medios": ["Ponto 1"],
-  "pontos_fracos": ["Ponto 1"],
-  "score": 85,
-  "risco": "Baixo",
-  "motivo_risco": "Breve explicação",
-  "sugestoes": ["Sugestão 1"]
-}
-
-[VAGA] {{VAGA}} [CURRÍCULO] {{CURRICULO}}`;
+export const DEFAULT_PROMPT_ATS = `Analise a aderência entre VAGA e CURRÍCULO. Responda somente JSON válido no formato {"pontos_fortes":[""],"pontos_medios":[""],"pontos_fracos":[""],"score":0,"risco":"","motivo_risco":"","sugestoes":[""],"sugestoes_estruturadas":[{"tipo":"","alvo":"","descricao":"","prioridade":"","aplicavel_automaticamente":false}]}. VAGA: {{VAGA}} CURRICULO: {{CURRICULO}}`;
+export const DEFAULT_PROMPT_ATS_GERAL = `Analise a qualidade geral do currículo sem vaga específica. Responda somente JSON válido no formato {"pontos_fortes":[""],"pontos_medios":[""],"pontos_fracos":[""],"score":0,"risco":"","motivo_risco":"","sugestoes":[""],"sugestoes_estruturadas":[{"tipo":"","alvo":"","descricao":"","prioridade":"","aplicavel_automaticamente":false}]}. CURRICULO: {{CURRICULO}}`;
+export const DEFAULT_PROMPT_APLICAR_AJUSTES = `Aplique ajustes do histórico profissional para a vaga, preservando fatos informados e retornando somente JSON válido no formato {"titulo_vaga":"","nome":"","endereco":"","cep":"","email":"","whatsapp":"","linkedin":"","resumo":"","experiencias":[{"cargo":"","empresa":"","ini":"","fim":"","desc":""}],"formacao":[{"curso":"","inst":"","ini":"","fim":""}],"idiomas":[{"nome":"","nivel":""}],"habilidades":[""],"email_envio_vaga":"","resumo_alteracoes":""}. HISTORICO: {{HISTORICO}} VAGA: {{VAGA}}`;
 
 export const DEFAULT_PROMPT_VALIDAR_VAGA_IMPORTADA = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Motivo da reprovação"}. Texto: {{TEXTO_VAGA}}`;
 
 export const DEFAULT_PROMPT_VALIDAR_VAGA_AJUSTE = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: {{TEXTO_VAGA}}`;
-
-export const DEFAULT_PROMPT_EXTRACAO = `Aja como conversor estrito de texto para JSON. Formato obrigatório: { "nome": "", "endereco": "", "cep": "", "email": "", "whatsapp": "", "linkedin": "", "resumo": "texto", "experiencias": [{"cargo":"", "empresa":"", "ini":"", "fim":"", "desc":""}], "formacao": [{"curso":"", "inst":"", "ini":"", "status":""}], "idiomas": [{"nome":"", "nivel":""}], "habilidades": ["skill1"] } STATUS FORMAÇÃO: Obrigatório retornar um dos: "Concluído", "Cursando", "Trancado". Texto: {{TEXTO_BRUTO}}`;
+export const DEFAULT_PROMPT_EXTRACAO = `Converta o histórico profissional em JSON. Responda somente JSON válido no formato {"nome":"","endereco":"","cep":"","email":"","whatsapp":"","linkedin":"","resumo":"texto","experiencias":[{"cargo":"","empresa":"","ini":"","fim":"","desc":""}],"formacao":[{"curso":"","inst":"","ini":"","status":""}],"idiomas":[{"nome":"","nivel":""}],"habilidades":[""]}. STATUS da formação deve ser "Concluído", "Cursando" ou "Trancado". TEXTO: {{TEXTO_BRUTO}}`;
+export const DEFAULT_PROMPT_GERAR_CURRICULO_HISTORICO = `Gere um currículo estruturado a partir do histórico profissional informado. Responda somente JSON válido no formato {"nome":"","endereco":"","cep":"","email":"","whatsapp":"","linkedin":"","resumo":"","experiencias":[{"cargo":"","empresa":"","ini":"","fim":"","desc":""}],"formacao":[{"curso":"","inst":"","ini":"","fim":""}],"idiomas":[{"nome":"","nivel":""}],"habilidades":[""]}. HISTORICO: {{HISTORICO}}`;
+export const DEFAULT_PROMPT_MELHORAR_RESUMO = `Reescreva o resumo profissional em português do Brasil, claro e objetivo, sem inventar fatos. Responda somente JSON válido no formato {"resumo":""}. TEXTO_BASE: {{RESUMO_BASE}}`;
+export const DEFAULT_PROMPT_MELHORAR_RESUMO_POR_ALVO = `Reescreva o resumo profissional para o alvo informado, preservando fatos reais. Responda somente JSON válido no formato {"resumo":"","foco":""}. ALVO: {{ALVO}} RESUMO_BASE: {{RESUMO_BASE}}`;
+export const DEFAULT_PROMPT_MELHORAR_EXPERIENCIA = `Reescreva a descrição da experiência em português do Brasil, clara e objetiva, sem inventar fatos. Responda somente JSON válido no formato {"descricao":""}. CARGO: {{CARGO}} EMPRESA: {{EMPRESA}} TEXTO_BASE: {{DESCRICAO_BASE}}`;
+export const DEFAULT_PROMPT_REESCREVER_EXPERIENCIA_POR_VAGA = `Reescreva a experiência para a vaga alvo, preservando fatos reais. Responda somente JSON válido no formato {"descricao":"","palavras_chave":[""]}. CARGO: {{CARGO}} EMPRESA: {{EMPRESA}} VAGA: {{VAGA}} TEXTO_BASE: {{DESCRICAO_BASE}}`;
 
 export const DEFAULT_PROMPTS_BY_NAME = {
     ajuste_simples: {
@@ -116,6 +102,16 @@ export const DEFAULT_PROMPTS_BY_NAME = {
         description: 'Prompt base para score ATS e análise de aderência.',
         content: DEFAULT_PROMPT_ATS
     },
+    analise_ats_geral: {
+        label: 'Análise ATS Geral',
+        description: 'Análise geral do currículo sem vaga específica.',
+        content: DEFAULT_PROMPT_ATS_GERAL
+    },
+    aplicar_ajustes: {
+        label: 'Aplicar Ajustes',
+        description: 'Gera a versão ajustada do currículo a partir do histórico e da vaga.',
+        content: DEFAULT_PROMPT_APLICAR_AJUSTES
+    },
     validar_vaga_importada: {
         label: 'Validação de Vaga Importada',
         description: 'Valida vagas capturadas externamente antes do uso no app.',
@@ -130,12 +126,60 @@ export const DEFAULT_PROMPTS_BY_NAME = {
         label: 'Extração de Texto em CV',
         description: 'Converte texto bruto de currículo/LinkedIn em JSON estruturado.',
         content: DEFAULT_PROMPT_EXTRACAO
+    },
+    gerar_curriculo_historico: {
+        label: 'Gerar Currículo do Histórico',
+        description: 'Monta um currículo estruturado a partir do histórico profissional.',
+        content: DEFAULT_PROMPT_GERAR_CURRICULO_HISTORICO
+    },
+    melhorar_resumo: {
+        label: 'Melhorar Resumo',
+        description: 'Reescreve o resumo profissional com linguagem mais clara, profissional e objetiva.',
+        content: DEFAULT_PROMPT_MELHORAR_RESUMO
+    },
+    melhorar_resumo_alvo: {
+        label: 'Resumo por Alvo',
+        description: 'Reescreve o resumo profissional com foco em um alvo específico.',
+        content: DEFAULT_PROMPT_MELHORAR_RESUMO_POR_ALVO
+    },
+    melhorar_experiencia: {
+        label: 'Melhorar Experiência',
+        description: 'Reescreve a descrição de uma experiência profissional sem alterar os fatos informados.',
+        content: DEFAULT_PROMPT_MELHORAR_EXPERIENCIA
+    },
+    reescrever_experiencia_vaga: {
+        label: 'Experiência por Vaga',
+        description: 'Reescreve uma experiência com foco em uma vaga específica, preservando fatos reais.',
+        content: DEFAULT_PROMPT_REESCREVER_EXPERIENCIA_POR_VAGA
     }
 };
 
 export const tourTextos = [
-    '<b>1. Cadastre seu currículo base</b><br><br>Comece criando um currículo manualmente ou importando um texto existente. O primeiro currículo salvo vira sua base para os ajustes de vaga.',
+    '<b>1. Cadastre seu Histórico Profissional</b><br><br>Comece criando um currículo manualmente ou importando um texto existente. O primeiro currículo salvo vira seu Cadastro de Histórico Profissional para os ajustes de vaga.',
     '<b>2. Capture ou cole a vaga</b><br><br>Use <b>Ajustar à Vaga</b> no app ou envie uma vaga pela extensão do Chrome. Se a vaga vier da extensão, o app valida o texto antes de usar.',
-    '<b>3. Gere uma versão ajustada</b><br><br>Escolha o currículo base, confira a vaga capturada e clique em gerar. O Edi Pro adapta o conteúdo e também cria uma análise ATS.',
+    '<b>3. Gere uma versão ajustada</b><br><br>Escolha seu Cadastro de Histórico Profissional, confira a vaga capturada e clique em gerar. O Edi Pro adapta o conteúdo e também cria uma análise ATS.',
     '<b>4. Salve, revise e exporte</b><br><br>Use <b>Salvar Cópia</b> para manter versões diferentes por vaga. Quando estiver pronto, gere o PDF e revise o resultado final.'
+];
+
+export const tourMenuPrincipal = [
+    {
+        targetId: 'btn-menu-novo-curriculo',
+        title: '➕ Novo Currículo',
+        text: 'Use este botão para começar um currículo do zero e preencher seus dados no editor.'
+    },
+    {
+        targetId: 'btn-menu-revisao-curriculo',
+        title: '✨ Revisão do Currículo',
+        text: 'Aqui você revisa rapidamente seu currículo-base antes de editar ou exportar.'
+    },
+    {
+        targetId: 'btn-menu-curriculos-salvos',
+        title: '📂 Currículos Salvos',
+        text: 'Abra seus currículos já salvos para continuar editando, duplicar ou definir um como seu Cadastro de Histórico Profissional principal.'
+    },
+    {
+        targetId: 'btn-menu-analise-vaga',
+        title: '🎯 Análise da Vaga',
+        text: 'Entre neste fluxo para cruzar uma vaga com seu currículo-base e gerar uma versão ajustada.'
+    }
 ];

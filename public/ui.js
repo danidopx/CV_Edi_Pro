@@ -1,6 +1,118 @@
-import { appState, tourTextos } from './config.js';
+import { appState, tourTextos, tourMenuPrincipal } from './config.js';
 
 let resolverConfirmacaoAtual = null;
+let valorConfirmacaoSecundaria = 'secondary';
+let indiceTourMenuAtual = 0;
+let tourMenuAtivo = false;
+
+function obterPainelTour() {
+    return document.getElementById('tour-panel');
+}
+
+function obterTituloPainelTour() {
+    return obterPainelTour()?.querySelector('h3');
+}
+
+function limparDestaqueTourMenu() {
+    document.querySelectorAll('[data-tour-menu-highlight="true"]').forEach(el => {
+        el.removeAttribute('data-tour-menu-highlight');
+        el.style.outline = '';
+        el.style.boxShadow = '';
+        el.style.position = '';
+        el.style.zIndex = '';
+    });
+}
+
+function destacarBotaoTourMenu(el) {
+    if (!el) return;
+    limparDestaqueTourMenu();
+    el.setAttribute('data-tour-menu-highlight', 'true');
+    el.style.outline = '3px solid rgba(108, 92, 231, 0.35)';
+    el.style.boxShadow = '0 0 0 6px rgba(108, 92, 231, 0.12)';
+    el.style.position = 'relative';
+    el.style.zIndex = '10002';
+}
+
+function posicionarPainelTourMenu(alvo) {
+    const painel = obterPainelTour();
+    if (!painel || !alvo) return;
+
+    const rect = alvo.getBoundingClientRect();
+    const larguraPainel = Math.min(320, Math.max(260, window.innerWidth - 32));
+    const margem = 16;
+    let top = rect.bottom + 12;
+    let left = rect.left;
+
+    painel.style.maxWidth = `${larguraPainel}px`;
+
+    if (left + larguraPainel > window.innerWidth - margem) {
+        left = window.innerWidth - larguraPainel - margem;
+    }
+    if (left < margem) left = margem;
+
+    const alturaEstimativa = 220;
+    if (top + alturaEstimativa > window.innerHeight - margem) {
+        top = Math.max(margem, rect.top - alturaEstimativa - 12);
+    }
+
+    painel.style.top = `${top}px`;
+    painel.style.left = `${left}px`;
+    painel.style.right = 'auto';
+    painel.style.bottom = 'auto';
+}
+
+function renderizarPassoTourMenu() {
+    const passo = tourMenuPrincipal[indiceTourMenuAtual];
+    const painel = obterPainelTour();
+    const titulo = obterTituloPainelTour();
+    const texto = document.getElementById('tour-text');
+    if (!passo || !painel || !titulo || !texto) return;
+
+    const alvo = document.getElementById(passo.targetId);
+    if (!alvo) {
+        fecharTourMenuPrincipal();
+        return;
+    }
+
+    titulo.textContent = '✨ Guia rápido do menu';
+    texto.innerHTML = `<b>${passo.title}</b><br><br>${passo.text}`;
+    painel.style.display = 'block';
+    destacarBotaoTourMenu(alvo);
+    posicionarPainelTourMenu(alvo);
+}
+
+export function iniciarTourMenuPrincipal() {
+    if (localStorage.getItem('tourMenuPrincipalV1') === 'concluido') return;
+    const telaMenu = document.getElementById('tela-menu');
+    if (!telaMenu || !telaMenu.classList.contains('ativa')) return;
+    indiceTourMenuAtual = 0;
+    tourMenuAtivo = true;
+    renderizarPassoTourMenu();
+}
+
+export function proximoTourMenuPrincipal() {
+    indiceTourMenuAtual += 1;
+    if (indiceTourMenuAtual >= tourMenuPrincipal.length) {
+        fecharTourMenuPrincipal();
+        return;
+    }
+    renderizarPassoTourMenu();
+}
+
+export function fecharTourMenuPrincipal() {
+    const painel = obterPainelTour();
+    if (painel) {
+        painel.style.display = 'none';
+        painel.style.top = '';
+        painel.style.left = '';
+        painel.style.right = '';
+        painel.style.bottom = '';
+        painel.style.maxWidth = '';
+    }
+    limparDestaqueTourMenu();
+    tourMenuAtivo = false;
+    localStorage.setItem('tourMenuPrincipalV1', 'concluido');
+}
 
 export function setValSafe(id, val) {
     const el = document.getElementById(id);
@@ -134,9 +246,10 @@ export function mostrarConfirmacao(mensagem, options = {}) {
     const corpo = document.getElementById('modal-confirmacao-mensagem');
     const botaoConfirmar = document.getElementById('modal-confirmacao-confirmar');
     const botaoCancelar = document.getElementById('modal-confirmacao-cancelar');
+    const botaoSecundario = document.getElementById('modal-confirmacao-secundario');
     const tone = options.tone || 'info';
 
-    if (!modal || !titulo || !corpo || !botaoConfirmar || !botaoCancelar) {
+    if (!modal || !titulo || !corpo || !botaoConfirmar || !botaoCancelar || !botaoSecundario) {
         return Promise.resolve(window.confirm(mensagem));
     }
 
@@ -158,6 +271,13 @@ export function mostrarConfirmacao(mensagem, options = {}) {
     botaoConfirmar.textContent = options.confirmLabel || 'Continuar';
     botaoCancelar.textContent = options.cancelLabel || 'Cancelar';
     botaoConfirmar.className = `btn-base ${tone === 'erro' ? 'btn-danger' : 'btn-accent'}`;
+    valorConfirmacaoSecundaria = options.secondaryValue ?? 'secondary';
+    if (options.secondaryLabel) {
+        botaoSecundario.textContent = options.secondaryLabel;
+        botaoSecundario.style.display = 'inline-flex';
+    } else {
+        botaoSecundario.style.display = 'none';
+    }
     modal.style.display = 'flex';
 
     return new Promise(resolve => {
@@ -169,7 +289,11 @@ export function responderConfirmacao(confirmado) {
     const modal = document.getElementById('modal-confirmacao');
     if (modal) modal.style.display = 'none';
     if (resolverConfirmacaoAtual) {
-        resolverConfirmacaoAtual(Boolean(confirmado));
+        if (confirmado === 'secondary') {
+            resolverConfirmacaoAtual(valorConfirmacaoSecundaria);
+        } else {
+            resolverConfirmacaoAtual(confirmado);
+        }
         resolverConfirmacaoAtual = null;
     }
 }
@@ -199,7 +323,9 @@ export function toggleTheme() {
 async function confirmarSaidaComAlteracoes() {
     return mostrarConfirmacao('Existem alterações não salvas. Deseja sair desta tela mesmo assim?', {
         title: 'Alterações não salvas',
-        confirmLabel: 'Sair mesmo assim',
+        confirmLabel: 'Salvar e sair',
+        secondaryLabel: 'Sair sem salvar',
+        secondaryValue: 'discard',
         cancelLabel: 'Continuar editando',
         tone: 'erro'
     });
@@ -210,8 +336,14 @@ export async function irPara(id) {
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa') && id !== 'tela-editor';
 
     if (saindoDoEditor && appState.temAlteracoesNaoSalvas) {
-        if (!await confirmarSaidaComAlteracoes()) return;
-        appState.temAlteracoesNaoSalvas = false;
+        const acaoSaida = await confirmarSaidaComAlteracoes();
+        if (!acaoSaida) return;
+        if (acaoSaida === true) {
+            const salvou = await window.salvar?.();
+            if (!salvou) return;
+        } else if (acaoSaida === 'discard') {
+            appState.temAlteracoesNaoSalvas = false;
+        }
     }
 
     const telaAtiva = document.querySelector('.tela.ativa');
@@ -230,6 +362,11 @@ export async function irPara(id) {
 
     window.scrollTo(0, 0);
     setTimeout(ajustarZoomMobile, 50);
+    if (id === 'tela-menu') {
+        setTimeout(iniciarTourMenuPrincipal, 120);
+    } else if (tourMenuAtivo) {
+        fecharTourMenuPrincipal();
+    }
 }
 
 export async function voltarTela() {
@@ -237,8 +374,14 @@ export async function voltarTela() {
     const saindoDoEditor = telaEditor && telaEditor.classList.contains('ativa');
 
     if (saindoDoEditor && appState.temAlteracoesNaoSalvas) {
-        if (!await confirmarSaidaComAlteracoes()) return;
-        appState.temAlteracoesNaoSalvas = false;
+        const acaoSaida = await confirmarSaidaComAlteracoes();
+        if (!acaoSaida) return;
+        if (acaoSaida === true) {
+            const salvou = await window.salvar?.();
+            if (!salvou) return;
+        } else if (acaoSaida === 'discard') {
+            appState.temAlteracoesNaoSalvas = false;
+        }
     }
 
     if (appState.historicoTelas.length > 0) {
@@ -259,6 +402,11 @@ export async function voltarTela() {
 
         window.scrollTo(0, 0);
         setTimeout(ajustarZoomMobile, 50);
+        if (id === 'tela-menu') {
+            setTimeout(iniciarTourMenuPrincipal, 120);
+        } else if (tourMenuAtivo) {
+            fecharTourMenuPrincipal();
+        }
     } else {
         irPara('tela-menu');
     }
@@ -318,7 +466,7 @@ export function renderizarATS(dados) {
         return;
     }
 
-    if (titulo) titulo.innerText = '📊 Análise da Vaga';
+    if (titulo) titulo.innerText = dados.contexto_titulo || '📊 Análise ATS';
 
     const pontuacao = dados.score || 0;
     const corScore = pontuacao >= 75 ? 'var(--accent)' : (pontuacao >= 50 ? '#f39c12' : 'var(--danger)');
@@ -428,6 +576,10 @@ export function mostrarPassoTour() {
 }
 
 export function proximoTour() {
+    if (tourMenuAtivo) {
+        proximoTourMenuPrincipal();
+        return;
+    }
     appState.passoTour++;
     if (appState.passoTour >= tourTextos.length) {
         fecharTour();
@@ -437,6 +589,10 @@ export function proximoTour() {
 }
 
 export function fecharTour() {
+    if (tourMenuAtivo) {
+        fecharTourMenuPrincipal();
+        return;
+    }
     document.getElementById('tour-panel').style.display = 'none';
     localStorage.setItem('tourV2', 'concluido');
 }

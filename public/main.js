@@ -7,6 +7,7 @@ import {
     toggleTheme,
     fecharTour,
     proximoTour,
+    iniciarTourMenuPrincipal,
     fecharOnboarding,
     mascaraWhats,
     calcularIdadeOnboarding,
@@ -60,7 +61,10 @@ import {
     carregar,
     deletar,
     abrirFluxoAnaliseVaga,
+    configurarEntradaLinkVaga,
     verificarCurriculoBase,
+    analisarVagaATS,
+    aplicarAjustesVaga,
     extrairDadosIA,
     acionarRecalculoATS,
     ajustarCurriculoVaga,
@@ -79,6 +83,7 @@ import {
     atualizarBotaoVagaCapturadaAdmin,
     alternarModalVagaCapturadaAdmin
 } from './cv-builder.js';
+import { abrirFluxoRevisaoCurriculo } from './editor.js';
 import { gerarPDF } from './pdf.js';
 
 function bindWindowGlobals() {
@@ -86,6 +91,7 @@ function bindWindowGlobals() {
         toggleTheme,
         fecharTour,
         proximoTour,
+        iniciarTourMenuPrincipal,
         abrirConfigAdmin,
         adicionarPromptAdmin,
         abrirGestaoUsuarios,
@@ -105,13 +111,17 @@ function bindWindowGlobals() {
         fazerLoginGoogle,
         fazerLogout,
         abrirFluxoEditorCurriculo,
+        abrirFluxoRevisaoCurriculo,
         abrirCurriculosSalvos,
         abrirFluxoAnaliseVaga,
+        configurarEntradaLinkVaga,
         atualizarNomeConta,
         atualizarEmail,
         atualizarSenhaConta,
         solicitarExclusao,
         verificarCurriculoBase,
+        analisarVagaATS,
+        aplicarAjustesVaga,
         ajustarCurriculoVaga,
         definirPadrao,
         carregar,
@@ -171,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initEditorFieldGuards();
+    configurarEntradaLinkVaga();
 });
 
 window.addEventListener('load', async () => {
