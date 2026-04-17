@@ -59,7 +59,8 @@ jobs:
             echo "is_release_branch=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Validar segredos obrigatórios
+      - name: Validar segredos do pipeline
+        id: pipeline_secrets
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -67,17 +68,16 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          missing=()
-
-          for secret_name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID VERCEL_TOKEN; do
-            if [[ -z "${!secret_name}" ]]; then
-              missing+=("$secret_name")
-            fi
-          done
-
-          if (( ${#missing[@]} > 0 )); then
-            echo "Segredos ausentes: ${missing[*]}"
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo "Segredo ausente: VERCEL_TOKEN"
             exit 1
+          fi
+
+          if [[ -n "$SUPABASE_ACCESS_TOKEN" && -n "$SUPABASE_DB_PASSWORD" && -n "$SUPABASE_PROJECT_ID" ]]; then
+            echo "has_supabase=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_supabase=false" >> "$GITHUB_OUTPUT"
+            echo "Supabase incompleto: pipeline seguirá com fallback em Git e sem registro no banco."
           fi
 
       - name: Ler versões atuais no banco
@@ -87,14 +87,21 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
-          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          PREVIEW_STATUS=1
+          PRODUCTION_STATUS=1
+          PREVIEW_CURRENT=""
+          PRODUCTION_CURRENT=""
 
-          set +e
-          PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
-          PREVIEW_STATUS=$?
-          PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
-          PRODUCTION_STATUS=$?
-          set -e
+          if [[ "${{ steps.pipeline_secrets.outputs.has_supabase }}" == "true" ]]; then
+            export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+            set +e
+            PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+            PREVIEW_STATUS=$?
+            PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+            PRODUCTION_STATUS=$?
+            set -e
+          fi
 
           if [[ $PREVIEW_STATUS -ne 0 || -z "$PREVIEW_CURRENT" ]]; then
             PREVIEW_CURRENT=$(git log --format=%s | sed -n 's/^chore: preview v\([0-9.]*\) \[skip .*\]$/\1/p' | head -n 1)
@@ -189,9 +196,11 @@ jobs:
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Instalar Supabase CLI
+        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
         uses: supabase/setup-cli@v1
 
       - name: Deploy SQL para o banco
+        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID
           supabase db push
@@ -250,6 +259,7 @@ jobs:
           fi
 
       - name: Registrar versão no banco
+        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
         shell: bash
         run: |
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
