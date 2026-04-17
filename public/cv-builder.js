@@ -41,6 +41,8 @@ export {
     abrirTelaVaga,
     configurarEntradaLinkVaga,
     verificarCurriculoBase,
+    analisarVagaATS,
+    aplicarAjustesVaga,
     acionarRecalculoATS,
     ajustarCurriculoVaga
 } from './analise-vaga.js';

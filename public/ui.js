@@ -466,7 +466,7 @@ export function renderizarATS(dados) {
         return;
     }
 
-    if (titulo) titulo.innerText = '📊 Análise da Vaga';
+    if (titulo) titulo.innerText = dados.contexto_titulo || '📊 Análise ATS';
 
     const pontuacao = dados.score || 0;
     const corScore = pontuacao >= 75 ? 'var(--accent)' : (pontuacao >= 50 ? '#f39c12' : 'var(--danger)');

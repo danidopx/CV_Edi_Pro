@@ -168,7 +168,7 @@ btnCapturar.addEventListener('click', async () => {
         }
 
         const origemLabel = captura.origem === 'selecao' ? 'selecao' : 'pagina';
-        setButtonStatus(`🔎 Validando ${origemLabel} com IA...`, true);
+        setButtonStatus(`🔎 Validando ${origemLabel} da vaga...`, true);
         const validacao = await validarTextoComIa(captura);
 
         setButtonStatus('💾 Salvando vaga...', true);

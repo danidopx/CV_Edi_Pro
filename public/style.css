@@ -168,6 +168,33 @@ body {
     flex-wrap: wrap;
 }
 
+.top-bar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: -0.4px;
+    white-space: nowrap;
+}
+
+.top-bar-brand::before {
+    content: 'CV';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--primary-dim);
+    border: 1px solid var(--border-color);
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
 #tela-editor .top-bar {
     position: sticky;
     top: 15px;
@@ -677,6 +704,12 @@ textarea:focus {
         padding: 15px 12px;
         gap: 12px;
         align-items: stretch;
+    }
+
+    .top-bar-brand {
+        justify-content: center;
+        width: 100%;
+        text-align: center;
     }
 
     #tela-editor .top-bar {

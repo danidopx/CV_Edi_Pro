@@ -4,11 +4,16 @@ export const PROMPT_NAMES = {
     simples: 'ajuste_simples',
     agressivo: 'ajuste_agressivo',
     ats: 'analise_ats',
+    atsGeral: 'analise_ats_geral',
+    aplicarAjustes: 'aplicar_ajustes',
     validarVagaImportada: 'validar_vaga_importada',
     validarVagaAjuste: 'validar_vaga_ajuste',
     extracaoTextoCv: 'extracao_texto_cv',
+    gerarCurriculoHistorico: 'gerar_curriculo_historico',
     melhorarResumo: 'melhorar_resumo',
-    melhorarExperiencia: 'melhorar_experiencia'
+    melhorarResumoAlvo: 'melhorar_resumo_alvo',
+    melhorarExperiencia: 'melhorar_experiencia',
+    reescreverExperienciaVaga: 'reescrever_experiencia_vaga'
 };
 
 function detectarAmbienteAtualPeloHost(hostname) {

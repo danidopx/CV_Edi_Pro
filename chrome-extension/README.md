@@ -1,6 +1,6 @@
 # Edi Pro - Captura de Vagas
 
-Extensao Chrome Manifest V3 do Edi Pro. Ela captura o texto de uma vaga em uma pagina externa, valida o conteudo com IA no backend do site e, se for valido, salva a vaga pelo backend para abrir o Edi Pro com `?vaga_id=<uuid>`.
+Extensao Chrome Manifest V3 do Edi Pro. Ela captura o texto de uma vaga em uma pagina externa, valida o conteudo no backend do site e, se for valido, salva a vaga pelo backend para abrir o Edi Pro com `?vaga_id=<uuid>`.
 
 Esta pasta fica versionada junto com o projeto, mas independente do build principal do site.
 
@@ -8,14 +8,16 @@ Esta pasta fica versionada junto com o projeto, mas independente do build princi
 
 1. O usuario abre uma pagina de vaga.
 2. Opcionalmente, seleciona com o mouse o texto principal da vaga.
-3. Ao clicar em `Validar e Capturar Vaga`, a extensao captura a selecao quando ela tiver mais de 50 caracteres.
+3. Ao clicar em `Capturar Vaga para Analise`, a extensao captura a selecao quando ela tiver mais de 50 caracteres.
 4. Se nao houver selecao suficiente, captura ate 8000 caracteres do texto visivel da pagina.
 5. A extensao chama `POST /api/validar-vaga` no backend do Edi Pro.
-6. O backend valida com IA usando prompt server-side proprio.
+6. O backend valida e normaliza a vaga.
 7. Se `valido: false`, a extensao nao salva nada.
 8. Se `valido: true`, a extensao chama `POST /api/salvar-vaga`.
 9. O backend salva em `transferencias_vagas` no Supabase.
 10. A extensao abre o site com `?vaga_id=<uuid>`.
+11. No app, o usuario segue para a etapa de analise ATS da vaga.
+12. Depois, se quiser, aplica a adaptacao no curriculo com base no seu Cadastro de Historico Profissional.
 
 ## Como carregar localmente no Chrome
 
@@ -32,11 +34,17 @@ Sempre que alterar arquivos da extensao, volte em `chrome://extensions` e clique
 1. Abra a pagina de uma vaga no LinkedIn, Gupy ou outro site.
 2. Para melhor resultado, selecione o bloco principal da vaga, incluindo cargo, descricao, requisitos e beneficios.
 3. Clique no icone da extensao.
-4. Clique em `Validar e Capturar Vaga`.
+4. Clique em `Capturar Vaga para Analise`.
 
 Se a selecao tiver mais de 50 caracteres, apenas ela sera enviada. Isso reduz ruido de menus, botoes e rodapes.
 
 Se a selecao estiver vazia ou curta demais, a extensao envia ate 8000 caracteres da pagina.
+
+Depois da captura, a vaga fica disponivel no app para:
+
+- analise ATS
+- vinculacao ao curriculo salvo
+- adaptacao do curriculo somente quando o usuario clicar
 
 ## Endpoints chamados
 
@@ -166,7 +174,7 @@ SUPABASE_SERVICE_KEY
 
 - A extensao nao contem chave de IA.
 - A extensao nao contem service role do Supabase.
-- O prompt enviado pela extensao e apenas contexto; o backend usa prompt server-side proprio.
+- O prompt enviado pela extensao e apenas contexto; o backend usa a propria validacao server-side.
 - O endpoint `/api/validar-vaga` limita o tamanho do texto recebido.
 - O endpoint `/api/salvar-vaga` salva no Supabase pelo backend.
 - A tabela `transferencias_vagas` deve ter RLS revisada para evitar `select` publico amplo.

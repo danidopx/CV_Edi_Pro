@@ -45,6 +45,95 @@ function detectarVagaInativa(texto) {
     return '';
 }
 
+function contarOcorrencias(texto, termos) {
+    return termos.reduce((total, termo) => total + (texto.includes(termo) ? 1 : 0), 0);
+}
+
+function validarConteudoVagaLocal(texto) {
+    const textoOriginal = String(texto || '').trim();
+    const textoSemLinks = textoSemUrls(textoOriginal);
+    const normalizado = normalizarTextoBusca(textoSemLinks);
+
+    if (!textoSemLinks || textoSemLinks.length < 80) {
+        return {
+            ok: false,
+            motivo: 'O conteúdo da vaga está muito curto. Cole mais detalhes sobre cargo, requisitos ou responsabilidades.'
+        };
+    }
+
+    const motivoInativa = detectarVagaInativa(textoSemLinks);
+    if (motivoInativa) {
+        return { ok: false, motivo: motivoInativa };
+    }
+
+    const termosBloqueados = [
+        'login',
+        'entrar',
+        'sign in',
+        'sign up',
+        'cadastre-se',
+        'cadastre se',
+        'esqueceu sua senha',
+        'criar conta',
+        'newsletter',
+        'politica de privacidade',
+        'termos de uso',
+        'cookies',
+        'compartilhe',
+        'comentarios',
+        'comentários',
+        'leia mais',
+        'promoção',
+        'promocao',
+        'frete gratis',
+        'frete grátis',
+        'compre agora',
+        'adicionar ao carrinho'
+    ];
+
+    const termosVaga = [
+        'vaga',
+        'oportunidade',
+        'cargo',
+        'requisitos',
+        'responsabilidades',
+        'atividades',
+        'beneficios',
+        'benefícios',
+        'salario',
+        'salário',
+        'empresa',
+        'candidatar',
+        'candidate-se',
+        'curriculo',
+        'currículo',
+        'experiencia',
+        'experiência'
+    ];
+
+    const termosRuido = contarOcorrencias(normalizado, termosBloqueados);
+    const termosDeVaga = contarOcorrencias(normalizado, termosVaga);
+
+    if (termosRuido >= 3 && termosDeVaga === 0) {
+        return {
+            ok: false,
+            motivo: 'O conteúdo parece ser uma página de login, artigo, propaganda ou página genérica, e não uma vaga.'
+        };
+    }
+
+    if (termosDeVaga === 0) {
+        return {
+            ok: false,
+            motivo: 'Não encontrei sinais suficientes de uma vaga real, como cargo, requisitos, responsabilidades ou instruções de candidatura.'
+        };
+    }
+
+    return {
+        ok: true,
+        motivo: ''
+    };
+}
+
 function extrairPrimeiraUrl(texto) {
     const match = String(texto || '').match(/https?:\/\/[^\s<>"')]+/i);
     return match ? match[0].trim() : '';
@@ -116,7 +205,12 @@ async function obterTextoVagaParaAnalise() {
     }
 
     if (textoManual && !linkVaga) {
-        return { ok: true, textoVaga: textoManual, origem: 'Texto copiado' };
+        return { ok: true, textoVaga: textoManual, origem: 'texto_manual', origemLabel: 'Texto copiado' };
+    }
+
+    if (linkVaga && !ehUrlValida(linkVaga) && textoManual) {
+        showToast('O link informado é inválido. O sistema vai usar o texto manual informado.');
+        return { ok: true, textoVaga: textoManual, origem: 'texto_manual', origemLabel: 'Texto manual (link inválido)' };
     }
 
     if (linkVaga && !ehUrlValida(linkVaga)) {
@@ -124,7 +218,7 @@ async function obterTextoVagaParaAnalise() {
     }
 
     if (!linkVaga) {
-        return { ok: true, textoVaga: textoManual, origem: 'Texto copiado' };
+        return { ok: true, textoVaga: textoManual, origem: 'texto_manual', origemLabel: 'Texto copiado' };
     }
 
     document.getElementById('loading-text').innerText = 'Lendo a vaga pelo link...';
@@ -137,9 +231,18 @@ async function obterTextoVagaParaAnalise() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload?.ok || !payload?.texto) {
+        if (textoManual) {
+            showToast('Não foi possível ler o link. O sistema vai usar o texto manual informado.');
+            return {
+                ok: true,
+                textoVaga: textoManual,
+                origem: 'texto_manual',
+                origemLabel: 'Texto manual (fallback do link)'
+            };
+        }
         return {
             ok: false,
-            error: payload?.error || 'Não foi possível ler a vaga pelo link informado.'
+            error: `${payload?.error || 'Não foi possível ler a vaga pelo link informado.'} Cole o texto da vaga manualmente para continuar.`
         };
     }
 
@@ -150,7 +253,62 @@ async function obterTextoVagaParaAnalise() {
     return {
         ok: true,
         textoVaga: textoFinal,
-        origem: payload.url
+        origem: 'link',
+        origemLabel: payload.url
+    };
+}
+
+async function validarVagaNormalizada(texto, origem) {
+    const validacaoLocal = validarConteudoVagaLocal(texto);
+    if (!validacaoLocal.ok) {
+        return {
+            ok: false,
+            motivo: validacaoLocal.motivo,
+            textoNormalizado: ''
+        };
+    }
+
+    const response = await fetch('/api/validar-vaga', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            texto,
+            origem: origem === 'link' ? 'pagina' : 'selecao',
+            truncado: texto.length >= 30000
+        })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        return {
+            ok: false,
+            motivo: payload?.motivo || 'Não foi possível validar a vaga agora. Revise o texto ou tente novamente em instantes.',
+            textoNormalizado: ''
+        };
+    }
+
+    if (payload?.valido !== true) {
+        return {
+            ok: false,
+            motivo: payload?.motivo || 'O conteúdo informado não parece ser uma vaga real.',
+            textoNormalizado: ''
+        };
+    }
+
+    const textoNormalizado = String(payload?.texto_normalizado || texto || '').trim();
+    const validacaoFinalLocal = validarConteudoVagaLocal(textoNormalizado);
+    if (!validacaoFinalLocal.ok) {
+        return {
+            ok: false,
+            motivo: validacaoFinalLocal.motivo,
+            textoNormalizado: ''
+        };
+    }
+
+    return {
+        ok: true,
+        motivo: payload?.motivo || '',
+        textoNormalizado
     };
 }
 
@@ -166,6 +324,102 @@ async function usuarioTemCurriculoBase() {
 function registrarVagaCapturadaAdmin(texto) {
     sessionStorage.setItem('ultima_vaga_capturada', texto || '');
     atualizarBotaoVagaCapturadaAdmin();
+}
+
+function atualizarDisponibilidadeAplicacaoVaga(podeAplicar = false) {
+    const btn = document.getElementById('btn-aplicar-ajustes-vaga');
+    if (!btn) return;
+    btn.style.display = podeAplicar ? 'inline-flex' : 'none';
+}
+
+function extrairLinkDaVaga(texto) {
+    const matchLinkMarcado = String(texto || '').match(/\[LINK DA VAGA:\s*(.*?)\]/i);
+    if (matchLinkMarcado?.[1]) return matchLinkMarcado[1].trim();
+    return extrairPrimeiraUrl(texto);
+}
+
+function atualizarVagaVinculadaAtual({ texto = '', origem = '', origemLabel = '', motivoValidacao = '' } = {}) {
+    const textoFinal = String(texto || '').trim();
+    if (!textoFinal) {
+        appState.vagaVinculadaAtual = null;
+        return null;
+    }
+
+    const vaga = {
+        texto: textoFinal,
+        origem_tipo: String(origem || '').trim() || 'texto_manual',
+        origem_label: String(origemLabel || '').trim() || 'Texto manual',
+        link: extrairLinkDaVaga(textoFinal),
+        motivo_validacao: String(motivoValidacao || '').trim(),
+        data_vinculacao: new Date().toISOString()
+    };
+
+    appState.vagaVinculadaAtual = vaga;
+    return vaga;
+}
+
+function preencherEntradaVagaComVinculoAtual() {
+    const campoTexto = document.getElementById('texto-vaga');
+    const campoLink = document.getElementById('link-vaga');
+    const vaga = appState.vagaVinculadaAtual;
+    if (!campoTexto || !campoLink || !vaga) return;
+
+    campoTexto.value = vaga.texto || '';
+    campoLink.value = vaga.link || '';
+}
+
+function montarDadosDoHistoricoParaIA(conteudo) {
+    const c = conteudo || {};
+    const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g;
+
+    return {
+        nome: c.pessoais?.nome || '',
+        endereco: c.pessoais?.end || '',
+        cep: c.pessoais?.cep || '',
+        email: c.pessoais?.email || '',
+        whatsapp: c.pessoais?.whats || '',
+        linkedin: c.pessoais?.linkedin || '',
+        resumo: c.resumo ? c.resumo.join('\n').replace(regexLimpa, '') : '',
+        experiencias: c.experiencias ? c.experiencias.map(e => {
+            const dates = String(e.data || '').split(' — ');
+            return { cargo: e.cargo, empresa: e.empresa, ini: dates[0] || '', fim: dates[1] || '', desc: String(e.desc || '').replace(regexLimpa, '') };
+        }) : [],
+        formacao: c.escolaridade ? c.escolaridade.map(esc => {
+            const p = String(esc || '').replace(regexLimpa, '').split(':');
+            return { curso: p[0] ? p[0].trim() : '', inst: '', ini: '', status: p[1] ? p[1].trim() : '' };
+        }) : [],
+        idiomas: c.idiomas ? c.idiomas.map(i => {
+            const p = String(i || '').replace(regexLimpa, '').split(':');
+            return { nome: p[0] ? p[0].trim() : '', nivel: p[1] ? p[1].trim() : '' };
+        }) : [],
+        habilidades: c.habilidades ? c.habilidades.map(h => String(h || '').replace(regexLimpa, '')) : []
+    };
+}
+
+function montarCurriculoAtualDoEditor() {
+    const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
+    return {
+        nome: getValSafe('inNome'),
+        resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()).join('\n'),
+        experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({
+            cargo: el.querySelector('.exp-header span:first-child')?.innerText || '',
+            fim: el.querySelector('.exp-header span:last-child')?.innerText || '',
+            empresa: el.querySelector('.exp-empresa')?.innerText || '',
+            desc: el.querySelector('.texto-justificado')?.innerText.replace(regexClean, '').trim() || ''
+        })),
+        formacao: Array.from(document.querySelectorAll('#preEsc .item-lista')).map(el => {
+            const raw = el.dataset.raw ? JSON.parse(el.dataset.raw) : {};
+            return { curso: raw.curso || el.innerText.replace(regexClean, '').trim(), status: raw.status || '' };
+        }),
+        idiomas: Array.from(document.querySelectorAll('#preIdi .item-lista')).map(el => ({ nome: el.innerText.replace(regexClean, '').trim() })),
+        habilidades: Array.from(document.querySelectorAll('#preHab .item-lista')).map(el => el.innerText.replace(regexClean, '').trim())
+    };
+}
+
+async function obterHistoricoSelecionado(idBase) {
+    const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', appState.usuarioAtual.id).single();
+    if (!data) throw new Error('Erro ao ler o Histórico Profissional.');
+    return data;
 }
 
 export function atualizarBotaoVagaCapturadaAdmin() {
@@ -249,8 +503,8 @@ export async function receberVagaExterna(idTransferencia) {
 
         const temCurriculo = await usuarioTemCurriculoBase();
         if (!temCurriculo) {
-            mostrarAviso('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente pela extensão para análise.', {
-                title: 'Falta seu currículo base'
+            mostrarAviso('Antes de ajustar uma vaga, cadastre primeiro seu Histórico Profissional.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente pela extensão para análise.', {
+                title: 'Falta seu Histórico Profissional'
             });
             localStorage.removeItem('vaga_pendente_importacao');
             await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
@@ -285,7 +539,7 @@ export async function receberVagaExterna(idTransferencia) {
             txtEl.dispatchEvent(new Event('input'));
         }
 
-        showToast('✨ Vaga capturada com sucesso! Selecione seu currículo base.');
+        showToast('✨ Vaga capturada com sucesso! Selecione seu Histórico Profissional.');
         logDebug('Deletando vaga temporária do banco...');
         await sb.from('transferencias_vagas').delete().eq('id', idTransferencia);
         logDebug('=== Processo Finalizado com Sucesso ===');
@@ -313,8 +567,8 @@ export async function receberVagaMobile(textoCompleto) {
         return;
     }
     if (!await usuarioTemCurriculoBase()) {
-        mostrarAviso('Antes de ajustar uma vaga, cadastre primeiro um currículo base.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente para análise.', {
-            title: 'Falta seu currículo base'
+        mostrarAviso('Antes de ajustar uma vaga, cadastre primeiro seu Histórico Profissional.\n\nVocê pode criar manualmente ou importar um currículo existente. Depois envie a vaga novamente para análise.', {
+            title: 'Falta seu Histórico Profissional'
         });
         irPara('tela-menu');
         return;
@@ -322,11 +576,12 @@ export async function receberVagaMobile(textoCompleto) {
     await abrirFluxoAnaliseVaga();
     const txtEl = document.getElementById('texto-vaga');
     if (txtEl) txtEl.value = textoCompleto;
-    showToast('📱 Vaga recebida do celular! Selecione o seu currículo base e clique em Gerar.');
+    showToast('📱 Vaga recebida do celular! Selecione seu Histórico Profissional e clique em Gerar.');
 }
 
 export async function abrirTelaVaga() {
     irPara('tela-vaga');
+    atualizarDisponibilidadeAplicacaoVaga(false);
     const select = document.getElementById('select-curriculo-base');
     if (!select) return;
     select.innerHTML = '<option>Carregando...</option>';
@@ -337,7 +592,7 @@ export async function abrirTelaVaga() {
     if (error || !data || data.length === 0) {
         select.innerHTML = "<option value=''>Nenhum currículo salvo.</option>";
         if (aviso) {
-            aviso.innerHTML = '<b>⚠️ Cadastre um currículo primeiro:</b> crie manualmente ou importe um currículo existente. Ele será usado como base padrão e então você poderá enviar a vaga novamente para análise.';
+            aviso.innerHTML = '<b>⚠️ Cadastre seu Histórico Profissional primeiro:</b> crie manualmente ou importe um currículo existente. Ele será usado como sua base principal e então você poderá enviar a vaga novamente para análise.';
             aviso.style.display = 'block';
         }
         return;
@@ -348,12 +603,13 @@ export async function abrirTelaVaga() {
     select.innerHTML = "<option value=''>-- Selecione o seu currículo --</option>";
     data.forEach(item => {
         const isSelected = item.identificador === padraoId ? 'selected' : '';
-        select.innerHTML += `<option value="${item.identificador}" ${isSelected}>${item.identificador} ${item.identificador === padraoId ? '(⭐ Padrão)' : ''}</option>`;
+        select.innerHTML += `<option value="${item.identificador}" ${isSelected}>${item.identificador} ${item.identificador === padraoId ? '(⭐ Histórico Principal)' : ''}</option>`;
     });
 
     if (padraoId) verificarCurriculoBase();
 
     moverLinkDoTextoParaCampo({ silencioso: true });
+    preencherEntradaVagaComVinculoAtual();
 }
 
 export async function abrirFluxoAnaliseVaga() {
@@ -364,6 +620,9 @@ export async function verificarCurriculoBase() {
     const idBase = getValSafe('select-curriculo-base');
     const aviso = document.getElementById('aviso-cv-incompleto');
     if (!aviso) return;
+    if (idBase !== appState.historicoProfissionalAlvoId) {
+        atualizarDisponibilidadeAplicacaoVaga(false);
+    }
     if (!idBase) {
         aviso.style.display = 'none';
         return;
@@ -388,9 +647,12 @@ export async function verificarCurriculoBase() {
 }
 
 export async function ajustarCurriculoVaga() {
+    return aplicarAjustesVaga();
+}
+
+export async function analisarVagaATS() {
     const idBase = getValSafe('select-curriculo-base');
-    const nivelAjuste = getValSafe('nivel-ajuste');
-    if (!idBase) return mostrarAviso('Cadastre ou selecione um currículo base antes de ajustar a vaga.');
+    if (!idBase) return mostrarAviso('Cadastre ou selecione seu Histórico Profissional antes de analisar a vaga.');
 
     mostrarCarregamento();
 
@@ -402,67 +664,70 @@ export async function ajustarCurriculoVaga() {
             return;
         }
 
-        const textoVaga = cargaVaga.textoVaga;
+        const textoVagaBruto = cargaVaga.textoVaga;
         const campoTextoVaga = document.getElementById('texto-vaga');
         if (campoTextoVaga) {
-            campoTextoVaga.value = textoVaga;
+            campoTextoVaga.value = textoVagaBruto;
         }
 
-        const motivoInativa = detectarVagaInativa(textoVaga);
-        if (motivoInativa) {
+        document.getElementById('loading-text').innerText = 'Validando a vaga...';
+        const validacao = await validarVagaNormalizada(textoVagaBruto, cargaVaga.origem);
+        if (!validacao.ok) {
             ocultarCarregamento();
-            mostrarAviso(`Esta vaga não parece ativa.\n\n${motivoInativa}`, {
-                title: 'Vaga encerrada ou inválida'
-            });
-            return;
-        }
-
-        document.getElementById('loading-text').innerText = 'Analisando a vaga...';
-        const promptValidacao = `Aja como um classificador estrito. O texto abaixo é uma descrição de vaga de emprego ATIVA ou requisitos de uma posição? Se o texto indicar explicitamente que a vaga está ENCERRADA, EXPIRADA ou com prazo de inscrição VENCIDO, retorne "valida": false e o motivo. Retorne APENAS um JSON válido. Formato: {"valida": true, "motivo": ""} ou {"valida": false, "motivo": "Explique resumidamente por que não parece uma vaga ativa"}. Texto: ${textoVaga.substring(0, 1500)}`;
-        const validacao = await processarIA(promptValidacao, {
-            promptNameFallback: PROMPT_NAMES.validarVagaAjuste,
-            transformPromptContent: template => template.replace('{{TEXTO_VAGA}}', textoVaga.substring(0, 1500))
-        });
-
-        if (validacao && validacao.valida === false) {
-            ocultarCarregamento();
-            mostrarAviso(`Aviso da IA sobre a vaga:\n\n${validacao.motivo || 'O texto inserido não parece conter os dados de uma vaga de emprego.'}`, {
+            mostrarAviso(validacao.motivo, {
                 title: 'Não foi possível seguir'
             });
             return;
         }
 
-        document.getElementById('loading-text').innerText = 'Reescrevendo o seu currículo...';
+        const textoVaga = validacao.textoNormalizado;
+        if (campoTextoVaga) {
+            campoTextoVaga.value = textoVaga;
+        }
 
-        const { data } = await sb.from('curriculos_saas').select('*').eq('identificador', idBase).eq('user_id', appState.usuarioAtual.id).single();
-        if (!data) throw new Error('Erro ao ler currículo base.');
+        document.getElementById('loading-text').innerText = 'Calculando a análise ATS...';
+
+        const data = await obterHistoricoSelecionado(idBase);
+        const dadosDoCandidato = montarDadosDoHistoricoParaIA(data.conteudo);
+        appState.vagaOriginalAtual = textoVaga;
+        appState.vagaAnalisadaAtual = textoVaga;
+        appState.historicoProfissionalAlvoId = idBase;
+        atualizarVagaVinculadaAtual({
+            texto: textoVaga,
+            origem: cargaVaga.origem,
+            origemLabel: cargaVaga.origemLabel,
+            motivoValidacao: validacao.motivo
+        });
+        await gerarAtsEmSegundoPlano(textoVaga, dadosDoCandidato, true, '📊 Análise ATS da Vaga');
+        atualizarDisponibilidadeAplicacaoVaga(true);
+        showToast('📊 Análise ATS concluída! Revise o resultado e aplique os ajustes somente se desejar.');
+    } catch (err) {
+        if (err.message !== 'Erro JSON.') mostrarAviso('Não foi possível analisar esta vaga agora.\n\nDetalhe: ' + err.message, { tone: 'erro' });
+    } finally {
+        ocultarCarregamento();
+    }
+}
+
+export async function aplicarAjustesVaga() {
+    const idBase = getValSafe('select-curriculo-base');
+    const nivelAjuste = getValSafe('nivel-ajuste');
+    if (!idBase) return mostrarAviso('Cadastre ou selecione seu Histórico Profissional antes de aplicar ajustes.');
+
+    if (!appState.vagaAnalisadaAtual || appState.historicoProfissionalAlvoId !== idBase) {
+        return mostrarAviso('Analise a vaga primeiro antes de aplicar os ajustes no currículo.');
+    }
+
+    mostrarCarregamento();
+    try {
+        document.getElementById('loading-text').innerText = 'Aplicando ajustes no currículo...';
+        const data = await obterHistoricoSelecionado(idBase);
         const c = data.conteudo;
-        const regexLimpa = /\[editar\]|\[remover\]|\[x\]/g;
-        const dadosDoCandidato = {
-            nome: c.pessoais.nome,
-            endereco: c.pessoais.end,
-            cep: c.pessoais.cep,
-            email: c.pessoais.email,
-            whatsapp: c.pessoais.whats,
-            linkedin: c.pessoais.linkedin,
-            resumo: c.resumo ? c.resumo.join('\n').replace(regexLimpa, '') : '',
-            experiencias: c.experiencias ? c.experiencias.map(e => {
-                const dates = e.data.split(' — ');
-                return { cargo: e.cargo, empresa: e.empresa, ini: dates[0] || '', fim: dates[1] || '', desc: e.desc.replace(regexLimpa, '') };
-            }) : [],
-            formacao: c.escolaridade ? c.escolaridade.map(esc => {
-                const p = esc.replace(regexLimpa, '').split(':');
-                return { curso: p[0] ? p[0].trim() : '', inst: '', ini: '', status: p[1] ? p[1].trim() : '' };
-            }) : [],
-            idiomas: c.idiomas ? c.idiomas.map(i => {
-                const p = i.replace(regexLimpa, '').split(':');
-                return { nome: p[0] ? p[0].trim() : '', nivel: p[1] ? p[1].trim() : '' };
-            }) : [],
-            habilidades: c.habilidades ? c.habilidades.map(h => h.replace(regexLimpa, '')) : []
-        };
+        const dadosDoCandidato = montarDadosDoHistoricoParaIA(c);
+        const textoVaga = appState.vagaAnalisadaAtual;
+        const analiseAnterior = appState.analiseAtsAtual;
+
         const promptAgressivoDb = await carregarPromptIA(PROMPT_NAMES.agressivo, { logMissing: false });
         const promptSimplesDb = await carregarPromptIA(PROMPT_NAMES.simples, { logMissing: false });
-
         const basePrompt = nivelAjuste === 'agressivo'
             ? (promptAgressivoDb?.prompt_content || localStorage.getItem('adminPromptAgressivo') || DEFAULT_PROMPT_AGRESSIVO)
             : (promptSimplesDb?.prompt_content || localStorage.getItem('adminPromptSimples') || DEFAULT_PROMPT_SIMPLES);
@@ -473,6 +738,16 @@ export async function ajustarCurriculoVaga() {
 
         limparTudo();
         appState.vagaOriginalAtual = textoVaga;
+        appState.vagaAnalisadaAtual = textoVaga;
+        appState.historicoProfissionalAlvoId = idBase;
+        atualizarVagaVinculadaAtual({
+            texto: textoVaga,
+            origem: appState.vagaVinculadaAtual?.origem_tipo || 'texto_manual',
+            origemLabel: appState.vagaVinculadaAtual?.origem_label || 'Texto manual',
+            motivoValidacao: appState.vagaVinculadaAtual?.motivo_validacao || ''
+        });
+        appState.analiseAtsAtual = analiseAnterior;
+        atualizarSugestoesAtsEstruturadas(appState.analiseAtsAtual);
 
         const alertaMail = document.getElementById('alerta-email-vaga');
         if (extraido.email_envio_vaga && extraido.email_envio_vaga.includes('@')) {
@@ -497,7 +772,6 @@ export async function ajustarCurriculoVaga() {
         const primeiroNome = (extraido.nome || 'Candidato').split(' ')[0];
         const tituloVagaFormatado = extraido.titulo_vaga || 'Vaga Ajustada';
         appState.idAtual = `${primeiroNome} - ${tituloVagaFormatado}`;
-
         localStorage.setItem('cvRecuperacao', appState.idAtual);
         const sn = document.getElementById('status-nome');
         if (sn) sn.innerText = '📄 Currículo: ' + appState.idAtual;
@@ -513,33 +787,54 @@ export async function ajustarCurriculoVaga() {
         }
 
         document.getElementById('panel-ia-extracao').style.display = 'none';
-
         preencherEditor(extraido);
+        if (appState.analiseAtsAtual) {
+            renderizarATS(appState.analiseAtsAtual);
+        }
         marcarAlteracao();
         irPara('tela-editor');
-        gerarAtsEmSegundoPlano(textoVaga, extraido);
-
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
         if (btnRecalcular) btnRecalcular.style.display = 'none';
     } catch (err) {
-        if (err.message !== 'Erro JSON.') mostrarAviso('Não foi possível ajustar o currículo para essa vaga.\n\nDetalhe: ' + err.message, { tone: 'erro' });
+        if (err.message !== 'Erro JSON.') mostrarAviso('Não foi possível aplicar os ajustes nesta vaga.\n\nDetalhe: ' + err.message, { tone: 'erro' });
     } finally {
         ocultarCarregamento();
     }
 }
 
-async function gerarAtsEmSegundoPlano(textoVaga, curriculoAdaptado, abrirPainel = true) {
+async function gerarAtsEmSegundoPlano(textoVaga, curriculoAdaptado, abrirPainel = true, contextoTitulo = '📊 Análise ATS') {
     mostrarCarregamentoATS(abrirPainel);
     try {
-        const promptAtsBase = (await carregarPromptIA(PROMPT_NAMES.ats, { logMissing: false }))?.prompt_content
-            || localStorage.getItem('adminPromptAts')
-            || DEFAULT_PROMPT_ATS;
-        const promptFinalAts = promptAtsBase.replace('{{VAGA}}', textoVaga).replace('{{CURRICULO}}', JSON.stringify(curriculoAdaptado));
+        let resultadoAts;
 
-        const resultadoAts = await processarIA(promptFinalAts);
-        appState.analiseAtsAtual = resultadoAts;
+        if (textoVaga) {
+            const promptAtsBase = (await carregarPromptIA(PROMPT_NAMES.ats, { logMissing: false }))?.prompt_content
+                || localStorage.getItem('adminPromptAts')
+                || DEFAULT_PROMPT_ATS;
+            const promptFinalAts = promptAtsBase.replace('{{VAGA}}', textoVaga).replace('{{CURRICULO}}', JSON.stringify(curriculoAdaptado));
+            resultadoAts = await processarIA(promptFinalAts);
+        } else {
+            const promptGeral = `Você é um avaliador de currículos. Analise a qualidade geral do currículo abaixo sem usar vaga específica.
+Retorne APENAS um JSON válido no formato:
+{
+  "pontos_fortes": ["Ponto 1"],
+  "pontos_medios": ["Ponto 1"],
+  "pontos_fracos": ["Ponto 1"],
+  "score": 85,
+  "risco": "Baixo",
+  "motivo_risco": "Breve explicação",
+  "sugestoes": ["Sugestão 1"]
+}
+CURRÍCULO: ${JSON.stringify(curriculoAdaptado)}`;
+            resultadoAts = await processarIA(promptGeral);
+        }
+
+        appState.analiseAtsAtual = {
+            ...resultadoAts,
+            contexto_titulo: contextoTitulo
+        };
         atualizarSugestoesAtsEstruturadas(resultadoAts);
-        renderizarATS(resultadoAts);
+        renderizarATS(appState.analiseAtsAtual);
     } catch (errAts) {
         console.error('Erro na Análise ATS assíncrona.', errAts);
         const titulo = document.getElementById('titulo-ats-lateral');
@@ -548,39 +843,29 @@ async function gerarAtsEmSegundoPlano(textoVaga, curriculoAdaptado, abrirPainel 
 }
 
 export async function acionarRecalculoATS(e) {
-    e.stopPropagation();
+    if (e?.stopPropagation) e.stopPropagation();
     const btn = document.getElementById('btn-recalcular-ats');
 
-    btn.disabled = true;
-    btn.innerText = '⏳';
-    btn.style.opacity = '0.7';
-    btn.style.cursor = 'not-allowed';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳';
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'not-allowed';
+    }
 
-    const regexClean = /\[editar\]|\[remover\]|\[x\]/g;
-    const cvAtualMontado = {
-        nome: getValSafe('inNome'),
-        resumo: Array.from(document.querySelectorAll('#preRes .texto-justificado')).map(el => el.innerText.replace(regexClean, '').trim()).join('\n'),
-        experiencias: Array.from(document.querySelectorAll('.bloco-exp')).map(el => ({
-            cargo: el.querySelector('.exp-header span:first-child').innerText,
-            fim: el.querySelector('.exp-header span:last-child').innerText,
-            empresa: el.querySelector('.exp-empresa').innerText,
-            desc: el.querySelector('.texto-justificado').innerText.replace(regexClean, '').trim()
-        })),
-        formacao: Array.from(document.querySelectorAll('#preEsc .item-lista')).map(el => {
-            const raw = el.dataset.raw ? JSON.parse(el.dataset.raw) : {};
-            return { curso: raw.curso || el.innerText.replace(regexClean, '').trim(), status: raw.status || '' };
-        }),
-        idiomas: Array.from(document.querySelectorAll('#preIdi .item-lista')).map(el => ({ nome: el.innerText.replace(regexClean, '').trim() })),
-        habilidades: Array.from(document.querySelectorAll('#preHab .item-lista')).map(el => el.innerText.replace(regexClean, '').trim())
-    };
+    const cvAtualMontado = montarCurriculoAtualDoEditor();
+    const textoVaga = appState.vagaOriginalAtual || '';
+    const titulo = textoVaga ? '📊 Análise ATS da Vaga' : '📊 Análise ATS Geral';
 
-    await gerarAtsEmSegundoPlano(appState.vagaOriginalAtual, cvAtualMontado, false);
+    await gerarAtsEmSegundoPlano(textoVaga, cvAtualMontado, false, titulo);
 
-    btn.innerText = '🔄';
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
-    btn.style.display = 'none';
+    if (btn) {
+        btn.innerText = '🔄';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.display = 'none';
+    }
 }
 
 export const FLUXO_ANALISE_VAGA = Object.freeze({
@@ -592,6 +877,8 @@ export const FLUXO_ANALISE_VAGA = Object.freeze({
     abrirTelaVaga,
     configurarEntradaLinkVaga,
     verificarCurriculoBase,
+    analisarVagaATS,
+    aplicarAjustesVaga,
     acionarRecalculoATS,
     ajustarCurriculoVaga
 });

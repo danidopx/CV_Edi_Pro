@@ -330,7 +330,10 @@
     <div id="tela-admin-usuarios" class="tela">
         <div
             style="width: 100%; max-width: 1000px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
+            <div class="top-bar">
+                <div class="top-bar-brand">CV Edi Pro</div>
+                <button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button>
+            </div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">👥 Painel Administrativo de Usuários
             </h2>
             <p style="font-size: 15px; margin-bottom: 25px; color: var(--text-light);">Acesso exclusivo para
@@ -470,7 +473,8 @@
     </div>
 
     <div id="tela-menu" class="tela">
-        <div class="top-bar" style="justify-content: flex-end; padding-top: 10px; padding-bottom: 10px;">
+        <div class="top-bar" style="padding-top: 10px; padding-bottom: 10px;">
+            <div class="top-bar-brand">CV Edi Pro</div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;">
                 <span id="user-name-display" style="font-size: 14px; font-weight: bold; color: var(--primary);">Olá,
                     Usuário</span>
@@ -482,12 +486,42 @@
             <button class="btn-base btn-danger" style="border: 1px solid var(--danger);" onclick="fazerLogout()">Sair da
                 Conta</button>
         </div>
-        <h1 style="color: var(--primary); font-weight: 800; font-size: 32px;">Bem-vindo ao CV Edi Pro</h1>
-        <p style="color: var(--text-light); margin-bottom: 12px; text-align: center; max-width: 720px;">Escolha entre
-            os dois fluxos principais do app: <b>Novo Currículo</b> para criar, revisar e salvar versões, ou
-            <b>Análise da Vaga</b> para cruzar uma vaga com seu currículo base.</p>
-        <p style="color: var(--text-light); margin-bottom: 40px; text-align: center; max-width: 500px;">O que deseja
-            fazer hoje?</p>
+        <h1 style="color: var(--primary); font-weight: 800; font-size: 32px; text-align: center;">Duas jornadas, uma base profissional bem organizada</h1>
+        <p style="color: var(--text-light); margin-bottom: 12px; text-align: center; max-width: 820px;">No CV Edi Pro, você pode seguir por dois caminhos: <b>Criador/Editor de Currículos</b> para montar, revisar e salvar o seu histórico profissional, ou <b>Análise/Adaptação do Currículo a Vagas</b> para cruzar uma vaga com a sua base e gerar uma versão ajustada.</p>
+        <p style="color: var(--text-light); margin-bottom: 28px; text-align: center; max-width: 760px;">Seu <b>Cadastro de Histórico Profissional</b> é a base da sua jornada no app: quanto mais completo ele estiver, melhor será a adaptação para cada vaga.</p>
+
+        <div style="width: 100%; max-width: 980px; margin: 0 auto 30px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; box-shadow: var(--shadow);">
+                <div style="font-size: 12px; font-weight: 800; color: var(--primary); letter-spacing: 0.08em; margin-bottom: 10px;">CAMINHO 1</div>
+                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 10px;">Criador/Editor de Currículos</div>
+                <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Crie do zero, importe informações, revise manualmente, salve versões e mantenha seu Cadastro de Histórico Profissional sempre atualizado.</p>
+            </div>
+            <div style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; box-shadow: var(--shadow);">
+                <div style="font-size: 12px; font-weight: 800; color: var(--ia); letter-spacing: 0.08em; margin-bottom: 10px;">CAMINHO 2</div>
+                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 10px;">Análise/Adaptação a Vagas</div>
+                <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Valide a vaga por texto ou link, compare com o seu Cadastro de Histórico Profissional e prepare uma versão mais aderente para a oportunidade.</p>
+            </div>
+        </div>
+
+        <div style="width: 100%; max-width: 980px; margin: 0 auto 32px auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; box-shadow: var(--shadow);">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 14px;">Por onde começar</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Se você ainda não tem base cadastrada</div>
+                    <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Comece por <b>Novo Currículo</b> e monte seu Cadastro de Histórico Profissional.</p>
+                </div>
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Se você quer revisar sua base atual</div>
+                    <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Use <b>Revisão do Currículo</b> ou abra seus <b>Currículos Salvos</b>.</p>
+                </div>
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Se você já tem uma vaga em mãos</div>
+                    <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Siga para <b>Análise da Vaga</b> e use sua base profissional como referência.</p>
+                </div>
+            </div>
+        </div>
+
+        <p style="color: var(--text-light); margin-bottom: 40px; text-align: center; max-width: 500px;">Escolha abaixo o próximo passo.</p>
         <div class="menu-botoes" style="display:flex; gap: 20px; justify-content: center;">
             <button id="btn-menu-novo-curriculo" class="btn-base btn-primary" onclick="abrirFluxoEditorCurriculo()" style="padding: 30px 45px; font-size: 16px;">➕
                 NOVO CURRÍCULO</button>
@@ -525,7 +559,10 @@
     <div id="tela-conta" class="tela">
         <div
             style="width: 100%; max-width: 600px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
+            <div class="top-bar">
+                <div class="top-bar-brand">CV Edi Pro</div>
+                <button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button>
+            </div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">⚙️ Minha Conta</h2>
             <div id="aviso-conta-admin"
                 style="display:none; margin-bottom: 20px; padding: 12px; border: 1px solid var(--danger); border-radius: 8px; color: var(--danger); background: rgba(255,118,117,0.1); font-size: 13px;">
@@ -577,7 +614,10 @@
     <div id="tela-revisao-curriculo" class="tela">
         <div
             style="width: 100%; max-width: 760px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
+            <div class="top-bar">
+                <div class="top-bar-brand">CV Edi Pro</div>
+                <button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button>
+            </div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">✨ Revisão do Currículo</h2>
             <p style="font-size: 15px; margin-bottom: 18px;">Use esta etapa para revisar o seu currículo-base antes de continuar editando.</p>
             <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
@@ -600,13 +640,16 @@
     <div id="tela-vaga" class="tela">
         <div
             style="width: 100%; max-width: 800px; background: var(--bg-panel); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
-            <div class="top-bar"><button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button></div>
+            <div class="top-bar">
+                <div class="top-bar-brand">CV Edi Pro</div>
+                <button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button>
+            </div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">🎯 Análise da Vaga</h2>
             <p style="font-size: 15px; margin-bottom: 8px;"><b>Fluxo separado do Novo Currículo.</b></p>
-            <p style="font-size: 15px; margin-bottom: 25px;">A IA vai cruzar os dados do seu currículo base com os
+            <p style="font-size: 15px; margin-bottom: 25px;">A IA vai cruzar os dados do seu Cadastro de Histórico Profissional com os
                 requisitos da vaga para criar o match perfeito e gerar uma versão ajustada.</p>
 
-            <label style="font-weight: bold; margin-bottom: 8px;">1. Selecione o seu Currículo Base:</label>
+            <label style="font-weight: bold; margin-bottom: 8px;">1. Selecione seu Histórico Profissional:</label>
             <select id="select-curriculo-base" style="margin-bottom: 20px;"
                 onchange="verificarCurriculoBase()"></select>
 
@@ -629,15 +672,19 @@
             <label style="font-weight: bold; margin-bottom: 8px;">4. Ou envie a vaga por link:</label>
             <input id="link-vaga" type="url" placeholder="https://empresa.com/vaga" style="margin-bottom: 6px;">
             <small id="ajuda-link-vaga" style="display:block; color: var(--text-light); margin-bottom: 25px;">Use o link da página da vaga se preferir. O sistema vai tentar ler o conteúdo automaticamente.</small>
-            <button id="btn-gerar-vaga" class="btn-base btn-ia" onclick="ajustarCurriculoVaga()"
-                style="width: 100%; padding: 18px; font-size: 16px;">✨ ANALISAR VAGA E GERAR CURRÍCULO AJUSTADO</button>
+            <button id="btn-gerar-vaga" class="btn-base btn-ia" onclick="analisarVagaATS()"
+                style="width: 100%; padding: 18px; font-size: 16px;">📊 ANALISAR VAGA COM ATS</button>
+            <button id="btn-aplicar-ajustes-vaga" class="btn-base btn-primary" onclick="aplicarAjustesVaga()"
+                style="width: 100%; padding: 16px; font-size: 15px; margin-top: 12px; display:none;">✨ APLICAR AJUSTES AO CURRÍCULO</button>
         </div>
     </div>
 
     <div id="tela-lista" class="tela">
         <div style="width: 100%; max-width: 900px;">
-            <div class="top-bar" style="justify-content: flex-start;"><button class="btn-base btn-neutral"
-                    onclick="voltarTela()">← Voltar</button></div>
+            <div class="top-bar">
+                <div class="top-bar-brand">CV Edi Pro</div>
+                <button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button>
+            </div>
             <h2 style="color: var(--primary); text-align: center; font-weight: 800; font-size: 28px;">Meus Currículos
                 Salvos</h2>
             <div id="grid-salvos" class="grid-salvos"></div>
@@ -646,6 +693,7 @@
 
     <div id="tela-editor" class="tela">
         <div class="top-bar">
+            <div class="top-bar-brand">CV Edi Pro</div>
 
             <div class="status-container">
                 <div id="status-nome">📄 Novo Currículo</div>
@@ -658,6 +706,7 @@
                 <button id="btn-ver-alteracoes" class="btn-base"
                     style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);"
                     onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
+                <button class="btn-base btn-neutral" onclick="acionarRecalculoATS(event)">📊 Atualizar análise ATS</button>
                 <button class="btn-base btn-neutral" onclick="abrirFluxoRevisaoCurriculo()">🔎 Revisar Currículo</button>
                 <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑
                     Salvar Cópia</button>
@@ -668,6 +717,16 @@
         <div style="width: 100%; max-width: 1400px; margin: 0 auto 10px auto; color: var(--text-light); font-size: 13px;">
             <strong style="color: var(--primary);">📝 Novo Currículo</strong>:
             crie, revise, salve versões e exporte seu currículo.
+        </div>
+        <div id="barra-preenchimento-curriculo" style="width: 100%; max-width: 1400px; margin: 0 auto 12px auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow);">
+            <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
+                <strong style="color: var(--primary); font-size: 14px;">Progresso do preenchimento</strong>
+                <span id="texto-percentual-preenchimento" style="font-size: 13px; font-weight: 800; color: var(--text-main);">0%</span>
+            </div>
+            <div style="height: 10px; background: var(--bg-body); border-radius: 999px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div id="progresso-preenchimento-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.2s ease;"></div>
+            </div>
+            <div id="mensagem-preenchimento-curriculo" style="margin-top: 8px; color: var(--text-light); font-size: 12px;">Comece pelos dados essenciais do seu Histórico Profissional.</div>
         </div>
         <div id="container-editor">
             <div id="editor">

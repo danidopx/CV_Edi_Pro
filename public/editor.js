@@ -31,10 +31,88 @@ import {
 
 export function marcarAlteracao() {
     appState.temAlteracoesNaoSalvas = true;
-    if (appState.analiseAtsAtual && appState.vagaOriginalAtual) {
+    if (appState.analiseAtsAtual) {
         const btnRecalcular = document.getElementById('btn-recalcular-ats');
         if (btnRecalcular) btnRecalcular.style.display = 'flex';
     }
+    atualizarBarraPreenchimentoCurriculo();
+}
+
+function textoPreenchido(valor) {
+    return String(valor || '').trim();
+}
+
+function existeTextoNosElementos(seletor) {
+    return Array.from(document.querySelectorAll(seletor))
+        .some(el => textoPreenchido(el.innerText || el.textContent));
+}
+
+function obterMensagemPreenchimento(percentual) {
+    if (percentual >= 100) return 'Cadastro completo e pronto para revisão final.';
+    if (percentual >= 80) return 'Quase lá. Revise os últimos pontos antes de salvar ou adaptar.';
+    if (percentual >= 50) return 'Boa base montada. Vale completar as seções restantes.';
+    if (percentual > 0) return 'Bom começo. Continue preenchendo seu Histórico Profissional.';
+    return 'Comece pelos dados essenciais do seu Histórico Profissional.';
+}
+
+function calcularProgressoPreenchimentoCurriculo() {
+    const dadosPessoaisEssenciais = [
+        getValSafe('inNome'),
+        getValSafe('inEmail'),
+        getValSafe('inWhats'),
+        getValSafe('inEnd')
+    ];
+
+    const resumoPreenchido = Boolean(
+        textoPreenchido(getValSafe('resIn')) || existeTextoNosElementos('#preRes .texto-justificado')
+    );
+    const experienciaPreenchida = Boolean(
+        existeTextoNosElementos('#preExp .bloco-exp')
+        || textoPreenchido(getValSafe('expC'))
+        || textoPreenchido(getValSafe('expE'))
+        || textoPreenchido(getValSafe('expDes'))
+    );
+    const formacaoPreenchida = Boolean(
+        existeTextoNosElementos('#preEsc .item-lista')
+        || textoPreenchido(getValSafe('escC'))
+        || textoPreenchido(getValSafe('escI'))
+    );
+    const habilidadePreenchida = Boolean(
+        existeTextoNosElementos('#preHab .item-lista')
+        || textoPreenchido(getValSafe('habIn'))
+    );
+    const idiomaPreenchido = Boolean(
+        existeTextoNosElementos('#preIdi .item-lista')
+        || textoPreenchido(getValSafe('idiIn'))
+    );
+
+    const grupos = [
+        dadosPessoaisEssenciais.filter(textoPreenchido).length / dadosPessoaisEssenciais.length,
+        resumoPreenchido ? 1 : 0,
+        experienciaPreenchida ? 1 : 0,
+        formacaoPreenchida ? 1 : 0,
+        habilidadePreenchida ? 1 : 0,
+        idiomaPreenchido ? 1 : 0
+    ];
+
+    const percentual = Math.round((grupos.reduce((total, valor) => total + valor, 0) / grupos.length) * 100);
+    return {
+        percentual,
+        mensagem: obterMensagemPreenchimento(percentual)
+    };
+}
+
+function atualizarBarraPreenchimentoCurriculo() {
+    const barra = document.getElementById('progresso-preenchimento-fill');
+    const percentualEl = document.getElementById('texto-percentual-preenchimento');
+    const mensagemEl = document.getElementById('mensagem-preenchimento-curriculo');
+
+    if (!barra || !percentualEl || !mensagemEl) return;
+
+    const { percentual, mensagem } = calcularProgressoPreenchimentoCurriculo();
+    barra.style.width = `${percentual}%`;
+    percentualEl.innerText = `${percentual}%`;
+    mensagemEl.innerText = mensagem;
 }
 
 function estruturarSugestaoAtsParaEditor(sugestao) {
@@ -191,7 +269,7 @@ function atualizarTelaRevisaoCurriculo(identificador) {
     if (origem) {
         origem.innerText = appState.origemAtual
             ? `Origem atual: ${appState.origemAtual}`
-            : 'Origem atual: currículo salvo';
+            : 'Origem atual: histórico salvo';
     }
 }
 
@@ -502,8 +580,8 @@ export async function definirPadrao(id) {
     });
 
     if (error) {
-        mostrarAviso('Não foi possível fixar o currículo padrão agora. Tente novamente em alguns instantes.', {
-            title: 'Currículo padrão',
+        mostrarAviso('Não foi possível fixar este Histórico Profissional principal agora. Tente novamente em alguns instantes.', {
+            title: 'Histórico Profissional principal',
             tone: 'erro'
         });
         return;
@@ -514,7 +592,7 @@ export async function definirPadrao(id) {
     }
 
     salvarCurriculoPadraoLocal(id);
-    showToast('⭐ Currículo padrão fixado na sua conta!');
+    showToast('⭐ Histórico Profissional principal definido na sua conta!');
     abrirCurriculosSalvos();
 }
 
@@ -536,15 +614,15 @@ export async function fluxoLista() {
 
     grid.innerHTML = `
             <div style="grid-column: 1 / -1; background: var(--primary-dim); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: var(--text-main);">
-                <strong>💡 Dica de Mestre:</strong> Crie um currículo contendo <b>todas</b> as suas experiências, habilidades e formações (mesmo que fique grande). Salve-o e depois clique em <b>"⭐ Definir Padrão"</b>. Ele será a sua base oficial para a IA gerar currículos perfeitos para cada vaga!
+                <strong>💡 Dica de Mestre:</strong> Crie um currículo contendo <b>todas</b> as suas experiências, habilidades e formações (mesmo que fique grande). Salve-o e depois clique em <b>"⭐ Definir como Principal"</b>. Ele será o seu Cadastro de Histórico Profissional oficial para a IA gerar currículos adaptados para cada vaga!
             </div>
         `;
 
     data.forEach(item => {
         const isPadrao = item.identificador === padraoId;
         const btnPadrao = isPadrao
-            ? '<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Padrão da Conta</span>'
-            : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir Padrão</button>`;
+            ? '<span style="font-size: 12px; color: var(--primary); font-weight: bold;">⭐ Histórico Principal</span>'
+            : `<button class="btn-base btn-neutral" style="padding: 6px 12px; font-size:11px;" onclick="definirPadrao('${item.identificador}')">⭐ Definir como Principal</button>`;
 
         let linhaAtualizado = 'Atualizado: —';
         if (item.conteudo && item.conteudo.data_atualizacao) {
@@ -612,6 +690,10 @@ export async function salvar() {
             data_atualizacao: dataAtualizacao,
             analise_ats: appState.analiseAtsAtual,
             vaga_original: appState.vagaOriginalAtual,
+            vaga_vinculada: appState.vagaVinculadaAtual ? {
+                ...appState.vagaVinculadaAtual,
+                texto: appState.vagaOriginalAtual || appState.vagaVinculadaAtual.texto || ''
+            } : null,
             pessoais: {
                 nome: getValSafe('inNome'),
                 data: getValSafe('inData'),
@@ -670,6 +752,16 @@ export async function carregar(id, options = {}) {
         atualizarStatusUltimoSalvamento(c.data_atualizacao || '');
 
         appState.vagaOriginalAtual = c.vaga_original || '';
+        appState.vagaAnalisadaAtual = c.vaga_original || '';
+        appState.vagaVinculadaAtual = c.vaga_vinculada || (c.vaga_original ? {
+            texto: c.vaga_original,
+            origem_tipo: 'legado',
+            origem_label: 'Vaga recuperada do currículo salvo',
+            link: '',
+            motivo_validacao: '',
+            data_vinculacao: c.data_atualizacao || ''
+        } : null);
+        appState.historicoProfissionalAlvoId = id;
 
         appState.analiseAtsAtual = c.analise_ats || null;
         atualizarSugestoesAtsEstruturadas(appState.analiseAtsAtual);
@@ -749,6 +841,8 @@ export async function carregar(id, options = {}) {
         if (options.iniciarTourDepois !== false) {
             iniciarTour();
         }
+
+        atualizarBarraPreenchimentoCurriculo();
     }
 }
 
@@ -1179,6 +1273,9 @@ export function limparTudo() {
     appState.ultimasAlteracoesIA = '';
     appState.analiseAtsAtual = null;
     appState.vagaOriginalAtual = '';
+    appState.vagaAnalisadaAtual = '';
+    appState.vagaVinculadaAtual = null;
+    appState.historicoProfissionalAlvoId = '';
     limparSugestoesAtsEstruturadas();
 
     document.getElementById('btn-ver-alteracoes').style.display = 'none';
@@ -1218,6 +1315,7 @@ export function limparTudo() {
     const btnRecalcular = document.getElementById('btn-recalcular-ats');
     if (btnRecalcular) btnRecalcular.style.display = 'none';
 
+    atualizarBarraPreenchimentoCurriculo();
     setTimeout(ajustarZoomMobile, 100);
 }
 
