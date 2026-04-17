@@ -46,10 +46,22 @@ Para testar em preview, veja o passo a passo em `chrome-extension/README.md`.
 
 ## Deploy e Versionamento
 
-- Preview: cada push na branch de trabalho gera um deploy preview da Vercel.
-- Produção: merge da PR na `main` gera deploy de produção.
+- Preview: cada push na branch de trabalho gera versionamento + deploy preview pelo GitHub Actions.
+- Produção: merge da PR na `main` gera versionamento + deploy de produção pelo GitHub Actions.
 - A versão aparece no rodapé do app e também no painel de log minimizado.
+- O Vercel deixa de ser a fonte primária de auto-deploy por Git; o fluxo oficial passa a ser `Git push -> GitHub Actions -> versionamento -> deploy Vercel`.
 - O workflow atual versiona preview como `CV Edi Pro vX.Y.Z - Preview`.
+
+## Regra de Deploy
+
+- Deploy oficial: somente pelo pipeline automatizado do GitHub Actions.
+- O auto-deploy nativo do Git no Vercel foi desabilitado para evitar deploy sem versionamento.
+- O disparo manual do workflow foi removido para evitar versões fora do fluxo.
+- Se alguém solicitar deploy manual, a regra operacional é:
+
+```txt
+DEPLOY MANUAL - PODE INTERFERIR NO VERSIONAMENTO - DESEJA CONTINUAR?
+```
 
 ## Processo Recomendado
 

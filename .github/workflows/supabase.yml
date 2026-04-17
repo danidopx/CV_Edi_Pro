@@ -7,7 +7,6 @@ on:
       - master
       - codex/supabase-ajustes
       - codex/**
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,7 +14,7 @@ concurrency:
 
 jobs:
   validar_projeto:
-    if: ${{ github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]')) }}
+    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +30,7 @@ jobs:
         run: npm run ci:validate
 
   versionar_e_deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]')) }}
+    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
     needs: validar_projeto
     runs-on: ubuntu-latest
     permissions:
