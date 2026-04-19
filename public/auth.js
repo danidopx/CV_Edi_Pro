@@ -248,16 +248,21 @@ export function verificarAdmin() {
     const admin = usuarioEhAdmin();
     atualizarVisibilidadePainelDebug(admin);
 
+    const c = document.getElementById('btn-admin-config');
+    const u = document.getElementById('btn-admin-users');
+    const dc = document.getElementById('dropdown-admin-config');
+    const du = document.getElementById('dropdown-admin-users');
+
     if (admin) {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'flex';
         if (u) u.style.display = 'flex';
+        if (dc) dc.style.display = 'flex';
+        if (du) du.style.display = 'flex';
     } else {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'none';
         if (u) u.style.display = 'none';
+        if (dc) dc.style.display = 'none';
+        if (du) du.style.display = 'none';
     }
 }
 

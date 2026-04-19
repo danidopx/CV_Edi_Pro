@@ -155,7 +155,10 @@ function bindWindowGlobals() {
         alternarModalVagaCapturadaAdmin,
         fecharAviso,
         fecharConfirmacao,
-        responderConfirmacao
+        responderConfirmacao,
+        toggleSettingsMenu,
+        salvarCoresPersonalizadas,
+        restaurarCoresPadrao
     });
 }
 
@@ -186,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('load', async () => {
     logDebug('=== PÁGINA CARREGADA ===');
+    applyCustomColors();
     applyTheme(localStorage.getItem('themePreference') || 'light');
     inicializarModeloIA();
 

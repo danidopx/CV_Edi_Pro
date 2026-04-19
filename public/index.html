@@ -10,11 +10,12 @@
     <link rel="apple-touch-icon" href="icon-512.png">
 
     <link rel="manifest" href="manifest.json?v=09779">
-    <meta name="theme-color" content="#6c5ce7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js?v=09779'); }</script>
 
     <link rel="stylesheet" href="style.css">
@@ -108,11 +109,46 @@
         </div>
     </div>
 
-    <button class="theme-toggle btn-luz" onclick="toggleTheme()" title="Modo Claro/Escuro">💡</button>
+    <button class="theme-toggle btn-luz" onclick="toggleTheme()" title="Modo Claro/Escuro" style="display:none !important;">💡</button>
     <button id="btn-admin-config" class="theme-toggle btn-admin-config" onclick="abrirConfigAdmin()"
-        title="Configurações da IA (Admin)">⚙️</button>
+        title="Configurações da IA (Admin)" style="display:none !important;">⚙️</button>
     <button id="btn-admin-users" class="theme-toggle btn-admin-users" onclick="abrirGestaoUsuarios()"
-        title="Gestão de Usuários (Admin)">👥</button>
+        title="Gestão de Usuários (Admin)" style="display:none !important;">👥</button>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mobile-bottom-nav">
+        <a href="#" class="nav-item active" onclick="irPara('tela-menu'); return false;">
+            <span class="nav-icon">🏠</span>
+            <span>Início</span>
+        </a>
+        <a href="#" class="nav-item" onclick="abrirFluxoEditorCurriculo(); return false;">
+            <span class="nav-icon">📝</span>
+            <span>Novo</span>
+        </a>
+        <a href="#" class="nav-item" onclick="abrirCurriculosSalvos(); return false;">
+            <span class="nav-icon">📂</span>
+            <span>Salvos</span>
+        </a>
+        <a href="#" class="nav-item" onclick="abrirFluxoAnaliseVaga(); return false;">
+            <span class="nav-icon">🎯</span>
+            <span>Vagas</span>
+        </a>
+    </nav>
+
+    <!-- MODAL O QUE É ATS -->
+    <div id="modal-ats-info" onclick="if(event.target===this)this.style.display='none'"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10010; align-items:center; justify-content:center; padding:18px;">
+        <div style="width:min(500px, 94vw); background:var(--bg-panel); border-radius:18px; padding:24px; box-shadow:var(--shadow-premium); border:1px solid var(--border-color);">
+            <h2 style="color:var(--primary); margin-top:0;">🔎 O que é Score ATS?</h2>
+            <p style="font-size:14px; line-height:1.6; color:var(--text-main);">
+                ATS significa <b>Applicant Tracking System</b> (Sistema de Rastreamento de Candidatos). É um software usado por recrutadores para filtrar currículos automaticamente.
+                <br><br>
+                Nosso sistema simula essa leitura, analisando palavras-chave, habilidades e requisitos. Um <b>Score alto</b> significa que seu currículo tem mais chances de ser lido por um humano!
+            </p>
+            <button class="btn-base btn-primary" onclick="document.getElementById('modal-ats-info').style.display='none'" style="width:100%; margin-top:10px;">Entendi!</button>
+        </div>
+    </div>
+
 
     <div id="modal-onboarding"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px;">
@@ -231,6 +267,28 @@
                     <input type="text" id="admin-modelo-manual" placeholder="Ou digite manualmente um modelo exato, ex: gemini-2.5-flash"
                         style="margin-bottom: 8px; font-family: monospace;">
                     <small style="color: var(--text-light); display: block;">Se deixar vazio, o sistema continua usando a lógica automática atual.</small>
+                </div>
+            </details>
+
+            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🎨 Personalização de Cores</summary>
+                <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="font-size: 13px; font-weight: 600;">Cor Primária (Purple)</label>
+                        <input type="color" id="admin-color-primary" value="#6366f1" style="width: 50px; padding: 2px;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="font-size: 13px; font-weight: 600;">Cor de Destaque (Green)</label>
+                        <input type="color" id="admin-color-accent" value="#10b981" style="width: 50px; padding: 2px;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="font-size: 13px; font-weight: 600;">Cor IA (Violet)</label>
+                        <input type="color" id="admin-color-ia" value="#8b5cf6" style="width: 50px; padding: 2px;">
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 5px;">
+                        <button class="btn-base btn-primary" onclick="salvarCoresPersonalizadas()" style="font-size: 11px; padding: 8px; flex: 1;">Aplicar Estilo</button>
+                        <button class="btn-base btn-neutral" onclick="restaurarCoresPadrao()" style="font-size: 11px; padding: 8px; flex: 1;">Restaurar Padrão</button>
+                    </div>
                 </div>
             </details>
 
@@ -365,10 +423,10 @@
             <button class="btn-base btn-neutral" onclick="irPara('tela-login')">Entrar na Conta</button>
         </div>
         <div class="hero-section">
-            <h1 class="hero-title">Duas jornadas para evoluir seu <span>Histórico Profissional</span></h1>
-            <p class="hero-subtitle">Crie e edite seu currículo manualmente com clareza ou analise vagas para adaptar seu currículo com mais aderência, sempre usando seu Cadastro de Histórico Profissional como base.</p>
-            <button class="btn-base btn-primary" style="padding: 20px 40px; font-size: 18px;"
-                onclick="irPara('tela-login')">COMEÇAR A CRIAR GRÁTIS ✨</button>
+            <h1 class="hero-title">Prepare seu <span>Histórico Profissional</span> para o futuro</h1>
+            <p class="hero-subtitle">Inicie aqui, adicionando seus dados profissionais para fazer uma análise profunda via IA e adequar a suas vagas ou só edite seu currículo.</p>
+            <button class="btn-base btn-primary" style="padding: 20px 50px; font-size: 18px; border-radius: 50px;"
+                onclick="irPara('tela-login')">COMEÇAR AGORA ✨</button>
         </div>
         <div class="features-grid">
             <div class="feature-card">
@@ -469,70 +527,88 @@
     </div>
 
     <div id="tela-menu" class="tela">
-        <div class="top-bar" style="padding-top: 10px; padding-bottom: 10px;">
-            <div class="top-bar-brand">CV Edi Pro</div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;">
-                <span id="user-name-display" style="font-size: 14px; font-weight: bold; color: var(--primary);">Olá,
-                    Usuário</span>
-                <span id="user-email-display"
-                    style="font-size: 11px; font-weight: bold; color: var(--text-light);"></span>
-            </div>
-            <button class="btn-base btn-neutral" onclick="irPara('tela-conta')"
-                style="border: 1px solid var(--border-color); margin-right: 10px;">⚙️ Minha Conta</button>
-            <button class="btn-base btn-danger" style="border: 1px solid var(--danger);" onclick="fazerLogout()">Sair da
-                Conta</button>
-        </div>
-        <h1 style="color: var(--primary); font-weight: 800; font-size: 32px; text-align: center;">Duas jornadas, uma base profissional bem organizada</h1>
-        <p style="color: var(--text-light); margin-bottom: 12px; text-align: center; max-width: 820px;">No CV Edi Pro, você pode seguir por dois caminhos: <b>Criador/Editor de Currículos</b> para montar, revisar e salvar o seu histórico profissional, ou <b>Análise/Adaptação do Currículo a Vagas</b> para cruzar uma vaga com a sua base e gerar uma versão ajustada.</p>
-        <p style="color: var(--text-light); margin-bottom: 28px; text-align: center; max-width: 760px;">Seu <b>Cadastro de Histórico Profissional</b> é a base da sua jornada no app: quanto mais completo ele estiver, melhor será a adaptação para cada vaga.</p>
-
-        <div style="width: 100%; max-width: 980px; margin: 0 auto 30px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-            <div style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; box-shadow: var(--shadow);">
-                <div style="font-size: 12px; font-weight: 800; color: var(--primary); letter-spacing: 0.08em; margin-bottom: 10px;">CAMINHO 1</div>
-                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 10px;">Criador/Editor de Currículos</div>
-                <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Crie do zero, importe informações, revise manualmente, salve versões e mantenha seu Cadastro de Histórico Profissional sempre atualizado.</p>
-            </div>
-            <div style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; box-shadow: var(--shadow);">
-                <div style="font-size: 12px; font-weight: 800; color: var(--ia); letter-spacing: 0.08em; margin-bottom: 10px;">CAMINHO 2</div>
-                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 10px;">Análise/Adaptação a Vagas</div>
-                <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Valide a vaga por texto ou link, compare com o seu Cadastro de Histórico Profissional e prepare uma versão mais aderente para a oportunidade.</p>
-            </div>
-        </div>
-
-        <div style="width: 100%; max-width: 980px; margin: 0 auto 32px auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; box-shadow: var(--shadow);">
-            <div style="font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 14px;">Por onde começar</div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
-                    <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Se você ainda não tem base cadastrada</div>
-                    <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Comece por <b>Novo Currículo</b> e monte seu Cadastro de Histórico Profissional.</p>
+        <div class="top-bar" style="border: none; background: transparent; box-shadow: none; padding: 10px 0;">
+            <div class="top-bar-brand" style="font-size: 24px;">CV Edi Pro</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="text-align: right;">
+                    <div id="user-name-display" style="font-size: 14px; font-weight: 800; color: var(--primary);">Olá, Usuário</div>
+                    <div id="user-email-display" style="font-size: 11px; color: var(--text-light);"></div>
                 </div>
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
-                    <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Se você quer revisar sua base atual</div>
-                    <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Use <b>Revisão do Currículo</b> ou abra seus <b>Currículos Salvos</b>.</p>
-                </div>
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;">
-                    <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Se você já tem uma vaga em mãos</div>
-                    <p style="margin: 0; color: var(--text-light); line-height: 1.6;">Siga para <b>Análise da Vaga</b> e use sua base profissional como referência.</p>
+                
+                <!-- Settings Dropdown -->
+                <div class="settings-menu">
+                    <button class="btn-base btn-neutral" onclick="toggleSettingsMenu(event)" style="padding: 10px; border-radius: 50%; width: 42px; height: 42px;">⚙️</button>
+                    <div id="dropdown-settings" class="settings-content">
+                        <div class="settings-item" onclick="toggleTheme()">
+                            <span id="theme-icon-dropdown">💡</span> Alterar Tema
+                        </div>
+                        <div class="settings-item" onclick="irPara('tela-conta')">
+                            <span>👤</span> Minha Conta
+                        </div>
+                        <div id="dropdown-admin-config" class="settings-item" onclick="abrirConfigAdmin()" style="display:none;">
+                            <span>🛠️</span> Configuração IA
+                        </div>
+                        <div id="dropdown-admin-users" class="settings-item" onclick="abrirGestaoUsuarios()" style="display:none;">
+                            <span>👥</span> Gestão Usuários
+                        </div>
+                        <hr>
+                        <div class="settings-item" onclick="fazerLogout()" style="color: var(--danger);">
+                            <span>🚪</span> Sair da Conta
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <p style="color: var(--text-light); margin-bottom: 40px; text-align: center; max-width: 500px;">Escolha abaixo o próximo passo.</p>
-        <div class="menu-botoes" style="display:flex; gap: 20px; justify-content: center;">
-            <button id="btn-menu-novo-curriculo" class="btn-base btn-primary" onclick="abrirFluxoEditorCurriculo()" style="padding: 30px 45px; font-size: 16px;">➕
-                NOVO CURRÍCULO</button>
-            <button id="btn-menu-revisao-curriculo" class="btn-base btn-neutral" onclick="abrirFluxoRevisaoCurriculo()" style="padding: 30px 45px; font-size: 16px;">✨
-                REVISÃO DO CURRÍCULO</button>
-            <button id="btn-menu-curriculos-salvos" class="btn-base btn-accent" onclick="abrirCurriculosSalvos()" style="padding: 30px 45px; font-size: 16px;">📂
-                CURRÍCULOS SALVOS</button>
-            <button id="btn-menu-analise-vaga" class="btn-base btn-ia" onclick="abrirFluxoAnaliseVaga()" style="padding: 30px 45px; font-size: 16px;">🎯
-                ANÁLISE DA VAGA</button>
+        <div class="dashboard-hero" style="width: 100%; max-width: 1000px; margin: 20px auto 40px auto; text-align: center;">
+            <h1 style="font-size: 38px; margin-bottom: 12px; letter-spacing: -1px;">Sua Central de <span>Carreira</span></h1>
+            <p style="color: var(--text-light); font-size: 16px; max-width: 650px; margin: 0 auto;">Gerencie seu histórico profissional e adapte-se para novas oportunidades com o poder da Inteligência Artificial.</p>
         </div>
 
-        <div class="footer-info">
-            <strong data-app-version-label>CV Edi Pro v0.0.55 - Preview</strong>
-            <div data-app-version-meta style="display:none; margin-top:6px;"></div><br>
-            Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com">Fale conosco</a>
+        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; margin: 0 auto;">
+            
+            <!-- Quick Start Card -->
+            <div class="feature-card" style="grid-column: 1 / -1; background: var(--primary-dim); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 30px;">
+                <div style="flex: 1;">
+                    <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px;">Recomendação</div>
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px;">Inicie aqui seu Cadastro Profissional</h2>
+                    <p style="margin: 0; color: var(--text-light); font-size: 14px; line-height: 1.5;">Adicione seus dados profissionais para fazer uma análise profunda via IA e adequar às suas vagas ou apenas edite seu currículo atual.</p>
+                </div>
+                <button class="btn-base btn-primary" onclick="abrirFluxoEditorCurriculo()" style="padding: 18px 30px; white-space: nowrap;">COMEÇAR AGORA ➔</button>
+            </div>
+
+            <!-- Action Cards -->
+            <div class="feature-card" onclick="abrirFluxoRevisaoCurriculo()" style="cursor: pointer;">
+                <div class="feature-icon">✨</div>
+                <h3 style="margin: 10px 0;">Revisão de Base</h3>
+                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Analise seu currículo atual e receba sugestões automáticas de melhoria via IA para destacar seu perfil.</p>
+                <div style="margin-top: 20px; color: var(--primary); font-weight: 800; font-size: 12px;">ACESSAR REVISÃO ➔</div>
+            </div>
+
+            <div class="feature-card" onclick="abrirCurriculosSalvos()" style="cursor: pointer;">
+                <div class="feature-icon">📂</div>
+                <h3 style="margin: 10px 0;">Meus Arquivos</h3>
+                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Gerencie todas as versões de currículos que você já criou. Clone, edite ou baixe em PDF a qualquer momento.</p>
+                <div style="margin-top: 20px; color: var(--primary); font-weight: 800; font-size: 12px;">VER SALVOS ➔</div>
+            </div>
+
+            <div class="feature-card" onclick="abrirFluxoAnaliseVaga()" style="cursor: pointer; border-color: var(--ia); background: rgba(139, 92, 246, 0.05);">
+                <div class="feature-icon" style="background: var(--ia-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🎯</div>
+                <h3 style="margin: 10px 0;">Análise de Vagas</h3>
+                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Cruze seu histórico com uma vaga específica. Gere um currículo adaptado e aumente suas chances no ATS.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                    <div style="color: var(--ia); font-weight: 800; font-size: 12px;">ADAPTAR CURRÍCULO ➔</div>
+                    <a href="#" onclick="event.stopPropagation(); document.getElementById('modal-ats-info').style.display='flex'; return false;" style="font-size: 11px; color: var(--primary); font-weight: 700; text-decoration: none;">O que é ATS?</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-info" style="margin-top: 60px; text-align: center; border: none; background: transparent;">
+            <strong data-app-version-label style="opacity: 0.5;">CV Edi Pro v0.0.55 - Preview</strong>
+            <div style="margin-top: 10px; font-size: 12px; color: var(--text-light);">
+                Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com" style="color: var(--primary); text-decoration: none;">Fale conosco</a>
+            </div>
         </div>
     </div>
 
