@@ -862,11 +862,11 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
-    .mobile-bottom-nav {
+    body.logged-in .mobile-bottom-nav {
         display: flex;
     }
     
-    .tela {
+    body.logged-in .tela {
         padding-bottom: 80px !important; /* Spacing for bottom nav */
     }
 }

@@ -272,7 +272,7 @@ export async function sincronizarVersaoAppNaTela() {
         return versaoBuild;
     }
 
-    if (!deployAtualRegistradoNoBanco || bancoEstaAtrasado) {
+    if (!registro || bancoEstaAtrasado) {
         metas.forEach(el => {
             el.textContent = '';
             el.style.display = 'none';

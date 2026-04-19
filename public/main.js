@@ -227,6 +227,7 @@ window.addEventListener('load', async () => {
 
     if (session) {
         logDebug('Usuário LOGADO detectado.');
+        document.body.classList.add('logged-in');
         appState.usuarioAtual = session.user;
         localStorage.setItem('ultima_atividade_app', Date.now());
         await sincronizarCurriculoPadraoPersistido();
@@ -249,6 +250,7 @@ window.addEventListener('load', async () => {
         }
     } else {
         logDebug('Usuário DESLOGADO.');
+        document.body.classList.remove('logged-in');
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
         if (idVagaPendente || textoMobilePendente) {
@@ -263,6 +265,7 @@ window.addEventListener('load', async () => {
     sb.auth.onAuthStateChange(async (event, session) => {
         logDebug(`Auth State Alterado: ${event}`);
         if (event === 'SIGNED_IN' && session) {
+            document.body.classList.add('logged-in');
             appState.usuarioAtual = session.user;
             localStorage.setItem('ultima_atividade_app', Date.now());
             await sincronizarCurriculoPadraoPersistido();
@@ -285,6 +288,7 @@ window.addEventListener('load', async () => {
                 }
             }
         } else if (event === 'SIGNED_OUT') {
+            document.body.classList.remove('logged-in');
             appState.usuarioAtual = null;
             verificarAdmin();
             irPara('tela-landing');
