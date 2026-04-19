@@ -66,6 +66,8 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_POOLER_HOST: ${{ vars.SUPABASE_DB_POOLER_HOST }}
+          SUPABASE_DB_POOLER_PORT: ${{ vars.SUPABASE_DB_POOLER_PORT }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [[ -z "$VERCEL_TOKEN" ]]; then
@@ -80,12 +82,25 @@ jobs:
             echo "Supabase incompleto: pipeline seguirá com fallback em Git e sem registro no banco."
           fi
 
+          if [[ -n "$SUPABASE_PROJECT_ID" && -n "$SUPABASE_DB_PASSWORD" ]]; then
+            DIRECT_DB_HOST="db.$SUPABASE_PROJECT_ID.supabase.co"
+            DIRECT_DB_HOSTADDR=$(getent ahostsv4 "$DIRECT_DB_HOST" | awk 'NR==1 {print $1}')
+
+            if [[ -n "$SUPABASE_DB_POOLER_HOST" ]]; then
+              DB_PORT="${SUPABASE_DB_POOLER_PORT:-5432}"
+              echo "db_connection_string=postgresql://postgres.${SUPABASE_PROJECT_ID}:${SUPABASE_DB_PASSWORD}@${SUPABASE_DB_POOLER_HOST}:${DB_PORT}/postgres?sslmode=require" >> "$GITHUB_OUTPUT"
+            elif [[ -n "$DIRECT_DB_HOSTADDR" ]]; then
+              echo "db_connection_string=host=${DIRECT_DB_HOST} hostaddr=${DIRECT_DB_HOSTADDR} port=5432 dbname=postgres user=postgres sslmode=require password=${SUPABASE_DB_PASSWORD}" >> "$GITHUB_OUTPUT"
+            else
+              echo "db_connection_string=host=${DIRECT_DB_HOST} port=5432 dbname=postgres user=postgres sslmode=require password=${SUPABASE_DB_PASSWORD}" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
       - name: Ler versões atuais no banco
         id: db_versions
         shell: bash
         env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          DB_CONNECTION_STRING: ${{ steps.pipeline_secrets.outputs.db_connection_string }}
         run: |
           PREVIEW_STATUS=1
           PRODUCTION_STATUS=1
@@ -93,12 +108,10 @@ jobs:
           PRODUCTION_CURRENT=""
 
           if [[ "${{ steps.pipeline_secrets.outputs.has_supabase }}" == "true" ]]; then
-            export PGPASSWORD="$SUPABASE_DB_PASSWORD"
-
             set +e
-            PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+            PREVIEW_CURRENT=$(psql "$DB_CONNECTION_STRING" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
             PREVIEW_STATUS=$?
-            PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+            PRODUCTION_CURRENT=$(psql "$DB_CONNECTION_STRING" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
             PRODUCTION_STATUS=$?
             set -e
           fi
@@ -261,9 +274,10 @@ jobs:
       - name: Registrar versão no banco
         if: steps.pipeline_secrets.outputs.has_supabase == 'true'
         shell: bash
+        env:
+          DB_CONNECTION_STRING: ${{ steps.pipeline_secrets.outputs.db_connection_string }}
         run: |
-          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
-          psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" <<SQL
+          psql "$DB_CONNECTION_STRING" <<SQL
           WITH previous_current AS (
               SELECT id, current_version
               FROM public.app_versions
@@ -310,6 +324,3 @@ jobs:
               NULL
           );
           SQL
-        env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
