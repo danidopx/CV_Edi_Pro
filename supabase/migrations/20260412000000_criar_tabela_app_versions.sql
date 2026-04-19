@@ -34,22 +34,26 @@ ON public.app_versions (environment_name, release_date DESC);
 
 ALTER TABLE public.app_versions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public read of visible app versions" ON public.app_versions;
 CREATE POLICY "Allow public read of visible app versions"
 ON public.app_versions
 FOR SELECT
 USING (is_public = TRUE OR public.is_admin_user());
 
+DROP POLICY IF EXISTS "Allow admins to insert app versions" ON public.app_versions;
 CREATE POLICY "Allow admins to insert app versions"
 ON public.app_versions
 FOR INSERT
 WITH CHECK (public.is_admin_user());
 
+DROP POLICY IF EXISTS "Allow admins to update app versions" ON public.app_versions;
 CREATE POLICY "Allow admins to update app versions"
 ON public.app_versions
 FOR UPDATE
 USING (public.is_admin_user())
 WITH CHECK (public.is_admin_user());
 
+DROP POLICY IF EXISTS "Allow admins to delete app versions" ON public.app_versions;
 CREATE POLICY "Allow admins to delete app versions"
 ON public.app_versions
 FOR DELETE
