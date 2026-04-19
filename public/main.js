@@ -22,7 +22,11 @@ import {
     mostrarAviso,
     fecharAviso,
     fecharConfirmacao,
-    responderConfirmacao
+    responderConfirmacao,
+    applyCustomColors,
+    toggleSettingsMenu,
+    salvarCoresPersonalizadas,
+    restaurarCoresPadrao
 } from './ui.js';
 import {
     verificarAdmin,
