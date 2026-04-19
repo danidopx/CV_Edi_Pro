@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.app_versions (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+DROP TRIGGER IF EXISTS update_app_versions_updated_at ON public.app_versions;
+
 CREATE TRIGGER update_app_versions_updated_at
 BEFORE UPDATE ON public.app_versions
 FOR EACH ROW
@@ -32,22 +34,26 @@ ON public.app_versions (environment_name, release_date DESC);
 
 ALTER TABLE public.app_versions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public read of visible app versions" ON public.app_versions;
 CREATE POLICY "Allow public read of visible app versions"
 ON public.app_versions
 FOR SELECT
 USING (is_public = TRUE OR public.is_admin_user());
 
+DROP POLICY IF EXISTS "Allow admins to insert app versions" ON public.app_versions;
 CREATE POLICY "Allow admins to insert app versions"
 ON public.app_versions
 FOR INSERT
 WITH CHECK (public.is_admin_user());
 
+DROP POLICY IF EXISTS "Allow admins to update app versions" ON public.app_versions;
 CREATE POLICY "Allow admins to update app versions"
 ON public.app_versions
 FOR UPDATE
 USING (public.is_admin_user())
 WITH CHECK (public.is_admin_user());
 
+DROP POLICY IF EXISTS "Allow admins to delete app versions" ON public.app_versions;
 CREATE POLICY "Allow admins to delete app versions"
 ON public.app_versions
 FOR DELETE

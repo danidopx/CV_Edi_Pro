@@ -303,14 +303,13 @@ export function fecharConfirmacao() {
 }
 
 export function applyTheme(theme) {
+    const icon = document.getElementById('theme-icon-dropdown');
     if (theme === 'dark') {
         document.body.classList.add('dark-mode');
-        const b = document.querySelector('.btn-luz');
-        if (b) b.innerText = '☀️';
+        if (icon) icon.innerText = '☀️';
     } else {
         document.body.classList.remove('dark-mode');
-        const b = document.querySelector('.btn-luz');
-        if (b) b.innerText = '💡';
+        if (icon) icon.innerText = '💡';
     }
 }
 
@@ -319,6 +318,67 @@ export function toggleTheme() {
     localStorage.setItem('themePreference', newTheme);
     applyTheme(newTheme);
 }
+
+/* SETTINGS & NAV LOGIC */
+export function toggleSettingsMenu(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('dropdown-settings');
+    if (dropdown) dropdown.classList.toggle('active');
+}
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', () => {
+    const dropdown = document.getElementById('dropdown-settings');
+    if (dropdown) dropdown.classList.remove('active');
+});
+
+/* CUSTOM COLORS LOGIC */
+function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r}, ${g}, ${b}`;
+}
+
+export function applyCustomColors() {
+    const primary = localStorage.getItem('customColorPrimary') || '#6366f1';
+    const accent = localStorage.getItem('customColorAccent') || '#10b981';
+    const ia = localStorage.getItem('customColorIa') || '#8b5cf6';
+
+    document.documentElement.style.setProperty('--primary-raw', hexToRgb(primary));
+    document.documentElement.style.setProperty('--accent-raw', hexToRgb(accent));
+    document.documentElement.style.setProperty('--ia', ia);
+    
+    // Update inputs in admin panel if visible
+    const inP = document.getElementById('admin-color-primary');
+    const inA = document.getElementById('admin-color-accent');
+    const inI = document.getElementById('admin-color-ia');
+    if (inP) inP.value = primary;
+    if (inA) inA.value = accent;
+    if (inI) inI.value = ia;
+}
+
+export function salvarCoresPersonalizadas() {
+    const primary = document.getElementById('admin-color-primary').value;
+    const accent = document.getElementById('admin-color-accent').value;
+    const ia = document.getElementById('admin-color-ia').value;
+
+    localStorage.setItem('customColorPrimary', primary);
+    localStorage.setItem('customColorAccent', accent);
+    localStorage.setItem('customColorIa', ia);
+    
+    applyCustomColors();
+    showToast('Cores atualizadas com sucesso!');
+}
+
+export function restaurarCoresPadrao() {
+    localStorage.removeItem('customColorPrimary');
+    localStorage.removeItem('customColorAccent');
+    localStorage.removeItem('customColorIa');
+    applyCustomColors();
+    showToast('Cores restauradas para o padrão.');
+}
+
 
 async function confirmarSaidaComAlteracoes() {
     return mostrarConfirmacao('Existem alterações não salvas. Deseja sair desta tela mesmo assim?', {
@@ -362,6 +422,19 @@ export async function irPara(id) {
 
     window.scrollTo(0, 0);
     setTimeout(ajustarZoomMobile, 50);
+    
+    // Update Active Nav Item
+    document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
+    const navItems = {
+        'tela-menu': 0,
+        'tela-editor': 1,
+        'tela-lista': 2,
+        'tela-vaga': 3
+    };
+    if (navItems[id] !== undefined) {
+        document.querySelectorAll('.mobile-bottom-nav .nav-item')[navItems[id]].classList.add('active');
+    }
+
     if (id === 'tela-menu') {
         setTimeout(iniciarTourMenuPrincipal, 120);
     } else if (tourMenuAtivo) {

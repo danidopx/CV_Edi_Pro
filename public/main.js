@@ -22,7 +22,11 @@ import {
     mostrarAviso,
     fecharAviso,
     fecharConfirmacao,
-    responderConfirmacao
+    responderConfirmacao,
+    applyCustomColors,
+    toggleSettingsMenu,
+    salvarCoresPersonalizadas,
+    restaurarCoresPadrao
 } from './ui.js';
 import {
     verificarAdmin,
@@ -44,6 +48,8 @@ import {
     atualizarSenhaConta,
     solicitarExclusao,
     fazerLoginGoogle,
+    registrarLoginNosBanco,
+    abrirVisualizadorLoginsAdmin,
     fazerLogout
 } from './auth.js';
 import {
@@ -155,7 +161,10 @@ function bindWindowGlobals() {
         alternarModalVagaCapturadaAdmin,
         fecharAviso,
         fecharConfirmacao,
-        responderConfirmacao
+        responderConfirmacao,
+        toggleSettingsMenu,
+        salvarCoresPersonalizadas,
+        restaurarCoresPadrao
     });
 }
 
@@ -172,7 +181,7 @@ window.addEventListener('beforeunload', function (e) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initDebugPanel();
-    sincronizarVersaoAppNaTela().catch(() => {});
+    sincronizarVersaoAppNaTela().catch(() => { });
     initCadastroSenhaEmTempoReal();
 
     const editorPanel = document.getElementById('editor');
@@ -186,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('load', async () => {
     logDebug('=== PÁGINA CARREGADA ===');
+    applyCustomColors();
     applyTheme(localStorage.getItem('themePreference') || 'light');
     inicializarModeloIA();
 
@@ -219,6 +229,7 @@ window.addEventListener('load', async () => {
 
     if (session) {
         logDebug('Usuário LOGADO detectado.');
+        document.body.classList.add('logged-in');
         appState.usuarioAtual = session.user;
         localStorage.setItem('ultima_atividade_app', Date.now());
         await sincronizarCurriculoPadraoPersistido();
@@ -241,6 +252,7 @@ window.addEventListener('load', async () => {
         }
     } else {
         logDebug('Usuário DESLOGADO.');
+        document.body.classList.remove('logged-in');
         const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
         const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
         if (idVagaPendente || textoMobilePendente) {
@@ -255,6 +267,10 @@ window.addEventListener('load', async () => {
     sb.auth.onAuthStateChange(async (event, session) => {
         logDebug(`Auth State Alterado: ${event}`);
         if (event === 'SIGNED_IN' && session) {
+            // Registrar o login no banco de dados
+            await registrarLoginNosBanco(session.user.id, session.user.email);
+
+            document.body.classList.add('logged-in');
             appState.usuarioAtual = session.user;
             localStorage.setItem('ultima_atividade_app', Date.now());
             await sincronizarCurriculoPadraoPersistido();
@@ -277,6 +293,7 @@ window.addEventListener('load', async () => {
                 }
             }
         } else if (event === 'SIGNED_OUT') {
+            document.body.classList.remove('logged-in');
             appState.usuarioAtual = null;
             verificarAdmin();
             irPara('tela-landing');

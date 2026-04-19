@@ -70,9 +70,7 @@ function formatarDataVersao(valor) {
 function montarRotuloVersao(registro) {
     const ambiente = registro?.environment_name === 'production' ? 'Produção' : 'Preview';
     const versao = registro?.current_version || '0.0.0';
-    const commitCurto = String(registro?.commit_ref || '').trim().slice(0, 7);
-    const buildSuffix = registro?.source === 'runtime_build' && commitCurto ? `+${commitCurto}` : '';
-    return `CV Edi Pro v${versao}${buildSuffix}${ambiente === 'Preview' ? ' - Preview' : ''}`;
+    return `CV Edi Pro v${versao}${ambiente === 'Preview' ? ' - Preview' : ''}`;
 }
 
 function extrairVersaoDoRotulo(texto) {
@@ -90,6 +88,10 @@ function compararVersoesSemver(a, b) {
     }
 
     return 0;
+}
+
+function normalizarUrlComparacao(valor) {
+    return String(valor || '').trim().replace(/\/+$/, '').toLowerCase();
 }
 
 export async function carregarVersaoAtualApp(environmentName = detectarAmbienteAtual()) {
@@ -120,15 +122,41 @@ export async function carregarVersaoBuildAtual() {
     }
 }
 
-function registroVersaoCombinaComDeployAtual(registro) {
+function registroVersaoCombinaComDeployAtual(registro, buildInfo = null) {
     if (!registro) return false;
-    if (registro.environment_name === 'production') return true;
 
-    const deploymentUrl = String(registro.deployment_url || '').trim().replace(/\/+$/, '');
-    const origemAtual = String(window.location.origin || '').trim().replace(/\/+$/, '');
+    const deploymentUrl = normalizarUrlComparacao(registro.deployment_url);
+    const origemAtual = normalizarUrlComparacao(window.location.origin);
+
+    if (buildInfo) {
+        const ambienteBuild = String(buildInfo.environment_name || '').trim();
+        const ambienteRegistro = String(registro.environment_name || '').trim();
+        const versaoBuild = String(buildInfo.current_version || '').trim();
+        const versaoRegistro = String(registro.current_version || '').trim();
+        const commitBuild = String(buildInfo.commit_ref || '').trim().toLowerCase();
+        const commitRegistro = String(registro.commit_ref || '').trim().toLowerCase();
+
+        if (ambienteBuild && ambienteRegistro && ambienteBuild !== ambienteRegistro) {
+            return false;
+        }
+
+        if (versaoBuild && versaoRegistro && versaoBuild !== versaoRegistro) {
+            return false;
+        }
+
+        if (commitBuild && commitRegistro) {
+            return commitBuild === commitRegistro;
+        }
+
+        if (deploymentUrl && origemAtual) {
+            return deploymentUrl === origemAtual;
+        }
+
+        return Boolean(versaoBuild && versaoRegistro && versaoBuild === versaoRegistro);
+    }
 
     if (!deploymentUrl) return false;
-    return deploymentUrl.toLowerCase() === origemAtual.toLowerCase();
+    return deploymentUrl === origemAtual;
 }
 
 export async function carregarHistoricoVersoesApp(environmentName) {
@@ -213,65 +241,44 @@ export async function sincronizarVersaoAppNaTela() {
     const metas = document.querySelectorAll('[data-app-version-meta]');
     if (rotulos.length === 0) return null;
 
-    const fallbackRotulo = rotulos[0]?.textContent || '';
-    const fallbackVersao = extrairVersaoDoRotulo(fallbackRotulo);
-    const versaoBuild = await carregarVersaoBuildAtual();
+    // 1. Tenta carregar a versão atual do banco (fonte primária)
     const registro = await carregarVersaoAtualApp();
-    const versaoBanco = registro?.current_version || '';
-    const bancoEstaAtrasado = fallbackVersao && versaoBanco && compararVersoesSemver(fallbackVersao, versaoBanco) > 0;
-    const usarVersaoBuild = versaoBuild && !registroVersaoCombinaComDeployAtual(registro);
 
-    if (usarVersaoBuild) {
+    if (registro?.current_version) {
+        const label = montarRotuloVersao(registro);
+        const dataFormatada = formatarDataVersao(registro.release_date);
+        const responsavel = registro.responsible_name || registro.responsible_email || 'Não informado';
+        const ambiente = registro.environment_name === 'production' ? 'Produção' : 'Preview';
+        const meta = `${ambiente} | ${dataFormatada || 'Data não informada'} | Responsável: ${responsavel}`;
+        const exibirMeta = registro.environment_name !== 'production';
+
+        rotulos.forEach(el => { el.textContent = label; });
+        metas.forEach(el => {
+            el.textContent = exibirMeta ? meta : '';
+            el.style.display = exibirMeta ? 'block' : 'none';
+        });
+        return registro;
+    }
+
+    // 2. Fallback: usa a versão do build-version API (lê package.json)
+    const versaoBuild = await carregarVersaoBuildAtual();
+    if (versaoBuild?.current_version) {
         const labelBuild = montarRotuloVersao(versaoBuild);
         const branch = String(versaoBuild.branch_name || '').trim();
         const commitCurto = String(versaoBuild.commit_ref || '').trim().slice(0, 7);
         const metaBuild = [branch, commitCurto && `Commit: ${commitCurto}`].filter(Boolean).join(' | ');
 
-        rotulos.forEach(el => {
-            el.textContent = labelBuild;
-        });
+        rotulos.forEach(el => { el.textContent = labelBuild; });
         metas.forEach(el => {
-            if (metaBuild) {
-                el.textContent = metaBuild;
-                el.style.display = 'block';
-            } else {
-                el.textContent = '';
-                el.style.display = 'none';
-            }
+            if (metaBuild) { el.textContent = metaBuild; el.style.display = 'block'; }
+            else { el.textContent = ''; el.style.display = 'none'; }
         });
-
         return versaoBuild;
     }
 
-    if (!registroVersaoCombinaComDeployAtual(registro) || bancoEstaAtrasado) {
-        metas.forEach(el => {
-            el.textContent = '';
-            el.style.display = 'none';
-        });
-        return null;
-    }
-
-    const label = montarRotuloVersao(registro);
-    const dataFormatada = formatarDataVersao(registro.release_date);
-    const ambiente = registro.environment_name === 'production' ? 'Produção' : 'Preview';
-    const responsavel = registro.responsible_name || registro.responsible_email || 'Não informado';
-    const meta = `${ambiente} | ${dataFormatada || 'Data não informada'} | Responsável: ${responsavel}`;
-    const exibirMeta = registro.environment_name !== 'production';
-
-    rotulos.forEach(el => {
-        el.textContent = label;
-    });
-    metas.forEach(el => {
-        if (exibirMeta) {
-            el.textContent = meta;
-            el.style.display = 'block';
-        } else {
-            el.textContent = '';
-            el.style.display = 'none';
-        }
-    });
-
-    return registro;
+    // 3. Fallback final: mantém o texto hardcoded do HTML
+    metas.forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+    return null;
 }
 
 function normalizarListaTexto(valor) {

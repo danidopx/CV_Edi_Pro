@@ -18,13 +18,7 @@ import {
 import { getValSafe, setValSafe, showToast, irPara, mostrarAviso, mostrarConfirmacao } from './ui.js';
 
 function getAuthRedirectUrl() {
-    const host = String(window.location.hostname || '').toLowerCase();
-
-    if (host === 'cvedipro.vercel.app' || host === 'curriculo-edi.vercel.app') {
-        return 'https://cvedipro.vercel.app';
-    }
-
-    return 'https://cvedipro-preview.vercel.app';
+    return window.location.origin;
 }
 
 export function usuarioEhAdmin() {
@@ -248,16 +242,24 @@ export function verificarAdmin() {
     const admin = usuarioEhAdmin();
     atualizarVisibilidadePainelDebug(admin);
 
+    const c = document.getElementById('btn-admin-config');
+    const u = document.getElementById('btn-admin-users');
+    const dc = document.getElementById('dropdown-admin-config');
+    const du = document.getElementById('dropdown-admin-users');
+    const dl = document.getElementById('dropdown-admin-logins');
+
     if (admin) {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'flex';
         if (u) u.style.display = 'flex';
+        if (dc) dc.style.display = 'flex';
+        if (du) du.style.display = 'flex';
+        if (dl) dl.style.display = 'flex';
     } else {
-        const c = document.getElementById('btn-admin-config');
-        const u = document.getElementById('btn-admin-users');
         if (c) c.style.display = 'none';
         if (u) u.style.display = 'none';
+        if (dc) dc.style.display = 'none';
+        if (du) du.style.display = 'none';
+        if (dl) dl.style.display = 'none';
     }
 }
 
@@ -538,6 +540,56 @@ export async function excluirUsuarioDefinitivo(userId, userEmail) {
     }
 }
 
+export async function registrarLoginNosBanco(userId, email) {
+    try {
+        const userAgent = navigator.userAgent || null;
+        const ipAddress = null; // Será preenchido no servidor se necessário
+
+        const { error } = await sb
+            .from('login_logs')
+            .insert({
+                user_id: userId,
+                email: email,
+                user_agent: userAgent,
+                ip_address: ipAddress,
+                success: true
+            });
+
+        if (error) {
+            console.warn('Erro ao registrar login no banco:', error);
+        } else {
+            console.log('Login registrado com sucesso no banco de dados');
+        }
+    } catch (erro) {
+        console.warn('Erro ao registrar login:', erro);
+    }
+}
+
+async function registrarTentativaLoginFalhada(email) {
+    try {
+        const userAgent = navigator.userAgent || null;
+        const ipAddress = null;
+
+        const { error } = await sb
+            .from('login_logs')
+            .insert({
+                user_id: null,
+                email: email,
+                user_agent: userAgent,
+                ip_address: ipAddress,
+                success: false
+            });
+
+        if (error) {
+            console.warn('Erro ao registrar tentativa falhada:', error);
+        } else {
+            console.log('Tentativa de login falhada registrada');
+        }
+    } catch (erro) {
+        console.warn('Erro ao registrar tentativa falhada:', erro);
+    }
+}
+
 export function alternarModoLogin() {
     appState.modoCriarConta = !appState.modoCriarConta;
     const bx = document.getElementById('box-confirma-senha');
@@ -594,6 +646,9 @@ export async function processarFormularioLogin() {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
             if (msgLog) msgLog.style.display = 'none';
+            // Registrar tentativa de login falhada
+            await registrarTentativaLoginFalhada(email);
+
             if (error.message.toLowerCase().includes('ban') || error.message.toLowerCase().includes('inativo') || error.message.toLowerCase().includes('suspen') || error.message.toLowerCase().includes('block')) {
                 const emailSuporte = localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com';
                 document.getElementById('texto-email-suporte').innerText = emailSuporte;
@@ -698,4 +753,141 @@ export async function fazerLogout() {
     localStorage.removeItem('ultima_atividade_app');
     localStorage.removeItem('telaRecuperacao');
     localStorage.removeItem('cvRecuperacao');
+}
+
+export async function abrirVisualizadorLoginsAdmin() {
+    if (!usuarioEhAdmin()) {
+        mostrarAviso('Apenas administradores podem acessar os logs de login.', { tone: 'erro' });
+        return;
+    }
+
+    let filtroEmail = '';
+    let filtroSucesso = 'todos';
+
+    async function carregarLogs() {
+        const tabela = document.getElementById('admin-logins-corpo-tabela');
+        const infoCont = document.getElementById('admin-logins-info');
+
+        if (!tabela || !infoCont) return;
+
+        tabela.innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando...</td></tr>';
+
+        let query = sb.from('login_logs').select('*').order('login_timestamp', { ascending: false }).limit(500);
+
+        if (filtroEmail) {
+            query = query.ilike('email', `%${filtroEmail}%`);
+        }
+
+        if (filtroSucesso === 'sucesso') {
+            query = query.eq('success', true);
+        } else if (filtroSucesso === 'falha') {
+            query = query.eq('success', false);
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+            tabela.innerHTML = `<tr><td colspan="5" style="color: red;">Erro: ${escaparHtml(error.message)}</td></tr>`;
+            infoCont.textContent = 'Erro ao carregar logs';
+            return;
+        }
+
+        infoCont.textContent = data && data.length > 0 ? `Exibindo ${data.length} registros` : 'Nenhum registro encontrado';
+
+        if (!data || data.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum log de login encontrado.</td></tr>';
+            return;
+        }
+
+        tabela.innerHTML = data.map(log => {
+            const data_fmt = new Date(log.login_timestamp).toLocaleString('pt-BR');
+            const statusCor = log.success ? 'var(--accent)' : 'var(--danger)';
+            const statusTexto = log.success ? '✓ Sucesso' : '✗ Falha';
+            return `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td><strong>${escaparHtml(log.email)}</strong></td>
+                    <td>${data_fmt}</td>
+                    <td><span style="color: ${statusCor}; font-weight: bold;">${statusTexto}</span></td>
+                    <td style="font-size: 11px; color: var(--text-light);">${log.user_agent ? log.user_agent.substring(0, 50) + '...' : 'N/A'}</td>
+                    <td style="font-size: 11px; color: var(--text-light);">${log.ip_address || 'N/A'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-logins-admin';
+    modal.style.cssText = 'display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;';
+
+    modal.innerHTML = `
+        <div style="background: var(--bg-body); border-radius: 15px; padding: 24px; max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📊 Histórico de Logins</h2>
+                <button onclick="document.getElementById('modal-logins-admin').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light);">✕</button>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Filtrar por E-mail:</label>
+                    <input id="admin-logins-filtro-email" type="text" placeholder="Digite o e-mail..." style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-panel);">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Status:</label>
+                    <select id="admin-logins-filtro-status" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-panel);">
+                        <option value="todos">Todos</option>
+                        <option value="sucesso">Apenas Sucessos</option>
+                        <option value="falha">Apenas Falhas</option>
+                    </select>
+                </div>
+                <button id="admin-logins-btn-filtrar" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">🔍 Filtrar</button>
+            </div>
+            
+            <div style="color: var(--text-light); font-size: 12px; margin-bottom: 12px;">
+                <span id="admin-logins-info">Carregando...</span>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-panel); border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: 12px; text-align: left; font-weight: bold;">E-mail</th>
+                            <th style="padding: 12px; text-align: left; font-weight: bold;">Data/Hora</th>
+                            <th style="padding: 12px; text-align: left; font-weight: bold;">Status</th>
+                            <th style="padding: 12px; text-align: left; font-weight: bold; font-size: 11px;">User Agent</th>
+                            <th style="padding: 12px; text-align: left; font-weight: bold; font-size: 11px;">IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-logins-corpo-tabela">
+                        <tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const btnFiltrar = document.getElementById('admin-logins-btn-filtrar');
+    const inputEmail = document.getElementById('admin-logins-filtro-email');
+    const selectStatus = document.getElementById('admin-logins-filtro-status');
+
+    if (btnFiltrar) {
+        btnFiltrar.addEventListener('click', async () => {
+            filtroEmail = inputEmail.value;
+            filtroSucesso = selectStatus.value;
+            await carregarLogs();
+        });
+    }
+
+    if (inputEmail) {
+        inputEmail.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                filtroEmail = inputEmail.value;
+                filtroSucesso = selectStatus.value;
+                await carregarLogs();
+            }
+        });
+    }
+
+    await carregarLogs();
 }

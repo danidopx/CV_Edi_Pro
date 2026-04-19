@@ -4,6 +4,7 @@ import { constants } from 'node:fs';
 const requiredFiles = [
   'package.json',
   'vercel.json',
+  'api/build-version.js',
   'public/index.html',
   'public/sw.js',
   'api/ia.js',
@@ -14,6 +15,7 @@ const requiredFiles = [
 ];
 
 const jsFiles = [
+  'api/build-version.js',
   'api/ia.js',
   'api/modelos.js',
   'api/extrair-vaga-url.js',
@@ -40,11 +42,24 @@ async function validateJson(file) {
   JSON.parse(content);
 }
 
+async function validateVercelConfig() {
+  const content = await readFile('vercel.json', 'utf8');
+  const config = JSON.parse(content);
+
+  if (config?.git?.deploymentEnabled !== false) {
+    throw new Error('vercel.json: git.deploymentEnabled deve permanecer false para evitar deploy fora do fluxo oficial.');
+  }
+
+  if (config?.github?.autoAlias !== false) {
+    throw new Error('vercel.json: github.autoAlias deve permanecer false para preservar o mapeamento controlado de preview/produção.');
+  }
+}
+
 async function validateJavaScript(file) {
   const content = await readFile(file, 'utf8');
   const normalized = content
     .replace(/^\uFEFF/, '')
-    .replace(/^\s*import[\s\S]*?from\s+['"][^'"]+['"];\s*$/gm, '')
+    .replace(/^\s*import[\s\S]*?from\s+['"][^'"]+['"](\s+with\s+\{[\s\S]*?\})?;\s*$/gm, '')
     .replace(/^\s*import\s+['"][^'"]+['"];\s*$/gm, '')
     .replace(/^\s*export\s*\{[\s\S]*?\}\s*from\s+['"][^'"]+['"];\s*$/gm, '')
     .replace(/\bexport\s+default\s+/g, '')
@@ -62,6 +77,7 @@ async function validateJavaScript(file) {
 try {
   await Promise.all(requiredFiles.map(ensureFileExists));
   await Promise.all([validateJson('package.json'), validateJson('vercel.json')]);
+  await validateVercelConfig();
 
   for (const file of jsFiles) {
     await validateJavaScript(file);
