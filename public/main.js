@@ -48,6 +48,8 @@ import {
     atualizarSenhaConta,
     solicitarExclusao,
     fazerLoginGoogle,
+    registrarLoginNosBanco,
+    abrirVisualizadorLoginsAdmin,
     fazerLogout
 } from './auth.js';
 import {
@@ -179,7 +181,7 @@ window.addEventListener('beforeunload', function (e) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initDebugPanel();
-    sincronizarVersaoAppNaTela().catch(() => {});
+    sincronizarVersaoAppNaTela().catch(() => { });
     initCadastroSenhaEmTempoReal();
 
     const editorPanel = document.getElementById('editor');
@@ -265,6 +267,9 @@ window.addEventListener('load', async () => {
     sb.auth.onAuthStateChange(async (event, session) => {
         logDebug(`Auth State Alterado: ${event}`);
         if (event === 'SIGNED_IN' && session) {
+            // Registrar o login no banco de dados
+            await registrarLoginNosBanco(session.user.id, session.user.email);
+
             document.body.classList.add('logged-in');
             appState.usuarioAtual = session.user;
             localStorage.setItem('ultima_atividade_app', Date.now());

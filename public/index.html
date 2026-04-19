@@ -12,7 +12,9 @@
     <link rel="manifest" href="manifest.json?v=09779">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap"
+        rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -32,28 +34,36 @@
 
     <div id="toast">✔ Operação realizada com sucesso!</div>
 
-    <div id="modal-aviso"
-        onclick="if(event.target===this)fecharAviso()"
+    <div id="modal-aviso" onclick="if(event.target===this)fecharAviso()"
         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:10020; align-items:center; justify-content:center; padding:18px;">
-        <div style="width:min(460px, 94vw); background:var(--bg-panel); border:1px solid var(--border-color); border-radius:18px; box-shadow:var(--shadow); padding:24px;">
-            <div id="modal-aviso-titulo" style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-bottom:10px;">Aviso</div>
-            <div id="modal-aviso-mensagem" style="color:var(--text-main); line-height:1.6; font-size:0.98rem; margin-bottom:18px;"></div>
+        <div
+            style="width:min(460px, 94vw); background:var(--bg-panel); border:1px solid var(--border-color); border-radius:18px; box-shadow:var(--shadow); padding:24px;">
+            <div id="modal-aviso-titulo"
+                style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-bottom:10px;">Aviso</div>
+            <div id="modal-aviso-mensagem"
+                style="color:var(--text-main); line-height:1.6; font-size:0.98rem; margin-bottom:18px;"></div>
             <div style="display:flex; justify-content:flex-end;">
                 <button id="modal-aviso-botao" class="btn-base btn-accent" onclick="fecharAviso()">Entendi</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-confirmacao"
-        onclick="if(event.target===this)fecharConfirmacao()"
+    <div id="modal-confirmacao" onclick="if(event.target===this)fecharConfirmacao()"
         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:10021; align-items:center; justify-content:center; padding:18px;">
-        <div style="width:min(480px, 94vw); background:var(--bg-panel); border:1px solid var(--border-color); border-radius:18px; box-shadow:var(--shadow); padding:24px;">
-            <div id="modal-confirmacao-titulo" style="font-size:1.15rem; font-weight:800; color:var(--danger); margin-bottom:10px;">Deseja continuar?</div>
-            <div id="modal-confirmacao-mensagem" style="color:var(--text-main); line-height:1.6; font-size:0.98rem; margin-bottom:18px;"></div>
+        <div
+            style="width:min(480px, 94vw); background:var(--bg-panel); border:1px solid var(--border-color); border-radius:18px; box-shadow:var(--shadow); padding:24px;">
+            <div id="modal-confirmacao-titulo"
+                style="font-size:1.15rem; font-weight:800; color:var(--danger); margin-bottom:10px;">Deseja continuar?
+            </div>
+            <div id="modal-confirmacao-mensagem"
+                style="color:var(--text-main); line-height:1.6; font-size:0.98rem; margin-bottom:18px;"></div>
             <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
-                <button id="modal-confirmacao-cancelar" class="btn-base btn-neutral" onclick="responderConfirmacao(false)">Cancelar</button>
-                <button id="modal-confirmacao-secundario" class="btn-base btn-neutral" style="display:none;" onclick="responderConfirmacao('secondary')">Outra ação</button>
-                <button id="modal-confirmacao-confirmar" class="btn-base btn-danger" onclick="responderConfirmacao(true)">Continuar</button>
+                <button id="modal-confirmacao-cancelar" class="btn-base btn-neutral"
+                    onclick="responderConfirmacao(false)">Cancelar</button>
+                <button id="modal-confirmacao-secundario" class="btn-base btn-neutral" style="display:none;"
+                    onclick="responderConfirmacao('secondary')">Outra ação</button>
+                <button id="modal-confirmacao-confirmar" class="btn-base btn-danger"
+                    onclick="responderConfirmacao(true)">Continuar</button>
             </div>
         </div>
     </div>
@@ -109,7 +119,8 @@
         </div>
     </div>
 
-    <button class="theme-toggle btn-luz" onclick="toggleTheme()" title="Modo Claro/Escuro" style="display:none !important;">💡</button>
+    <button class="theme-toggle btn-luz" onclick="toggleTheme()" title="Modo Claro/Escuro"
+        style="display:none !important;">💡</button>
     <button id="btn-admin-config" class="theme-toggle btn-admin-config" onclick="abrirConfigAdmin()"
         title="Configurações da IA (Admin)" style="display:none !important;">⚙️</button>
     <button id="btn-admin-users" class="theme-toggle btn-admin-users" onclick="abrirGestaoUsuarios()"
@@ -138,14 +149,19 @@
     <!-- MODAL O QUE É ATS -->
     <div id="modal-ats-info" onclick="if(event.target===this)this.style.display='none'"
         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10010; align-items:center; justify-content:center; padding:18px;">
-        <div style="width:min(500px, 94vw); background:var(--bg-panel); border-radius:18px; padding:24px; box-shadow:var(--shadow-premium); border:1px solid var(--border-color);">
+        <div
+            style="width:min(500px, 94vw); background:var(--bg-panel); border-radius:18px; padding:24px; box-shadow:var(--shadow-premium); border:1px solid var(--border-color);">
             <h2 style="color:var(--primary); margin-top:0;">🔎 O que é Score ATS?</h2>
             <p style="font-size:14px; line-height:1.6; color:var(--text-main);">
-                ATS significa <b>Applicant Tracking System</b> (Sistema de Rastreamento de Candidatos). É um software usado por recrutadores para filtrar currículos automaticamente.
+                ATS significa <b>Applicant Tracking System</b> (Sistema de Rastreamento de Candidatos). É um software
+                usado por recrutadores para filtrar currículos automaticamente.
                 <br><br>
-                Nosso sistema simula essa leitura, analisando palavras-chave, habilidades e requisitos. Um <b>Score alto</b> significa que seu currículo tem mais chances de ser lido por um humano!
+                Nosso sistema simula essa leitura, analisando palavras-chave, habilidades e requisitos. Um <b>Score
+                    alto</b> significa que seu currículo tem mais chances de ser lido por um humano!
             </p>
-            <button class="btn-base btn-primary" onclick="document.getElementById('modal-ats-info').style.display='none'" style="width:100%; margin-top:10px;">Entendi!</button>
+            <button class="btn-base btn-primary"
+                onclick="document.getElementById('modal-ats-info').style.display='none'"
+                style="width:100%; margin-top:10px;">Entendi!</button>
         </div>
     </div>
 
@@ -248,30 +264,39 @@
                 style="color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 22px;">
                 ⚙️ Configuração da IA</h2>
 
-            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
-                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">📧 E-mail de Suporte</summary>
+            <details
+                style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">📧 E-mail de Suporte
+                </summary>
                 <div style="margin-top: 12px;">
                     <label style="font-weight: bold; margin-bottom: 8px; display: block;">Mostrado em bloqueios:</label>
                     <input type="email" id="admin-email-suporte" placeholder="Ex: suporte@meusite.com">
                 </div>
             </details>
 
-            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+            <details
+                style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
                 <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🧠 Modelo da IA</summary>
                 <div style="margin-top: 12px;">
                     <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo atual em uso:</label>
-                    <div id="admin-modelo-atual" style="margin-bottom: 12px; color: var(--primary); font-weight: bold;">Carregando...</div>
+                    <div id="admin-modelo-atual" style="margin-bottom: 12px; color: var(--primary); font-weight: bold;">
+                        Carregando...</div>
 
-                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo manual (override):</label>
+                    <label style="font-weight: bold; margin-bottom: 8px; display: block;">Modelo manual
+                        (override):</label>
                     <select id="admin-modelo-select" style="margin-bottom: 10px;"></select>
-                    <input type="text" id="admin-modelo-manual" placeholder="Ou digite manualmente um modelo exato, ex: gemini-2.5-flash"
+                    <input type="text" id="admin-modelo-manual"
+                        placeholder="Ou digite manualmente um modelo exato, ex: gemini-2.5-flash"
                         style="margin-bottom: 8px; font-family: monospace;">
-                    <small style="color: var(--text-light); display: block;">Se deixar vazio, o sistema continua usando a lógica automática atual.</small>
+                    <small style="color: var(--text-light); display: block;">Se deixar vazio, o sistema continua usando
+                        a lógica automática atual.</small>
                 </div>
             </details>
 
-            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
-                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🎨 Personalização de Cores</summary>
+            <details
+                style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🎨 Personalização de Cores
+                </summary>
                 <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <label style="font-size: 13px; font-weight: 600;">Cor Primária (Purple)</label>
@@ -286,28 +311,40 @@
                         <input type="color" id="admin-color-ia" value="#8b5cf6" style="width: 50px; padding: 2px;">
                     </div>
                     <div style="display: flex; gap: 8px; margin-top: 5px;">
-                        <button class="btn-base btn-primary" onclick="salvarCoresPersonalizadas()" style="font-size: 11px; padding: 8px; flex: 1;">Aplicar Estilo</button>
-                        <button class="btn-base btn-neutral" onclick="restaurarCoresPadrao()" style="font-size: 11px; padding: 8px; flex: 1;">Restaurar Padrão</button>
+                        <button class="btn-base btn-primary" onclick="salvarCoresPersonalizadas()"
+                            style="font-size: 11px; padding: 8px; flex: 1;">Aplicar Estilo</button>
+                        <button class="btn-base btn-neutral" onclick="restaurarCoresPadrao()"
+                            style="font-size: 11px; padding: 8px; flex: 1;">Restaurar Padrão</button>
                     </div>
                 </div>
             </details>
 
-            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
-                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">✍️ Prompts e Chamadas da IA</summary>
-                <div style="display:flex; justify-content: space-between; align-items: center; margin: 12px 0; gap: 10px;">
-                    <small style="color: var(--text-light);">Edite prompts padrão ou crie prompts administrativos.</small>
-                    <button class="btn-base btn-neutral" onclick="adicionarPromptAdmin()" type="button">+ Novo Prompt</button>
+            <details
+                style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">✍️ Prompts e Chamadas da IA
+                </summary>
+                <div
+                    style="display:flex; justify-content: space-between; align-items: center; margin: 12px 0; gap: 10px;">
+                    <small style="color: var(--text-light);">Edite prompts padrão ou crie prompts
+                        administrativos.</small>
+                    <button class="btn-base btn-neutral" onclick="adicionarPromptAdmin()" type="button">+ Novo
+                        Prompt</button>
                 </div>
 
                 <div id="admin-prompts-dinamicos" style="margin-bottom: 15px;"></div>
             </details>
 
-            <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
-                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🚀 Versionamento do App</summary>
+            <details
+                style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🚀 Versionamento do App
+                </summary>
                 <div style="margin-top: 12px;">
-                    <div id="admin-versao-atual-info" style="margin-bottom: 12px; color: var(--text-light); font-size: 13px;">Carregando versão atual...</div>
+                    <div id="admin-versao-atual-info"
+                        style="margin-bottom: 12px; color: var(--text-light); font-size: 13px;">Carregando versão
+                        atual...</div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 10px;">
                         <div>
                             <label style="font-weight: bold; margin-bottom: 6px; display: block;">Ambiente</label>
                             <select id="admin-versao-ambiente">
@@ -320,7 +357,8 @@
                             <input id="admin-versao-atual" placeholder="Ex: 0.0.40">
                         </div>
                         <div>
-                            <label style="font-weight: bold; margin-bottom: 6px; display: block;">Versão anterior</label>
+                            <label style="font-weight: bold; margin-bottom: 6px; display: block;">Versão
+                                anterior</label>
                             <input id="admin-versao-anterior" placeholder="Ex: 0.0.39">
                         </div>
                         <div>
@@ -340,17 +378,20 @@
                             <input id="admin-versao-url" placeholder="https://...">
                         </div>
                         <div style="grid-column: 1 / -1;">
-                            <label style="font-weight: bold; margin-bottom: 6px; display: block;">Commit / referência</label>
+                            <label style="font-weight: bold; margin-bottom: 6px; display: block;">Commit /
+                                referência</label>
                             <input id="admin-versao-commit" placeholder="SHA, branch ou tag">
                         </div>
                         <div style="grid-column: 1 / -1;">
                             <label style="font-weight: bold; margin-bottom: 6px; display: block;">Observações</label>
-                            <textarea id="admin-versao-observacoes" style="height: 90px; background: var(--bg-panel);"></textarea>
+                            <textarea id="admin-versao-observacoes"
+                                style="height: 90px; background: var(--bg-panel);"></textarea>
                         </div>
                     </div>
 
                     <div style="display:flex; justify-content: flex-end; margin-bottom: 12px;">
-                        <button class="btn-base btn-accent" type="button" onclick="registrarVersaoAdmin()">💾 Registrar versão</button>
+                        <button class="btn-base btn-accent" type="button" onclick="registrarVersaoAdmin()">💾 Registrar
+                            versão</button>
                     </div>
 
                     <div style="overflow-x: auto;">
@@ -424,7 +465,8 @@
         </div>
         <div class="hero-section">
             <h1 class="hero-title">Prepare seu <span>Histórico Profissional</span> para o futuro</h1>
-            <p class="hero-subtitle">Inicie aqui, adicionando seus dados profissionais para fazer uma análise profunda via IA e adequar a suas vagas ou só edite seu currículo.</p>
+            <p class="hero-subtitle">Inicie aqui, adicionando seus dados profissionais para fazer uma análise profunda
+                via IA e adequar a suas vagas ou só edite seu currículo.</p>
             <button class="btn-base btn-primary" style="padding: 20px 50px; font-size: 18px; border-radius: 50px;"
                 onclick="irPara('tela-login')">COMEÇAR AGORA ✨</button>
         </div>
@@ -432,17 +474,20 @@
             <div class="feature-card">
                 <div class="feature-icon">📝</div>
                 <div class="feature-title">Criador e Editor</div>
-                <div class="feature-desc">Monte seu Cadastro de Histórico Profissional, revise manualmente, salve versões e mantenha sua base sempre pronta para novas oportunidades.</div>
+                <div class="feature-desc">Monte seu Cadastro de Histórico Profissional, revise manualmente, salve
+                    versões e mantenha sua base sempre pronta para novas oportunidades.</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎯</div>
                 <div class="feature-title">Análise de Vaga</div>
-                <div class="feature-desc">Envie a vaga por texto, link ou extensão, valide o conteúdo e gere primeiro a análise ATS antes de decidir aplicar ajustes no currículo.</div>
+                <div class="feature-desc">Envie a vaga por texto, link ou extensão, valide o conteúdo e gere primeiro a
+                    análise ATS antes de decidir aplicar ajustes no currículo.</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">📊</div>
                 <div class="feature-title">ATS em 2 Etapas</div>
-                <div class="feature-desc">Veja score, gaps e sugestões com base na vaga vinculada ou no currículo geral. Depois, aplique a adaptação apenas quando fizer sentido para você.</div>
+                <div class="feature-desc">Veja score, gaps e sugestões com base na vaga vinculada ou no currículo geral.
+                    Depois, aplique a adaptação apenas quando fizer sentido para você.</div>
             </div>
         </div>
 
@@ -482,11 +527,19 @@
                         número e 1 letra maiúscula.</small>
                     <div id="box-validacao-senha"
                         style="display:none; text-align:left; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; margin-top: 4px;">
-                        <div id="login-senha-resumo" style="font-size: 12px; margin-bottom: 8px; color: var(--text-light);">Sua senha ficará protegida pelo Supabase Auth.</div>
-                        <div id="senha-regra-tamanho" style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• Pelo menos 8 caracteres</div>
-                        <div id="senha-regra-maiuscula" style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• 1 letra maiúscula</div>
-                        <div id="senha-regra-numero" style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• 1 número</div>
-                        <div id="senha-regra-coincide" style="font-size: 11px; color: var(--text-light);">• Senhas iguais</div>
+                        <div id="login-senha-resumo"
+                            style="font-size: 12px; margin-bottom: 8px; color: var(--text-light);">Sua senha ficará
+                            protegida pelo Supabase Auth.</div>
+                        <div id="senha-regra-tamanho"
+                            style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• Pelo menos 8
+                            caracteres</div>
+                        <div id="senha-regra-maiuscula"
+                            style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• 1 letra maiúscula
+                        </div>
+                        <div id="senha-regra-numero"
+                            style="font-size: 11px; color: var(--text-light); margin-bottom: 4px;">• 1 número</div>
+                        <div id="senha-regra-coincide" style="font-size: 11px; color: var(--text-light);">• Senhas
+                            iguais</div>
                     </div>
                 </div>
 
@@ -531,13 +584,15 @@
             <div class="top-bar-brand" style="font-size: 24px;">CV Edi Pro</div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="text-align: right;">
-                    <div id="user-name-display" style="font-size: 14px; font-weight: 800; color: var(--primary);">Olá, Usuário</div>
+                    <div id="user-name-display" style="font-size: 14px; font-weight: 800; color: var(--primary);">Olá,
+                        Usuário</div>
                     <div id="user-email-display" style="font-size: 11px; color: var(--text-light);"></div>
                 </div>
-                
+
                 <!-- Settings Dropdown -->
                 <div class="settings-menu">
-                    <button class="btn-base btn-neutral" onclick="toggleSettingsMenu(event)" style="padding: 10px; border-radius: 50%; width: 42px; height: 42px;">⚙️</button>
+                    <button class="btn-base btn-neutral" onclick="toggleSettingsMenu(event)"
+                        style="padding: 10px; border-radius: 50%; width: 42px; height: 42px;">⚙️</button>
                     <div id="dropdown-settings" class="settings-content">
                         <div class="settings-item" onclick="toggleTheme()">
                             <span id="theme-icon-dropdown">💡</span> Alterar Tema
@@ -545,11 +600,17 @@
                         <div class="settings-item" onclick="irPara('tela-conta')">
                             <span>👤</span> Minha Conta
                         </div>
-                        <div id="dropdown-admin-config" class="settings-item" onclick="abrirConfigAdmin()" style="display:none;">
+                        <div id="dropdown-admin-config" class="settings-item" onclick="abrirConfigAdmin()"
+                            style="display:none;">
                             <span>🛠️</span> Configuração IA
                         </div>
-                        <div id="dropdown-admin-users" class="settings-item" onclick="abrirGestaoUsuarios()" style="display:none;">
+                        <div id="dropdown-admin-users" class="settings-item" onclick="abrirGestaoUsuarios()"
+                            style="display:none;">
                             <span>👥</span> Gestão Usuários
+                        </div>
+                        <div id="dropdown-admin-logins" class="settings-item" onclick="abrirVisualizadorLoginsAdmin()"
+                            style="display:none;">
+                            <span>📊</span> Logs de Login
                         </div>
                         <hr>
                         <div class="settings-item" onclick="fazerLogout()" style="color: var(--danger);">
@@ -560,45 +621,66 @@
             </div>
         </div>
 
-        <div class="dashboard-hero" style="width: 100%; max-width: 1000px; margin: 20px auto 40px auto; text-align: center;">
-            <h1 style="font-size: 38px; margin-bottom: 12px; letter-spacing: -1px;">Sua Central de <span>Carreira</span></h1>
-            <p style="color: var(--text-light); font-size: 16px; max-width: 650px; margin: 0 auto;">Gerencie seu histórico profissional e adapte-se para novas oportunidades com o poder da Inteligência Artificial.</p>
+        <div class="dashboard-hero"
+            style="width: 100%; max-width: 1000px; margin: 20px auto 40px auto; text-align: center;">
+            <h1 style="font-size: 38px; margin-bottom: 12px; letter-spacing: -1px;">Sua Central de <span>Carreira</span>
+            </h1>
+            <p style="color: var(--text-light); font-size: 16px; max-width: 650px; margin: 0 auto;">Gerencie seu
+                histórico profissional e adapte-se para novas oportunidades com o poder da Inteligência Artificial.</p>
         </div>
 
-        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; margin: 0 auto;">
-            
+        <div class="dashboard-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; margin: 0 auto;">
+
             <!-- Quick Start Card -->
-            <div class="feature-card" style="grid-column: 1 / -1; background: var(--primary-dim); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 30px;">
+            <div class="feature-card"
+                style="grid-column: 1 / -1; background: var(--primary-dim); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 30px;">
                 <div style="flex: 1;">
-                    <div style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px;">Recomendação</div>
+                    <div
+                        style="font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px;">
+                        Recomendação</div>
                     <h2 style="margin: 0 0 10px 0; font-size: 22px;">Inicie aqui seu Cadastro Profissional</h2>
-                    <p style="margin: 0; color: var(--text-light); font-size: 14px; line-height: 1.5;">Adicione seus dados profissionais para fazer uma análise profunda via IA e adequar às suas vagas ou apenas edite seu currículo atual.</p>
+                    <p style="margin: 0; color: var(--text-light); font-size: 14px; line-height: 1.5;">Adicione seus
+                        dados profissionais para fazer uma análise profunda via IA e adequar às suas vagas ou apenas
+                        edite seu currículo atual.</p>
                 </div>
-                <button class="btn-base btn-primary" onclick="abrirFluxoEditorCurriculo()" style="padding: 18px 30px; white-space: nowrap;">COMEÇAR AGORA ➔</button>
+                <button class="btn-base btn-primary" onclick="abrirFluxoEditorCurriculo()"
+                    style="padding: 18px 30px; white-space: nowrap;">COMEÇAR AGORA ➔</button>
             </div>
 
             <!-- Action Cards -->
             <div class="feature-card" onclick="abrirFluxoRevisaoCurriculo()" style="cursor: pointer;">
                 <div class="feature-icon">✨</div>
                 <h3 style="margin: 10px 0;">Revisão de Base</h3>
-                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Analise seu currículo atual e receba sugestões automáticas de melhoria via IA para destacar seu perfil.</p>
-                <div style="margin-top: 20px; color: var(--primary); font-weight: 800; font-size: 12px;">ACESSAR REVISÃO ➔</div>
+                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Analise seu currículo atual e
+                    receba sugestões automáticas de melhoria via IA para destacar seu perfil.</p>
+                <div style="margin-top: 20px; color: var(--primary); font-weight: 800; font-size: 12px;">ACESSAR REVISÃO
+                    ➔</div>
             </div>
 
             <div class="feature-card" onclick="abrirCurriculosSalvos()" style="cursor: pointer;">
                 <div class="feature-icon">📂</div>
                 <h3 style="margin: 10px 0;">Meus Arquivos</h3>
-                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Gerencie todas as versões de currículos que você já criou. Clone, edite ou baixe em PDF a qualquer momento.</p>
-                <div style="margin-top: 20px; color: var(--primary); font-weight: 800; font-size: 12px;">VER SALVOS ➔</div>
+                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Gerencie todas as versões de
+                    currículos que você já criou. Clone, edite ou baixe em PDF a qualquer momento.</p>
+                <div style="margin-top: 20px; color: var(--primary); font-weight: 800; font-size: 12px;">VER SALVOS ➔
+                </div>
             </div>
 
-            <div class="feature-card" onclick="abrirFluxoAnaliseVaga()" style="cursor: pointer; border-color: var(--ia); background: rgba(139, 92, 246, 0.05);">
-                <div class="feature-icon" style="background: var(--ia-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🎯</div>
+            <div class="feature-card" onclick="abrirFluxoAnaliseVaga()"
+                style="cursor: pointer; border-color: var(--ia); background: rgba(139, 92, 246, 0.05);">
+                <div class="feature-icon"
+                    style="background: var(--ia-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    🎯</div>
                 <h3 style="margin: 10px 0;">Análise de Vagas</h3>
-                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Cruze seu histórico com uma vaga específica. Gere um currículo adaptado e aumente suas chances no ATS.</p>
+                <p style="font-size: 13px; color: var(--text-light); line-height: 1.5;">Cruze seu histórico com uma vaga
+                    específica. Gere um currículo adaptado e aumente suas chances no ATS.</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
                     <div style="color: var(--ia); font-weight: 800; font-size: 12px;">ADAPTAR CURRÍCULO ➔</div>
-                    <a href="#" onclick="event.stopPropagation(); document.getElementById('modal-ats-info').style.display='flex'; return false;" style="font-size: 11px; color: var(--primary); font-weight: 700; text-decoration: none;">O que é ATS?</a>
+                    <a href="#"
+                        onclick="event.stopPropagation(); document.getElementById('modal-ats-info').style.display='flex'; return false;"
+                        style="font-size: 11px; color: var(--primary); font-weight: 700; text-decoration: none;">O que é
+                        ATS?</a>
                 </div>
             </div>
 
@@ -607,7 +689,8 @@
         <div class="footer-info" style="margin-top: 60px; text-align: center; border: none; background: transparent;">
             <strong data-app-version-label style="opacity: 0.5;">CV Edi Pro v0.0.56 - Preview</strong>
             <div style="margin-top: 10px; font-size: 12px; color: var(--text-light);">
-                Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com" style="color: var(--primary); text-decoration: none;">Fale conosco</a>
+                Precisa de ajuda? <a href="mailto:dop.jr82@gmail.com"
+                    style="color: var(--primary); text-decoration: none;">Fale conosco</a>
             </div>
         </div>
     </div>
@@ -618,10 +701,13 @@
 
     <div id="modal-vaga-capturada-admin" onclick="if(event.target===this)this.style.display='none'"
         style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 9999; align-items: center; justify-content: center; padding: 18px;">
-        <div style="width: min(820px, 96vw); background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
-            <div style="display:flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px;">
+        <div
+            style="width: min(820px, 96vw); background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: var(--shadow);">
+            <div
+                style="display:flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin:0; color: var(--primary);">Texto capturado pela extensão</h3>
-                <button class="btn-base btn-neutral" onclick="document.getElementById('modal-vaga-capturada-admin').style.display='none'">Fechar</button>
+                <button class="btn-base btn-neutral"
+                    onclick="document.getElementById('modal-vaga-capturada-admin').style.display='none'">Fechar</button>
             </div>
             <textarea id="texto-vaga-capturada-admin" readonly
                 style="height: 420px; width: 100%; font-family: monospace; font-size: 12px; line-height: 1.5; background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;"></textarea>
@@ -644,8 +730,8 @@
             <div style="margin-bottom: 25px;">
                 <label style="font-weight: bold; margin-bottom: 8px; display: block;">Nome de Exibição:</label>
                 <div style="display: flex; gap: 10px;"><input type="text" id="novo-nome"
-                        placeholder="Seu nome (ex: João Silva)"><button class="btn-base btn-primary" data-bloqueia-admin="true"
-                        onclick="atualizarNomeConta()">Salvar Nome</button></div>
+                        placeholder="Seu nome (ex: João Silva)"><button class="btn-base btn-primary"
+                        data-bloqueia-admin="true" onclick="atualizarNomeConta()">Salvar Nome</button></div>
                 <small style="color: var(--text-light);">Este nome aparecerá no topo do sistema.</small>
             </div>
 
@@ -666,7 +752,8 @@
                     <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password">
                     <input type="password" id="nova-senha-conf" placeholder="Confirme a nova senha"
                         autocomplete="new-password">
-                    <button type="submit" class="btn-base btn-primary" data-bloqueia-admin="true">Atualizar Senha</button>
+                    <button type="submit" class="btn-base btn-primary" data-bloqueia-admin="true">Atualizar
+                        Senha</button>
                     <small style="color: var(--text-light);">Mínimo 8 caracteres, 1 número e 1 letra maiúscula.</small>
                 </form>
             </div>
@@ -677,7 +764,8 @@
                 <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Ao excluir sua conta, o
                     acesso será permanentemente bloqueado. Os dados dos currículos poderão ser retidos de forma anônima
                     para fins estatísticos.</p><button class="btn-base btn-danger"
-                    style="border: 1px solid var(--danger); padding: 12px 20px;" data-bloqueia-admin="true" onclick="solicitarExclusao()">🚨
+                    style="border: 1px solid var(--danger); padding: 12px 20px;" data-bloqueia-admin="true"
+                    onclick="solicitarExclusao()">🚨
                     Excluir Minha Conta</button>
             </div>
         </div>
@@ -691,19 +779,28 @@
                 <button class="btn-base btn-neutral" onclick="voltarTela()">← Voltar</button>
             </div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">✨ Revisão do Currículo</h2>
-            <p style="font-size: 15px; margin-bottom: 18px;">Use esta etapa para revisar o seu currículo-base antes de continuar editando.</p>
-            <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+            <p style="font-size: 15px; margin-bottom: 18px;">Use esta etapa para revisar o seu currículo-base antes de
+                continuar editando.</p>
+            <div
+                style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
                 <div style="font-size: 12px; color: var(--text-light); margin-bottom: 6px;">Currículo carregado</div>
-                <div id="revisao-curriculo-identificador" style="font-size: 18px; font-weight: 700; color: var(--text-main);">Currículo não identificado</div>
-                <div id="revisao-curriculo-origem" style="font-size: 13px; color: var(--text-light); margin-top: 8px;">Origem atual: currículo salvo</div>
+                <div id="revisao-curriculo-identificador"
+                    style="font-size: 18px; font-weight: 700; color: var(--text-main);">Currículo não identificado</div>
+                <div id="revisao-curriculo-origem" style="font-size: 13px; color: var(--text-light); margin-top: 8px;">
+                    Origem atual: currículo salvo</div>
             </div>
             <div style="display:flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn-base btn-primary" onclick="irPara('tela-editor')" style="padding: 14px 22px;">📝 Abrir no Editor</button>
-                <button class="btn-base btn-neutral" onclick="abrirCurriculosSalvos()" style="padding: 14px 22px;">📂 Escolher outro currículo</button>
+                <button class="btn-base btn-primary" onclick="irPara('tela-editor')" style="padding: 14px 22px;">📝
+                    Abrir no Editor</button>
+                <button class="btn-base btn-neutral" onclick="abrirCurriculosSalvos()" style="padding: 14px 22px;">📂
+                    Escolher outro currículo</button>
             </div>
-            <div style="margin-top: 22px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px;">
-                <div style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 10px;">Checklist de revisão</div>
-                <p id="revisao-curriculo-vazio" style="margin: 0; color: var(--text-light); line-height: 1.6;">Abra a revisão para ver os pontos básicos do currículo-base.</p>
+            <div
+                style="margin-top: 22px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px;">
+                <div style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 10px;">Checklist de
+                    revisão</div>
+                <p id="revisao-curriculo-vazio" style="margin: 0; color: var(--text-light); line-height: 1.6;">Abra a
+                    revisão para ver os pontos básicos do currículo-base.</p>
                 <ul id="revisao-curriculo-lista" style="margin: 0; padding-left: 20px; color: var(--text-main);"></ul>
             </div>
         </div>
@@ -718,7 +815,8 @@
             </div>
             <h2 style="color: var(--primary); margin-top: 10px; font-weight: 800;">🎯 Análise da Vaga</h2>
             <p style="font-size: 15px; margin-bottom: 8px;"><b>Fluxo separado do Novo Currículo.</b></p>
-            <p style="font-size: 15px; margin-bottom: 25px;">A IA vai cruzar os dados do seu Cadastro de Histórico Profissional com os
+            <p style="font-size: 15px; margin-bottom: 25px;">A IA vai cruzar os dados do seu Cadastro de Histórico
+                Profissional com os
                 requisitos da vaga para criar o match perfeito e gerar uma versão ajustada.</p>
 
             <label style="font-weight: bold; margin-bottom: 8px;">1. Selecione seu Histórico Profissional:</label>
@@ -743,11 +841,13 @@
                 style="height: 200px; margin-bottom: 12px;"></textarea>
             <label style="font-weight: bold; margin-bottom: 8px;">4. Ou envie a vaga por link:</label>
             <input id="link-vaga" type="url" placeholder="https://empresa.com/vaga" style="margin-bottom: 6px;">
-            <small id="ajuda-link-vaga" style="display:block; color: var(--text-light); margin-bottom: 25px;">Use o link da página da vaga se preferir. O sistema vai tentar ler o conteúdo automaticamente.</small>
+            <small id="ajuda-link-vaga" style="display:block; color: var(--text-light); margin-bottom: 25px;">Use o link
+                da página da vaga se preferir. O sistema vai tentar ler o conteúdo automaticamente.</small>
             <button id="btn-gerar-vaga" class="btn-base btn-ia" onclick="analisarVagaATS()"
                 style="width: 100%; padding: 18px; font-size: 16px;">📊 ANALISAR VAGA COM ATS</button>
             <button id="btn-aplicar-ajustes-vaga" class="btn-base btn-primary" onclick="aplicarAjustesVaga()"
-                style="width: 100%; padding: 16px; font-size: 15px; margin-top: 12px; display:none;">✨ APLICAR AJUSTES AO CURRÍCULO</button>
+                style="width: 100%; padding: 16px; font-size: 15px; margin-top: 12px; display:none;">✨ APLICAR AJUSTES
+                AO CURRÍCULO</button>
         </div>
     </div>
 
@@ -778,27 +878,38 @@
                 <button id="btn-ver-alteracoes" class="btn-base"
                     style="display:none; background: var(--primary-dim); color: var(--primary); border: 1px solid var(--primary);"
                     onclick="mostrarAlteracoes()">🔍 O que mudou?</button>
-                <button class="btn-base btn-neutral" onclick="acionarRecalculoATS(event)">📊 Atualizar análise ATS</button>
-                <button class="btn-base btn-neutral" onclick="abrirFluxoRevisaoCurriculo()">🔎 Revisar Currículo</button>
+                <button class="btn-base btn-neutral" onclick="acionarRecalculoATS(event)">📊 Atualizar análise
+                    ATS</button>
+                <button class="btn-base btn-neutral" onclick="abrirFluxoRevisaoCurriculo()">🔎 Revisar
+                    Currículo</button>
                 <button class="btn-base btn-neutral" onclick="salvarComo()" title="Salvar como uma nova versão">📑
                     Salvar Cópia</button>
                 <button class="btn-base btn-neutral" onclick="salvar()">💾 Salvar</button>
                 <button class="btn-base btn-neutral" onclick="gerarPDF()">📄 Gerar PDF</button>
             </div>
         </div>
-        <div style="width: 100%; max-width: 1400px; margin: 0 auto 10px auto; color: var(--text-light); font-size: 13px;">
+        <div
+            style="width: 100%; max-width: 1400px; margin: 0 auto 10px auto; color: var(--text-light); font-size: 13px;">
             <strong style="color: var(--primary);">📝 Novo Currículo</strong>:
             crie, revise, salve versões e exporte seu currículo.
         </div>
-        <div id="barra-preenchimento-curriculo" style="width: 100%; max-width: 1400px; margin: 0 auto 12px auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow);">
-            <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
+        <div id="barra-preenchimento-curriculo"
+            style="width: 100%; max-width: 1400px; margin: 0 auto 12px auto; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow);">
+            <div
+                style="display:flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
                 <strong style="color: var(--primary); font-size: 14px;">Progresso do preenchimento</strong>
-                <span id="texto-percentual-preenchimento" style="font-size: 13px; font-weight: 800; color: var(--text-main);">0%</span>
+                <span id="texto-percentual-preenchimento"
+                    style="font-size: 13px; font-weight: 800; color: var(--text-main);">0%</span>
             </div>
-            <div style="height: 10px; background: var(--bg-body); border-radius: 999px; overflow: hidden; border: 1px solid var(--border-color);">
-                <div id="progresso-preenchimento-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.2s ease;"></div>
+            <div
+                style="height: 10px; background: var(--bg-body); border-radius: 999px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div id="progresso-preenchimento-fill"
+                    style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.2s ease;">
+                </div>
             </div>
-            <div id="mensagem-preenchimento-curriculo" style="margin-top: 8px; color: var(--text-light); font-size: 12px;">Comece pelos dados essenciais do seu Histórico Profissional.</div>
+            <div id="mensagem-preenchimento-curriculo"
+                style="margin-top: 8px; color: var(--text-light); font-size: 12px;">Comece pelos dados essenciais do seu
+                Histórico Profissional.</div>
         </div>
         <div id="container-editor">
             <div id="editor">
@@ -904,8 +1015,9 @@
                             Trabalho Atual</label><textarea id="expDes"
                             placeholder="Atividades e conquistas principais..."
                             style="height: 100px;"></textarea><button class="btn-base btn-neutral"
-                            onclick="melhorarDescricaoExperiencia()">✨ Melhorar Descrição</button><button id="btn-add-exp"
-                            class="btn-base btn-primary btn-add-block" onclick="adicionarExperiencia()">+ Adicionar
+                            onclick="melhorarDescricaoExperiencia()">✨ Melhorar Descrição</button><button
+                            id="btn-add-exp" class="btn-base btn-primary btn-add-block"
+                            onclick="adicionarExperiencia()">+ Adicionar
                             Experiência</button>
                     </div>
                 </details>
