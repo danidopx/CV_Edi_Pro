@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.app_versions (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+DROP TRIGGER IF EXISTS update_app_versions_updated_at ON public.app_versions;
+
 CREATE TRIGGER update_app_versions_updated_at
 BEFORE UPDATE ON public.app_versions
 FOR EACH ROW
