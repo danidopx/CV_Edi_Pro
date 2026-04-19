@@ -738,6 +738,27 @@ textarea:focus {
         width: 100% !important;
     }
 
+    .hero-section .btn-base {
+        width: 100% !important;
+        padding: 16px 20px !important;
+        font-size: 15px !important;
+        border-radius: 12px !important;
+    }
+
+    .hero-section {
+        margin: 30px auto 50px auto !important;
+        padding: 0 10px !important;
+    }
+
+    .landing-header {
+        padding: 15px 0 !important;
+    }
+
+    .landing-header .btn-base {
+        padding: 10px 16px !important;
+        font-size: 12px !important;
+    }
+
     .theme-toggle {
         right: 15px;
         width: 45px;

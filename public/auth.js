@@ -18,13 +18,7 @@ import {
 import { getValSafe, setValSafe, showToast, irPara, mostrarAviso, mostrarConfirmacao } from './ui.js';
 
 function getAuthRedirectUrl() {
-    const host = String(window.location.hostname || '').toLowerCase();
-
-    if (host === 'cvedipro.vercel.app' || host === 'curriculo-edi.vercel.app') {
-        return 'https://cvedipro.vercel.app';
-    }
-
-    return 'https://cvedipro-preview.vercel.app';
+    return window.location.origin;
 }
 
 export function usuarioEhAdmin() {
