@@ -231,10 +231,10 @@ jobs:
           PREVIEW_ALIAS="${VERCEL_PREVIEW_ALIAS:-cvedipro-preview.vercel.app}"
 
           if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            DEPLOYMENT_URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
+            DEPLOYMENT_URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" | tail -n 1 | tr -d '\r' | sed 's#https://##')
             PUBLIC_URL="https://cvedipro.vercel.app"
           else
-            DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
+            DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" | tail -n 1 | tr -d '\r' | sed 's#https://##')
             PUBLIC_URL="https://${DEPLOYMENT_URL}"
 
             if [[ "${GITHUB_REF_NAME}" == "$PREVIEW_BRANCH" ]]; then

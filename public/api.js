@@ -70,9 +70,7 @@ function formatarDataVersao(valor) {
 function montarRotuloVersao(registro) {
     const ambiente = registro?.environment_name === 'production' ? 'Produção' : 'Preview';
     const versao = registro?.current_version || '0.0.0';
-    const commitCurto = String(registro?.commit_ref || '').trim().slice(0, 7);
-    const buildSuffix = registro?.source === 'runtime_build' && commitCurto ? `+${commitCurto}` : '';
-    return `CV Edi Pro v${versao}${buildSuffix}${ambiente === 'Preview' ? ' - Preview' : ''}`;
+    return `CV Edi Pro v${versao}${ambiente === 'Preview' ? ' - Preview' : ''}`;
 }
 
 function extrairVersaoDoRotulo(texto) {
