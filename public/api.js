@@ -92,6 +92,10 @@ function compararVersoesSemver(a, b) {
     return 0;
 }
 
+function normalizarUrlComparacao(valor) {
+    return String(valor || '').trim().replace(/\/+$/, '').toLowerCase();
+}
+
 export async function carregarVersaoAtualApp(environmentName = detectarAmbienteAtual()) {
     const { data, error } = await sb
         .from('app_versions')
@@ -120,15 +124,41 @@ export async function carregarVersaoBuildAtual() {
     }
 }
 
-function registroVersaoCombinaComDeployAtual(registro) {
+function registroVersaoCombinaComDeployAtual(registro, buildInfo = null) {
     if (!registro) return false;
-    if (registro.environment_name === 'production') return true;
 
-    const deploymentUrl = String(registro.deployment_url || '').trim().replace(/\/+$/, '');
-    const origemAtual = String(window.location.origin || '').trim().replace(/\/+$/, '');
+    const deploymentUrl = normalizarUrlComparacao(registro.deployment_url);
+    const origemAtual = normalizarUrlComparacao(window.location.origin);
+
+    if (buildInfo) {
+        const ambienteBuild = String(buildInfo.environment_name || '').trim();
+        const ambienteRegistro = String(registro.environment_name || '').trim();
+        const versaoBuild = String(buildInfo.current_version || '').trim();
+        const versaoRegistro = String(registro.current_version || '').trim();
+        const commitBuild = String(buildInfo.commit_ref || '').trim().toLowerCase();
+        const commitRegistro = String(registro.commit_ref || '').trim().toLowerCase();
+
+        if (ambienteBuild && ambienteRegistro && ambienteBuild !== ambienteRegistro) {
+            return false;
+        }
+
+        if (versaoBuild && versaoRegistro && versaoBuild !== versaoRegistro) {
+            return false;
+        }
+
+        if (commitBuild && commitRegistro) {
+            return commitBuild === commitRegistro;
+        }
+
+        if (deploymentUrl && origemAtual) {
+            return deploymentUrl === origemAtual;
+        }
+
+        return Boolean(versaoBuild && versaoRegistro && versaoBuild === versaoRegistro);
+    }
 
     if (!deploymentUrl) return false;
-    return deploymentUrl.toLowerCase() === origemAtual.toLowerCase();
+    return deploymentUrl === origemAtual;
 }
 
 export async function carregarHistoricoVersoesApp(environmentName) {
@@ -219,7 +249,8 @@ export async function sincronizarVersaoAppNaTela() {
     const registro = await carregarVersaoAtualApp();
     const versaoBanco = registro?.current_version || '';
     const bancoEstaAtrasado = fallbackVersao && versaoBanco && compararVersoesSemver(fallbackVersao, versaoBanco) > 0;
-    const usarVersaoBuild = versaoBuild && !registroVersaoCombinaComDeployAtual(registro);
+    const deployAtualRegistradoNoBanco = registroVersaoCombinaComDeployAtual(registro, versaoBuild);
+    const usarVersaoBuild = versaoBuild && !deployAtualRegistradoNoBanco;
 
     if (usarVersaoBuild) {
         const labelBuild = montarRotuloVersao(versaoBuild);
@@ -243,7 +274,7 @@ export async function sincronizarVersaoAppNaTela() {
         return versaoBuild;
     }
 
-    if (!registroVersaoCombinaComDeployAtual(registro) || bancoEstaAtrasado) {
+    if (!deployAtualRegistradoNoBanco || bancoEstaAtrasado) {
         metas.forEach(el => {
             el.textContent = '';
             el.style.display = 'none';
