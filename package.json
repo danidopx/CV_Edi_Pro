@@ -1,9 +1,11 @@
 {
-  "name": "cv-edi-pro",
-  "version": "0.0.56",
+  "name": "contacomigo",
+  "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "vercel dev",
+    "start": "node server.js",
+    "dev": "node server.js",
     "ci:validate": "node scripts/ci-validate.mjs"
   }
 }
