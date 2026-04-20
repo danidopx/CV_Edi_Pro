@@ -46,8 +46,8 @@ async function validateVercelConfig() {
   const content = await readFile('vercel.json', 'utf8');
   const config = JSON.parse(content);
 
-  if (config?.git?.deploymentEnabled !== false) {
-    throw new Error('vercel.json: git.deploymentEnabled deve permanecer false para evitar deploy fora do fluxo oficial.');
+  if (config?.git?.deploymentEnabled !== true) {
+    throw new Error('vercel.json: git.deploymentEnabled deve permanecer true para permitir preview automático por branch.');
   }
 
   if (config?.github?.autoAlias !== false) {
