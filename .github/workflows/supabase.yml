@@ -1,16 +1,16 @@
-name: Deploy & Versionamento CV Edi Pro
+name: Validate & Sync ContaComigo
 
 on:
   push:
     branches:
       - main
       - master
-      - codex/supabase-ajustes
       - codex/**
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   validar_projeto:
@@ -29,287 +29,41 @@ jobs:
       - name: Validar estrutura e sintaxe
         run: npm run ci:validate
 
-  versionar_e_deploy:
-    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
+  sincronizar_supabase:
+    if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
     needs: validar_projeto
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Instalar cliente PostgreSQL
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Detectar contexto da branch
-        id: context
-        shell: bash
-        run: |
-          BRANCH_NAME="${GITHUB_REF_NAME}"
-          if [[ "$BRANCH_NAME" == "main" || "$BRANCH_NAME" == "master" ]]; then
-            echo "is_release_branch=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_release_branch=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Validar segredos do pipeline
-        id: pipeline_secrets
+      - name: Verificar segredos Supabase
+        id: supabase_secrets
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          if [[ -z "$VERCEL_TOKEN" ]]; then
-            echo "Segredo ausente: VERCEL_TOKEN"
-            exit 1
-          fi
-
           if [[ -n "$SUPABASE_ACCESS_TOKEN" && -n "$SUPABASE_DB_PASSWORD" && -n "$SUPABASE_PROJECT_ID" ]]; then
-            echo "has_supabase=true" >> "$GITHUB_OUTPUT"
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_supabase=false" >> "$GITHUB_OUTPUT"
-            echo "Supabase incompleto: pipeline seguirá com fallback em Git e sem registro no banco."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Segredos Supabase não configurados; pulando db push."
           fi
-
-      - name: Ler versões atuais no banco
-        id: db_versions
-        shell: bash
-        env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-        run: |
-          PREVIEW_STATUS=1
-          PRODUCTION_STATUS=1
-          PREVIEW_CURRENT=""
-          PRODUCTION_CURRENT=""
-
-          if [[ "${{ steps.pipeline_secrets.outputs.has_supabase }}" == "true" ]]; then
-            export PGPASSWORD="$SUPABASE_DB_PASSWORD"
-
-            set +e
-            PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
-            PREVIEW_STATUS=$?
-            PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
-            PRODUCTION_STATUS=$?
-            set -e
-          fi
-
-          if [[ $PREVIEW_STATUS -ne 0 || -z "$PREVIEW_CURRENT" ]]; then
-            PREVIEW_CURRENT=$(git log --format=%s | sed -n 's/^chore: preview v\([0-9.]*\) \[skip .*\]$/\1/p' | head -n 1)
-          fi
-
-          if [[ $PRODUCTION_STATUS -ne 0 || -z "$PRODUCTION_CURRENT" ]]; then
-            PRODUCTION_CURRENT=$(git tag --sort=-version:refname | head -n 1)
-          fi
-
-          echo "preview_current=${PREVIEW_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
-          echo "production_current=${PRODUCTION_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
-
-      - name: Definir próxima versão
-        id: next_version
-        shell: bash
-        run: |
-          increment_patch() {
-            local version="$1"
-            IFS='.' read -r major minor patch <<< "${version:-0.0.0}"
-            major=${major:-0}
-            minor=${minor:-0}
-            patch=${patch:-0}
-            patch=$((patch + 1))
-            echo "${major}.${minor}.${patch}"
-          }
-
-          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            CURRENT_VERSION="${{ steps.db_versions.outputs.production_current }}"
-            NEXT_VERSION=$(increment_patch "$CURRENT_VERSION")
-            echo "environment_name=production" >> "$GITHUB_OUTPUT"
-            echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
-            echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-            echo "release_notes=Registro automático de versão de produção pelo GitHub Actions." >> "$GITHUB_OUTPUT"
-          else
-            CURRENT_VERSION="${{ steps.db_versions.outputs.preview_current }}"
-            NEXT_VERSION=$(increment_patch "$CURRENT_VERSION")
-            echo "environment_name=preview" >> "$GITHUB_OUTPUT"
-            echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
-            echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-            echo "release_notes=Registro automático de versão de preview pelo GitHub Actions." >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Atualizar arquivos para release
-        if: steps.context.outputs.is_release_branch == 'true'
-        shell: bash
-        run: |
-          NEW_VER=${{ steps.next_version.outputs.target_version }}
-          CACHE_ID=$(date +%s | tail -c 6)
-
-          sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VER\"/" package.json
-          sed -i "s|CV Edi Pro v[0-9.]*\( - Preview\)\{0,1\}|CV Edi Pro v$NEW_VER|g" public/index.html
-          sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
-          sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
-          sed -i "s|const CACHE_NAME = '[^']*';|const CACHE_NAME = 'cv-edi-pro-v$CACHE_ID';|" public/sw.js
-
-      - name: Atualizar arquivos para preview
-        if: steps.context.outputs.is_release_branch == 'false'
-        shell: bash
-        run: |
-          PREVIEW_VER=${{ steps.next_version.outputs.target_version }}
-          CACHE_ID=$(date +%s | tail -c 6)
-
-          sed -i "s/\"version\": \".*\"/\"version\": \"$PREVIEW_VER\"/" package.json
-          sed -i "s|CV Edi Pro v[0-9.]*\( - Preview\)\{0,1\}|CV Edi Pro v$PREVIEW_VER - Preview|g" public/index.html
-          sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
-          sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
-          sed -i "s|const CACHE_NAME = '[^']*';|const CACHE_NAME = 'cv-edi-pro-v$CACHE_ID-preview';|" public/sw.js
-
-      - name: Commitar e enviar alterações automáticas
-        id: git_version_commit
-        shell: bash
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add package.json public/index.html public/sw.js
-
-          if git diff --cached --quiet; then
-            echo "No changes"
-            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            TARGET_VER=${{ steps.next_version.outputs.target_version }}
-            git commit -m "chore: v$TARGET_VER [skip ci]"
-          else
-            TARGET_VER=${{ steps.next_version.outputs.target_version }}
-            git commit -m "chore: preview v$TARGET_VER [skip ci]"
-          fi
-
-          git push origin HEAD:${GITHUB_REF_NAME}
-          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Instalar Supabase CLI
-        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
+        if: steps.supabase_secrets.outputs.enabled == 'true'
         uses: supabase/setup-cli@v1
 
-      - name: Deploy SQL para o banco
-        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
+      - name: Aplicar migrations no Supabase
+        if: steps.supabase_secrets.outputs.enabled == 'true'
+        shell: bash
         run: |
-          supabase link --project-ref $SUPABASE_PROJECT_ID
+          supabase link --project-ref "$SUPABASE_PROJECT_ID"
           supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-
-      - name: Instalar Vercel CLI
-        shell: bash
-        run: npm install --global vercel@latest
-
-      - name: Publicar deploy na Vercel
-        id: vercel_deploy
-        shell: bash
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: team_kSnfsgEE6vY2cjGK7ZzNPemP
-          VERCEL_PROJECT_ID: prj_FEcy11K266dsq53dzVmZcepeR4Ch
-          VERCEL_SCOPE: dopjr82-6869s-projects
-          STABLE_PREVIEW_BRANCH: ${{ vars.STABLE_PREVIEW_BRANCH }}
-          VERCEL_PREVIEW_ALIAS: ${{ vars.VERCEL_PREVIEW_ALIAS }}
-        run: |
-          COMMIT_SHA="${{ steps.git_version_commit.outputs.commit_sha }}"
-          DEPLOYMENT_URL=""
-          PUBLIC_URL=""
-          PREVIEW_BRANCH="${STABLE_PREVIEW_BRANCH:-codex/supabase-ajustes}"
-          PREVIEW_ALIAS="${VERCEL_PREVIEW_ALIAS:-cvedipro-preview.vercel.app}"
-
-          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            DEPLOYMENT_URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
-            PUBLIC_URL="https://cvedipro.vercel.app"
-          else
-            DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
-            PUBLIC_URL="https://${DEPLOYMENT_URL}"
-
-            if [[ "${GITHUB_REF_NAME}" == "$PREVIEW_BRANCH" ]]; then
-              vercel alias set "$DEPLOYMENT_URL" "$PREVIEW_ALIAS" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-              PUBLIC_URL="https://$PREVIEW_ALIAS"
-            fi
-          fi
-
-          echo "deployment_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
-          echo "deployment_inspect_url=https://${DEPLOYMENT_URL}" >> "$GITHUB_OUTPUT"
-
-      - name: Criar tag da produção
-        if: steps.context.outputs.is_release_branch == 'true'
-        shell: bash
-        run: |
-          TARGET_VER=${{ steps.next_version.outputs.target_version }}
-          if git rev-parse "$TARGET_VER" >/dev/null 2>&1; then
-            echo "Tag $TARGET_VER já existe localmente."
-          else
-            git tag "$TARGET_VER"
-            git push origin "$TARGET_VER"
-          fi
-
-      - name: Registrar versão no banco
-        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
-        shell: bash
-        run: |
-          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
-          psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" <<SQL
-          WITH previous_current AS (
-              SELECT id, current_version
-              FROM public.app_versions
-              WHERE environment_name = '${{ steps.next_version.outputs.environment_name }}'
-                AND is_current = true
-              ORDER BY release_date DESC
-              LIMIT 1
-          ),
-          clear_current AS (
-              UPDATE public.app_versions
-              SET is_current = false
-              WHERE id IN (SELECT id FROM previous_current)
-          )
-          INSERT INTO public.app_versions (
-              app_name,
-              environment_name,
-              current_version,
-              previous_version,
-              release_date,
-              responsible_name,
-              responsible_email,
-              deployment_url,
-              commit_ref,
-              release_notes,
-              source,
-              is_current,
-              is_public,
-              created_by
-          )
-          VALUES (
-              'CV Edi Pro',
-              '${{ steps.next_version.outputs.environment_name }}',
-              '${{ steps.next_version.outputs.target_version }}',
-              COALESCE((SELECT current_version FROM previous_current), NULL),
-              NOW(),
-              'GitHub Action',
-              'action@github.com',
-              '${{ steps.vercel_deploy.outputs.deployment_url }}',
-              '${{ steps.git_version_commit.outputs.commit_sha }}',
-              '${{ steps.next_version.outputs.release_notes }}',
-              'github_actions',
-              true,
-              true,
-              NULL
-          );
-          SQL
-        env:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}

@@ -1,311 +1,244 @@
-import { sb, appState } from './config.js';
-import { logDebug, initDebugPanel, inicializarModeloIA, sincronizarVersaoAppNaTela } from './api.js';
-import {
-    applyTheme,
-    irPara,
-    ajustarZoomMobile,
-    toggleTheme,
-    fecharTour,
-    proximoTour,
-    iniciarTourMenuPrincipal,
-    fecharOnboarding,
-    mascaraWhats,
-    calcularIdadeOnboarding,
-    mascaraCep,
-    mascaraCpf,
-    syncNome,
-    calcularIdadeEditor,
-    syncContato,
-    voltarTela,
-    mostrarAlteracoes,
-    toggleFullscreenCV,
-    mostrarAviso,
-    fecharAviso,
-    fecharConfirmacao,
-    responderConfirmacao,
-    applyCustomColors,
-    toggleSettingsMenu,
-    salvarCoresPersonalizadas,
-    restaurarCoresPadrao
-} from './ui.js';
-import {
-    verificarAdmin,
-    atualizarInfosUsuarioTopo,
-    atualizarNomeConta,
-    abrirConfigAdmin,
-    adicionarPromptAdmin,
-    salvarConfigAdmin,
-    registrarVersaoAdmin,
-    abrirGestaoUsuarios,
-    deletarUsuarioAdmin,
-    reabilitarUsuarioAdmin,
-    excluirUsuarioDefinitivo,
-    alternarModoLogin,
-    processarFormularioLogin,
-    recuperarSenha,
-    initCadastroSenhaEmTempoReal,
-    atualizarEmail,
-    atualizarSenhaConta,
-    solicitarExclusao,
-    fazerLoginGoogle,
-    registrarLoginNosBanco,
-    abrirVisualizadorLoginsAdmin,
-    fazerLogout
-} from './auth.js';
-import {
-    marcarAlteracao,
-    recuperarEstadoTela,
-    receberVagaExterna,
-    receberVagaMobile,
-    abrirFluxoEditorCurriculo,
-    abrirCurriculosSalvos,
-    salvarOnboardingEContinuar,
-    definirPadrao,
-    duplicar,
-    salvarComo,
-    salvar,
-    carregar,
-    deletar,
-    abrirFluxoAnaliseVaga,
-    configurarEntradaLinkVaga,
-    verificarCurriculoBase,
-    analisarVagaATS,
-    aplicarAjustesVaga,
-    extrairDadosIA,
-    acionarRecalculoATS,
-    ajustarCurriculoVaga,
-    editarResumo,
-    adicionarResumo,
-    editarExperiencia,
-    adicionarExperiencia,
-    editarEscolaridade,
-    adicionarEscolaridade,
-    editarIdioma,
-    adicionarIdioma,
-    editarHabilidade,
-    adicionarHabilidade,
-    sincronizarCurriculoPadraoPersistido,
-    initEditorFieldGuards,
-    atualizarBotaoVagaCapturadaAdmin,
-    alternarModalVagaCapturadaAdmin
-} from './cv-builder.js';
-import { abrirFluxoRevisaoCurriculo } from './editor.js';
-import { gerarPDF } from './pdf.js';
+import { appState, initPublicConfig } from './config.js';
+import { initAuth, signInWithGoogle, signOut } from './auth.js';
+import { loadStories, loadMySessions, createSession, joinSession, createCharacter, submitDecision, fetchSessionStatus, consolidateRound, generateNextChapter, fetchCurrentState, adminCrud, loadPromptConfigs, sincronizarVersaoAppNaTela } from './api.js';
+import { bindSimpleNavigation, formToJson, setLoading, showScreen, toast } from './ui.js';
+import { renderAdminList, renderChapter, renderLobby, renderSessions, renderStories, renderSummary } from './cv-builder.js';
 
-function bindWindowGlobals() {
-    Object.assign(window, {
-        toggleTheme,
-        fecharTour,
-        proximoTour,
-        iniciarTourMenuPrincipal,
-        abrirConfigAdmin,
-        adicionarPromptAdmin,
-        abrirGestaoUsuarios,
-        salvarConfigAdmin,
-        registrarVersaoAdmin,
-        fecharOnboarding,
-        mascaraWhats,
-        calcularIdadeOnboarding,
-        mascaraCep,
-        mascaraCpf,
-        salvarOnboardingEContinuar,
-        irPara,
-        voltarTela,
-        processarFormularioLogin,
-        recuperarSenha,
-        alternarModoLogin,
-        fazerLoginGoogle,
-        fazerLogout,
-        abrirFluxoEditorCurriculo,
-        abrirFluxoRevisaoCurriculo,
-        abrirCurriculosSalvos,
-        abrirFluxoAnaliseVaga,
-        configurarEntradaLinkVaga,
-        atualizarNomeConta,
-        atualizarEmail,
-        atualizarSenhaConta,
-        solicitarExclusao,
-        verificarCurriculoBase,
-        analisarVagaATS,
-        aplicarAjustesVaga,
-        ajustarCurriculoVaga,
-        definirPadrao,
-        carregar,
-        duplicar,
-        deletar,
-        mostrarAlteracoes,
-        salvarComo,
-        salvar,
-        gerarPDF,
-        extrairDadosIA,
-        syncNome,
-        calcularIdadeEditor,
-        syncContato,
-        adicionarResumo,
-        adicionarExperiencia,
-        adicionarEscolaridade,
-        adicionarIdioma,
-        adicionarHabilidade,
-        acionarRecalculoATS,
-        toggleFullscreenCV,
-        editarResumo,
-        editarExperiencia,
-        editarEscolaridade,
-        editarIdioma,
-        editarHabilidade,
-        marcarAlteracao,
-        deletarUsuarioAdmin,
-        reabilitarUsuarioAdmin,
-        excluirUsuarioDefinitivo,
-        atualizarBotaoVagaCapturadaAdmin,
-        alternarModalVagaCapturadaAdmin,
-        fecharAviso,
-        fecharConfirmacao,
-        responderConfirmacao,
-        toggleSettingsMenu,
-        salvarCoresPersonalizadas,
-        restaurarCoresPadrao
-    });
+let lastConsolidation = null;
+
+function updateHeader() {
+  const chip = document.getElementById('user-chip');
+  const logout = document.getElementById('btn-logout');
+  const admin = document.getElementById('btn-admin');
+  const openAdmin = document.getElementById('btn-open-admin');
+
+  if (appState.user) {
+    chip.textContent = appState.user.user_metadata?.full_name || appState.user.email;
+    chip.classList.remove('hidden');
+    logout.classList.remove('hidden');
+  } else {
+    chip.classList.add('hidden');
+    logout.classList.add('hidden');
+  }
+
+  const adminVisible = Boolean(appState.user && appState.isAdmin);
+  admin.classList.toggle('hidden', !adminVisible);
+  openAdmin.classList.toggle('hidden', !adminVisible);
 }
 
-bindWindowGlobals();
-
-window.addEventListener('beforeunload', function (e) {
-    const telaEditor = document.getElementById('tela-editor');
-    if (telaEditor && telaEditor.classList.contains('ativa') && appState.temAlteracoesNaoSalvas) {
-        e.preventDefault();
-        e.returnValue = 'Deseja seguir com a atualização da página? Todos seus dados não salvos serão perdidos!';
-        return e.returnValue;
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    initDebugPanel();
-    sincronizarVersaoAppNaTela().catch(() => { });
-    initCadastroSenhaEmTempoReal();
-
-    const editorPanel = document.getElementById('editor');
-    if (editorPanel) {
-        editorPanel.addEventListener('input', marcarAlteracao);
-    }
-
-    initEditorFieldGuards();
-    configurarEntradaLinkVaga();
-});
-
-window.addEventListener('load', async () => {
-    logDebug('=== PÁGINA CARREGADA ===');
-    applyCustomColors();
-    applyTheme(localStorage.getItem('themePreference') || 'light');
-    inicializarModeloIA();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const vaga_id = urlParams.get('vaga_id');
-    const tituloMobile = urlParams.get('titulo_vaga');
-    const textoMobile = urlParams.get('texto_vaga');
-    const linkMobile = urlParams.get('link_vaga');
-
-    if (vaga_id) {
-        logDebug(`ID da Extensão recebido na URL: ${vaga_id}`);
-        localStorage.setItem('vaga_pendente_importacao', vaga_id);
-        window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (tituloMobile || textoMobile || linkMobile) {
-        logDebug('Vaga Mobile recebida via Share.');
-        const conteudoMontado = `[ORIGEM DA VAGA: Celular]\n\n${tituloMobile || ''}\n${textoMobile || ''}\n${linkMobile || ''}`.trim();
-        localStorage.setItem('vaga_mobile_pendente', conteudoMontado);
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    const ultimaAtividade = localStorage.getItem('ultima_atividade_app');
-    if (ultimaAtividade && (Date.now() - parseInt(ultimaAtividade, 10) > 7200000)) {
-        logDebug('Sessão expirada por inatividade.');
-        await sb.auth.signOut();
-        localStorage.removeItem('ultima_atividade_app');
-        irPara('tela-landing');
-        return;
-    }
-
-    const { data: { session } } = await sb.auth.getSession();
-
-    if (session) {
-        logDebug('Usuário LOGADO detectado.');
-        document.body.classList.add('logged-in');
-        appState.usuarioAtual = session.user;
-        localStorage.setItem('ultima_atividade_app', Date.now());
-        await sincronizarCurriculoPadraoPersistido();
-        atualizarInfosUsuarioTopo();
-        verificarAdmin();
-        atualizarBotaoVagaCapturadaAdmin();
-
-        const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-        const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
-
-        if (idVagaPendente) {
-            logDebug(`Chamando receberVagaExterna() com ID: ${idVagaPendente}`);
-            receberVagaExterna(idVagaPendente);
-        } else if (textoMobilePendente) {
-            logDebug('Processando vaga mobile pendente.');
-            receberVagaMobile(textoMobilePendente);
-        } else {
-            logDebug('Sem vaga pendente. Recuperando estado da tela.');
-            recuperarEstadoTela();
-        }
-    } else {
-        logDebug('Usuário DESLOGADO.');
-        document.body.classList.remove('logged-in');
-        const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-        const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
-        if (idVagaPendente || textoMobilePendente) {
-            logDebug('Exibindo alerta de login obrigatório para o usuário.');
-            mostrarAviso('Sua vaga já foi capturada e está aguardando processamento.\n\nFaça login ou crie sua conta agora para que a Inteligência Artificial preencha o seu currículo.', {
-                title: 'Vaga aguardando você'
-            });
-        }
-        irPara('tela-landing');
-    }
-
-    sb.auth.onAuthStateChange(async (event, session) => {
-        logDebug(`Auth State Alterado: ${event}`);
-        if (event === 'SIGNED_IN' && session) {
-            // Registrar o login no banco de dados
-            await registrarLoginNosBanco(session.user.id, session.user.email);
-
-            document.body.classList.add('logged-in');
-            appState.usuarioAtual = session.user;
-            localStorage.setItem('ultima_atividade_app', Date.now());
-            await sincronizarCurriculoPadraoPersistido();
-            atualizarInfosUsuarioTopo();
-            verificarAdmin();
-
-            const idVagaPendente = localStorage.getItem('vaga_pendente_importacao');
-            const textoMobilePendente = localStorage.getItem('vaga_mobile_pendente');
-
-            if (idVagaPendente) {
-                logDebug('Pós-login: Vaga pendente encontrada. Chamando receberVagaExterna()');
-                receberVagaExterna(idVagaPendente);
-            } else if (textoMobilePendente) {
-                receberVagaMobile(textoMobilePendente);
-            } else {
-                const tl = document.getElementById('tela-login');
-                const tld = document.getElementById('tela-landing');
-                if ((tl && tl.classList.contains('ativa')) || (tld && tld.classList.contains('ativa'))) {
-                    recuperarEstadoTela();
-                }
-            }
-        } else if (event === 'SIGNED_OUT') {
-            document.body.classList.remove('logged-in');
-            appState.usuarioAtual = null;
-            verificarAdmin();
-            irPara('tela-landing');
-        }
+async function refreshDashboard() {
+  setLoading(true, 'Atualizando dashboard...');
+  try {
+    const [stories, sessions] = await Promise.all([loadStories(), loadMySessions()]);
+    renderStories(document.getElementById('stories-list'), stories, async storyId => {
+      const created = await createSession(storyId);
+      toast('Sessão criada.');
+      await openSession(created.session.id);
     });
+    renderSessions(document.getElementById('sessions-list'), sessions, openSession, async sessionId => {
+      await joinSession(sessionId);
+      toast('Você entrou na sessão.');
+      await openSession(sessionId);
+    });
+  } finally {
+    setLoading(false);
+  }
+}
 
-    const cv = document.getElementById('curriculo');
-    if (cv) {
-        const observer = new MutationObserver(ajustarZoomMobile);
-        observer.observe(cv, { childList: true, subtree: true, characterData: true });
+async function openSession(sessionId) {
+  setLoading(true, 'Carregando sessão...');
+  try {
+    const state = await fetchCurrentState(sessionId);
+    renderLobby(state);
+
+    if (state.session?.status === 'waiting') {
+      const status = await fetchSessionStatus(sessionId);
+      document.getElementById('wait-status-text').textContent = `Decisões recebidas: ${status.decidedCount}/${status.requiredCount}.`;
+      showScreen('screen-wait');
+      return;
     }
-    setTimeout(ajustarZoomMobile, 100);
-});
 
-window.addEventListener('resize', ajustarZoomMobile);
+    if (state.session?.status === 'summary') {
+      renderSummary(state, lastConsolidation);
+      showScreen('screen-summary');
+      return;
+    }
+
+    if (state.session?.status === 'active' || state.session?.status === 'decision_pending') {
+      renderChapter(state);
+      showScreen('screen-chapter');
+      return;
+    }
+
+    showScreen('screen-lobby');
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleAuthChange(user) {
+  updateHeader();
+  if (!user) {
+    showScreen('screen-landing');
+    return;
+  }
+  await refreshDashboard();
+  showScreen('screen-dashboard');
+}
+
+async function loadAdmin() {
+  if (!appState.isAdmin) return;
+  setLoading(true, 'Carregando admin...');
+  try {
+    const [storiesPayload, chaptersPayload, decisionsPayload, rulesPayload, sessionsPayload, promptsPayload] = await Promise.all([
+      adminCrud('stories', 'GET', { scope: 'stories' }),
+      adminCrud('story_chapters', 'GET', { scope: 'chapters' }),
+      adminCrud('story_decision_points', 'GET', { scope: 'decisions' }),
+      adminCrud('story_rules', 'GET', { scope: 'rules' }),
+      adminCrud('game_sessions', 'GET', { scope: 'sessions' }),
+      loadPromptConfigs()
+    ]);
+
+    renderAdminList(document.getElementById('admin-stories-list'), storiesPayload.items || []);
+    renderAdminList(document.getElementById('admin-chapters-list'), chaptersPayload.items || [], 'title', 'chapter_goal');
+    renderAdminList(document.getElementById('admin-decisions-list'), decisionsPayload.items || [], 'title', 'visibility_mode');
+    renderAdminList(document.getElementById('admin-rules-list'), rulesPayload.items || [], 'rule_name', 'rule_content');
+    renderAdminList(document.getElementById('admin-sessions-list'), sessionsPayload.items || [], 'title', 'status');
+    renderAdminList(document.getElementById('admin-prompts-list'), promptsPayload, 'label', 'prompt_name');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function bindAdminTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(node => node.classList.remove('active'));
+      document.querySelectorAll('.admin-panel').forEach(node => node.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`admin-tab-${tab.dataset.adminTab}`)?.classList.add('active');
+    });
+  });
+}
+
+function bindForms() {
+  document.getElementById('character-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    await createCharacter(appState.currentSession.id, formToJson(event.currentTarget));
+    toast('Personagem salvo.');
+    await openSession(appState.currentSession.id);
+  });
+
+  document.getElementById('decision-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const optionId = event.currentTarget.querySelector('input[name="decision_option_id"]:checked')?.value;
+    if (!optionId) {
+      toast('Escolha uma opção.');
+      return;
+    }
+    await submitDecision(appState.currentSession.id, appState.currentState.decisionPoint.id, optionId, document.getElementById('decision-note').value);
+    const status = await fetchSessionStatus(appState.currentSession.id);
+    if (status.allDecided) {
+      lastConsolidation = await consolidateRound(appState.currentSession.id);
+      await openSession(appState.currentSession.id);
+    } else {
+      document.getElementById('wait-status-text').textContent = `Decisões recebidas: ${status.decidedCount}/${status.requiredCount}.`;
+      showScreen('screen-wait');
+    }
+  });
+
+  document.getElementById('admin-story-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    await adminCrud('stories', 'POST', { data: formToJson(event.currentTarget) });
+    toast('História salva.');
+    await loadAdmin();
+    event.currentTarget.reset();
+  });
+
+  document.getElementById('admin-chapter-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    await adminCrud('story_chapters', 'POST', { data: formToJson(event.currentTarget) });
+    toast('Capítulo salvo.');
+    await loadAdmin();
+    event.currentTarget.reset();
+  });
+
+  document.getElementById('admin-decision-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    await adminCrud('story_decision_points', 'POST', { data: formToJson(event.currentTarget) });
+    toast('Ponto de decisão salvo.');
+    await loadAdmin();
+    event.currentTarget.reset();
+  });
+
+  document.getElementById('admin-prompt-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    await adminCrud('story_prompt_configs', 'POST', { data: formToJson(event.currentTarget) });
+    toast('Prompt salvo.');
+    await loadAdmin();
+    event.currentTarget.reset();
+  });
+
+  document.getElementById('admin-rule-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    await adminCrud('story_rules', 'POST', { data: formToJson(event.currentTarget) });
+    toast('Regra salva.');
+    await loadAdmin();
+    event.currentTarget.reset();
+  });
+}
+
+function bindButtons() {
+  bindSimpleNavigation();
+  bindAdminTabs();
+
+  document.getElementById('btn-start-login').addEventListener('click', () => showScreen('screen-login'));
+  document.getElementById('btn-open-login').addEventListener('click', () => showScreen('screen-login'));
+  document.getElementById('btn-google-login').addEventListener('click', async () => signInWithGoogle());
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    await signOut();
+    toast('Sessão encerrada.');
+  });
+  document.getElementById('btn-admin').addEventListener('click', async () => {
+    await loadAdmin();
+    showScreen('screen-admin');
+  });
+  document.getElementById('btn-open-admin').addEventListener('click', async () => {
+    await loadAdmin();
+    showScreen('screen-admin');
+  });
+  document.getElementById('btn-refresh-dashboard').addEventListener('click', refreshDashboard);
+  document.getElementById('btn-refresh-session').addEventListener('click', async () => openSession(appState.currentSession.id));
+  document.getElementById('btn-refresh-chapter').addEventListener('click', async () => openSession(appState.currentSession.id));
+  document.getElementById('btn-refresh-wait').addEventListener('click', async () => openSession(appState.currentSession.id));
+  document.getElementById('btn-open-character').addEventListener('click', () => showScreen('screen-character'));
+  document.getElementById('btn-check-decisions').addEventListener('click', async () => {
+    const status = await fetchSessionStatus(appState.currentSession.id);
+    toast(`Decisões: ${status.decidedCount}/${status.requiredCount}`);
+  });
+  document.getElementById('btn-consolidate-round').addEventListener('click', async () => {
+    lastConsolidation = await consolidateRound(appState.currentSession.id);
+    await openSession(appState.currentSession.id);
+  });
+  document.getElementById('btn-open-next-chapter').addEventListener('click', async () => {
+    await generateNextChapter(appState.currentSession.id);
+    await openSession(appState.currentSession.id);
+  });
+}
+
+async function bootstrap() {
+  setLoading(true, 'Inicializando aplicativo...');
+  try {
+    await initPublicConfig();
+    bindButtons();
+    bindForms();
+    await initAuth(handleAuthChange);
+    await sincronizarVersaoAppNaTela();
+  } catch (error) {
+    toast(error.message || 'Falha ao inicializar.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+bootstrap();
