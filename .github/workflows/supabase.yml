@@ -280,7 +280,7 @@ jobs:
               true,
               NULL
           );
-SQL
+          SQL
           then
             echo "Registro de versão no Supabase falhou; deploy Render permanece válido."
           fi
