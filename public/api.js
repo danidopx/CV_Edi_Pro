@@ -18,7 +18,7 @@ export const PROMPT_NAMES = {
 
 function detectarAmbienteAtualPeloHost(hostname) {
     const host = String(hostname || '').toLowerCase();
-    
+
     // Domínios oficiais de PRODUÇÃO
     const hostsProducao = [
         'cvedipro.vercel.app',
@@ -34,7 +34,7 @@ function detectarAmbienteAtualPeloHost(hostname) {
     if (host.includes('onrender.com') || host.includes('vercel.app')) {
         return 'preview';
     }
-    
+
     return 'production';
 }
 
@@ -124,6 +124,18 @@ export async function carregarVersaoAtualApp() {
         .maybeSingle();
 
     return data || null;
+}
+
+export function inicializarBadgeAmbiente() {
+    const ambiente = detectarAmbienteAtual();
+    const el = document.getElementById('env-badge');
+    if (!el) return;
+
+    el.className = `env-badge ${ambiente}`;
+    el.textContent = ambiente === 'preview' ? '🧪 Preview' : '🚀 Produção';
+
+    // Se quiser esconder em produção para manter o visual limpo, descomente abaixo:
+    // if (ambiente === 'production') el.style.display = 'none';
 }
 
 export async function carregarVersaoBuildAtual() {
@@ -251,6 +263,7 @@ export async function registrarVersaoApp(payload) {
 }
 
 export async function sincronizarVersaoAppNaTela() {
+    inicializarBadgeAmbiente();
     const label = document.querySelector('[data-app-version-label]');
     const meta = document.querySelector('[data-app-version-meta]');
     if (!label) return;
