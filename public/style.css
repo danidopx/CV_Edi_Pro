@@ -36,19 +36,53 @@
 
 body.dark-mode {
     --bg-body: #020617;
-    --bg-panel: #0f172a;
-    --text-main: #f1f5f9;
+    --bg-panel: rgba(15, 23, 42, 0.8);
+    --bg-glass: rgba(30, 41, 59, 0.7);
+    --text-main: #f8fafc;
     --text-light: #94a3b8;
-    --primary: #9fa8da; /* Adjusted for dark mode readability */
-    --primary-dim: #1e1b4b;
-    --accent: #6ee7b7; /* Adjusted for dark mode readability */
-    --accent-dim: #064e3b;
-    --border-color: #1e293b;
-    --danger: #f87171;
-    --ia: #c084fc;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --primary: #a29bfe;
+    --primary-dim: rgba(108, 92, 231, 0.15);
+    --accent: #55efc4;
+    --accent-dim: rgba(0, 184, 148, 0.15);
+    --border-color: rgba(51, 65, 85, 0.8);
+    --danger: #ff7675;
+    --ia: #a29bfe;
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     --bg-paper: #1e293b;
     --text-paper: #f1f5f9;
+    --glass-border: rgba(255, 255, 255, 0.05);
+}
+
+/* Badge de Ambiente */
+.env-badge {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 10000;
+    pointer-events: none;
+    box-shadow: var(--shadow-sm);
+    display: none;
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+}
+
+.env-badge.preview {
+    display: block;
+    background: #ffeaa7;
+    color: #d35400;
+    border-color: #fab1a0;
+}
+
+.env-badge.production {
+    display: flex; /* Opcional: mostrar se quiser confirmar prod */
+    background: var(--accent-dim);
+    color: var(--accent);
 }
 
 * {
@@ -359,7 +393,28 @@ h1, h2, h3, .hero-title, .top-bar-brand {
     text-align: center;
     max-width: 900px;
     margin: 60px auto 80px auto;
-    padding: 0 20px;
+    padding: 60px 20px;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 50%, var(--primary-dim) 0%, transparent 70%);
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 180deg at 50% 50%, var(--primary-dim) 0deg, transparent 360deg);
+    animation: rotate-hero 15s linear infinite;
+    z-index: -1;
+    opacity: 0.3;
+}
+
+@keyframes rotate-hero {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .hero-title {
@@ -407,9 +462,9 @@ h1, h2, h3, .hero-title, .top-bar-brand {
 }
 
 .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: var(--shadow-premium);
-    border-color: var(--primary-dim);
+    transform: translateY(-12px);
+    box-shadow: 0 30px 60px rgba(108, 92, 231, 0.15);
+    border-color: var(--primary);
 }
 
 .feature-card::before {
