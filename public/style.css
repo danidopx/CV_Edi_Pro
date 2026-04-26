@@ -1,30 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 :root {
-    --bg-body: #f8fafc;
-    --bg-panel: #ffffff;
-    --text-main: #0f172a;
+    --bg-body: #f1f5f9;
+    --bg-panel: rgba(255, 255, 255, 0.85);
+    --bg-glass: rgba(255, 255, 255, 0.7);
+    --text-main: #1e293b;
     --text-light: #64748b;
-    /* Custom Color Roots - Defaulting to user's requested Purpura/Verde */
-    --primary-raw: 99, 102, 241; /* Default Purple */
+    /* Custom Color Roots - Purpura e Verde Vibrantes */
+    --primary-raw: 108, 92, 231;
     --primary: rgb(var(--primary-raw));
-    --primary-gradient: linear-gradient(135deg, rgba(var(--primary-raw), 1) 0%, #a855f7 100%);
-    --primary-dim: rgba(var(--primary-raw), 0.1);
+    --primary-gradient: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    --primary-dim: rgba(var(--primary-raw), 0.08);
     
-    --accent-raw: 16, 185, 129; /* Default Green */
+    --accent-raw: 0, 184, 148;
     --accent: rgb(var(--accent-raw));
     --accent-dim: rgba(var(--accent-raw), 0.1);
     
-    --border-color: #e2e8f0;
-    --danger: #ef4444;
-    --ia: #8b5cf6;
-    --ia-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --border-color: rgba(226, 232, 240, 0.8);
+    --danger: #ff7675;
+    --ia: #6c5ce7;
+    --ia-gradient: linear-gradient(135deg, #6c5ce7 0%, #d63031 100%);
+    
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-blur: blur(12px);
+    
     --bg-paper: #ffffff;
     --text-paper: #1e293b;
-    --radius-lg: 16px;
-    --radius-md: 12px;
+    --radius-lg: 24px;
+    --radius-md: 14px;
 }
 
 body.dark-mode {
@@ -173,11 +180,13 @@ h1, h2, h3, .hero-title, .top-bar-brand {
     align-items: center;
     gap: 10px;
     margin-bottom: 25px;
-    background: var(--bg-panel);
-    padding: 15px 80px 15px 25px;
-    border-radius: 10px;
+    background: var(--bg-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 20px 80px 20px 30px;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
     flex-wrap: wrap;
 }
 
@@ -305,6 +314,27 @@ h1, h2, h3, .hero-title, .top-bar-brand {
 .btn-ia {
     background: var(--ia-gradient);
     color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-ia::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: rotate(45deg);
+    transition: 0.5s;
+    opacity: 0;
+}
+
+.btn-ia:hover::after {
+    left: 100%;
+    opacity: 1;
 }
 
 /* LANDING PAGE & LOGIN */
@@ -444,21 +474,25 @@ h1, h2, h3, .hero-title, .top-bar-brand {
 }
 
 #editor {
-    width: 440px;
-    min-width: 440px;
-    background: var(--bg-panel);
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
+    width: 460px;
+    min-width: 460px;
+    background: var(--bg-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 25px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-premium);
     position: sticky;
-    top: 95px;
-    max-height: calc(100vh - 110px);
+    top: 110px;
+    max-height: calc(100vh - 140px);
     overflow-y: auto;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
     scroll-behavior: smooth;
-    /* Ocultar barra de rolagem */
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    transition: all 0.4s ease;
+}
+
+#editor:hover {
+    box-shadow: 0 30px 60px -12px rgba(0,0,0,0.25);
 }
 
 #editor::-webkit-scrollbar {
