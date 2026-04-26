@@ -234,7 +234,7 @@ jobs:
         shell: bash
         run: |
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
-          psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" <<SQL
+          if ! psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" <<SQL
           WITH previous_current AS (
               SELECT id, current_version
               FROM public.app_versions
@@ -280,7 +280,10 @@ jobs:
               true,
               NULL
           );
-          SQL
+SQL
+          then
+            echo "Registro de versão no Supabase falhou; deploy Render permanece válido."
+          fi
         env:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
