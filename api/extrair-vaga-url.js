@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     try {
         const response = await fetch(url.toString(), {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; CVEdiProBot/1.0; +https://cvedipro.vercel.app)',
+                'User-Agent': 'Mozilla/5.0 (compatible; CVEdiProBot/1.0; +https://cv-edi-pro.onrender.com)',
                 'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
             }
         });

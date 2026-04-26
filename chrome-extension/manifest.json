@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "CV Edi Pro - Captura de Vagas",
+  "version": "1.0.0",
+  "description": "Capture vagas de emprego diretamente do navegador para o seu currículo inteligente.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.linkedin.com/jobs/*", "*://*.gupy.io/*", "*://*.indeed.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "host_permissions": ["https://cv-edi-pro.onrender.com/*", "https://cvedipro.vercel.app/*"]
+}
