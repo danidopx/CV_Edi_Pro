@@ -66,13 +66,7 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          if [[ -z "$VERCEL_TOKEN" ]]; then
-            echo "Segredo ausente: VERCEL_TOKEN"
-            exit 1
-          fi
-
           if [[ -n "$SUPABASE_ACCESS_TOKEN" && -n "$SUPABASE_DB_PASSWORD" && -n "$SUPABASE_PROJECT_ID" ]]; then
             echo "has_supabase=true" >> "$GITHUB_OUTPUT"
           else
@@ -209,42 +203,17 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
 
-      - name: Instalar Vercel CLI
-        shell: bash
-        run: npm install --global vercel@latest
-
-      - name: Publicar deploy na Vercel
-        id: vercel_deploy
+      - name: Registrar URL do Render
+        id: render_deploy
         shell: bash
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: team_kSnfsgEE6vY2cjGK7ZzNPemP
-          VERCEL_PROJECT_ID: prj_FEcy11K266dsq53dzVmZcepeR4Ch
-          VERCEL_SCOPE: dopjr82-6869s-projects
-          STABLE_PREVIEW_BRANCH: ${{ vars.STABLE_PREVIEW_BRANCH }}
-          VERCEL_PREVIEW_ALIAS: ${{ vars.VERCEL_PREVIEW_ALIAS }}
+          RENDER_EXTERNAL_URL: ${{ vars.RENDER_EXTERNAL_URL }}
+          RENDER_EXTERNAL_URL_SECRET: ${{ secrets.RENDER_EXTERNAL_URL }}
         run: |
-          COMMIT_SHA="${{ steps.git_version_commit.outputs.commit_sha }}"
-          DEPLOYMENT_URL=""
-          PUBLIC_URL=""
-          PREVIEW_BRANCH="${STABLE_PREVIEW_BRANCH:-codex/supabase-ajustes}"
-          PREVIEW_ALIAS="${VERCEL_PREVIEW_ALIAS:-cvedipro-preview.vercel.app}"
-
-          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
-            DEPLOYMENT_URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
-            PUBLIC_URL="https://cvedipro.vercel.app"
-          else
-            DEPLOYMENT_URL=$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --meta githubCommitSha="$COMMIT_SHA" --meta githubCommitRef="${GITHUB_REF_NAME}" 2>&1 | tail -n 1 | sed 's#https://##')
-            PUBLIC_URL="https://${DEPLOYMENT_URL}"
-
-            if [[ "${GITHUB_REF_NAME}" == "$PREVIEW_BRANCH" ]]; then
-              vercel alias set "$DEPLOYMENT_URL" "$PREVIEW_ALIAS" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-              PUBLIC_URL="https://$PREVIEW_ALIAS"
-            fi
-          fi
+          PUBLIC_URL="${RENDER_EXTERNAL_URL:-$RENDER_EXTERNAL_URL_SECRET}"
 
           echo "deployment_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
-          echo "deployment_inspect_url=https://${DEPLOYMENT_URL}" >> "$GITHUB_OUTPUT"
+          echo "deployment_inspect_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
 
       - name: Criar tag da produção
         if: steps.context.outputs.is_release_branch == 'true'
@@ -301,7 +270,7 @@ jobs:
               NOW(),
               'GitHub Action',
               'action@github.com',
-              '${{ steps.vercel_deploy.outputs.deployment_url }}',
+              '${{ steps.render_deploy.outputs.deployment_url }}',
               '${{ steps.git_version_commit.outputs.commit_sha }}',
               '${{ steps.next_version.outputs.release_notes }}',
               'github_actions',

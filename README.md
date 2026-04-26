@@ -1,11 +1,11 @@
 # CV Edi Pro
 
-Aplicação PWA para criar, importar e adaptar currículos com IA, com autenticação e persistência no Supabase, deploy na Vercel e uma extensão Chrome para capturar vagas externas.
+Aplicação PWA para criar, importar e adaptar currículos com IA, com autenticação e persistência no Supabase, deploy no Render e uma extensão Chrome para capturar vagas externas.
 
 ## Arquitetura
 
 - Frontend: HTML, CSS e JavaScript Vanilla em `public/`.
-- Backend: Vercel Functions em `api/`.
+- Backend: servidor Node/Express em `server.js`, reaproveitando os handlers de `api/` como rotas.
 - Banco e autenticação: Supabase com RLS.
 - IA: Google Gemini via variáveis de ambiente no backend.
 - Extensão Chrome: pasta independente em `chrome-extension/`.
@@ -24,10 +24,14 @@ Aplicação PWA para criar, importar e adaptar currículos com IA, com autentica
 
 ## Variáveis de Ambiente
 
-Configure na Vercel:
+Configure no Render:
 
 - `GEMINI_KEY`: chave do Google AI Studio.
 - `SUPABASE_SERVICE_ROLE_KEY`: usada apenas no backend para salvar vagas temporárias.
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `APP_ADMIN_EMAIL`
+- `NODE_ENV=production`
 
 Não coloque chaves secretas no frontend nem na extensão.
 
@@ -46,21 +50,22 @@ Para testar em preview, veja o passo a passo em `chrome-extension/README.md`.
 
 ## Deploy e Versionamento
 
-- Preview: push em branch de trabalho pode gerar preview no Vercel e também passar pelo pipeline do GitHub Actions.
-- Produção: merge da PR na `main` gera versionamento + deploy de produção pelo GitHub Actions.
+- Produção: o Render roda como Web Service Node na branch `main`.
+- Build Command: `npm install`.
+- Start Command: `npm start`.
 - A versão aparece no rodapé do app e também no painel de log minimizado.
-- O workflow atual continua versionando preview como `CV Edi Pro vX.Y.Z - Preview`.
+- O endpoint `/api/build-version` reconhece `RENDER_EXTERNAL_URL`, `RENDER_GIT_COMMIT` e `RENDER_GIT_BRANCH`.
 
 ## Regra de Deploy
 
-- Preview por Git no Vercel está habilitado.
-- O pipeline do GitHub Actions continua sendo o fluxo principal para versionamento automatizado.
+- Deploy principal: Render Web Service.
+- O arquivo `vercel.json` permanece apenas como legado durante a migração.
 - Deploy manual continua exigindo atenção, porque pode divergir do versionamento registrado.
 
 ## Processo Recomendado
 
 1. Trabalhar em branch `codex/...`.
-2. Testar localmente ou no preview da Vercel.
+2. Testar localmente com `npm start`.
 3. Gerar commit com resumo claro.
 4. Abrir PR para `main` usando o resumo das alterações.
 5. Validar preview.
