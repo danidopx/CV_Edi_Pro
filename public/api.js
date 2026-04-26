@@ -18,14 +18,24 @@ export const PROMPT_NAMES = {
 
 function detectarAmbienteAtualPeloHost(hostname) {
     const host = String(hostname || '').toLowerCase();
-    // Priorizando os domínios do Render
-    if (host.includes('onrender.com') && !host.includes('preview')) return 'production';
-    if (host.includes('onrender.com') && host.includes('preview')) return 'preview';
     
-    // Fallback para os domínios antigos (Vercel) para não quebrar acesso imediato
-    if (host === 'cvedipro.vercel.app' || host === 'curriculo-edi.vercel.app') return 'production';
+    // Domínios oficiais de PRODUÇÃO
+    const hostsProducao = [
+        'cvedipro.vercel.app',
+        'curriculo-edi.vercel.app',
+        'cv-edi-pro.onrender.com'
+    ];
+
+    if (hostsProducao.includes(host)) {
+        return 'production';
+    }
+
+    // Se estiver no Render ou Vercel e não for o host oficial, é Preview
+    if (host.includes('onrender.com') || host.includes('vercel.app')) {
+        return 'preview';
+    }
     
-    return 'preview';
+    return 'production';
 }
 
 const ORDEM_PREFERENCIA_MODELOS = [
@@ -102,10 +112,7 @@ function normalizarUrlComparacao(valor) {
 export async function carregarVersaoAtualApp() {
     const sb = getSb();
 
-    const ambiente =
-        location.hostname.includes('onrender.com') || location.hostname.includes('vercel.app')
-            ? (location.hostname.includes('preview') ? 'preview' : 'production')
-            : 'production';
+    const ambiente = detectarAmbienteAtual();
 
     const { data } = await sb
         .from('app_versions')
