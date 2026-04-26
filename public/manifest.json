@@ -1,10 +1,10 @@
 {
-  "name": "ContaComigo",
-  "short_name": "ContaComigo",
+  "name": "Edi Pro",
+  "short_name": "Edi Pro",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f1e8",
-  "theme_color": "#2f6b5f",
+  "background_color": "#ffffff",
+  "theme_color": "#6c5ce7",
   "icons": [
     {
       "src": "icon-192.png",
@@ -16,5 +16,14 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "titulo_vaga",
+      "text": "texto_vaga",
+      "url": "link_vaga"
+    }
+  }
 }

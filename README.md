@@ -1,58 +1,81 @@
-# ContaComigo
+# CV Edi Pro
 
-Aplicação web de RPG narrativo com IA para até 4 jogadores simultâneos, derivada diretamente do projeto `cv-edi-pro` e ajustada para deploy no Render.
+Aplicação PWA para criar, importar e adaptar currículos com IA, com autenticação e persistência no Supabase, deploy no Render e uma extensão Chrome para capturar vagas externas.
 
-## Stack reaproveitada
+## Arquitetura
 
-- Frontend SPA estática em `public/`
-- Backend Node servindo a SPA e os handlers em `api/`
-- Supabase para auth, banco, realtime e RLS
-- Google OAuth via Supabase Auth
-- Google Gemini no backend com o mesmo padrão de integração da base
-- GitHub Actions + Render auto deploy + versionamento em banco
+- Frontend: HTML, CSS e JavaScript Vanilla em `public/`.
+- Backend: servidor Node/Express em `server.js`, reaproveitando os handlers de `api/` como rotas.
+- Banco e autenticação: Supabase com RLS.
+- IA: Google Gemini via variáveis de ambiente no backend.
+- Extensão Chrome: pasta independente em `chrome-extension/`.
 
-## Estrutura
+## Estrutura Principal
 
-- `public/`: SPA do jogo, dashboard, lobby, capítulo, decisões e admin
-- `api/`: handlers de sessão, decisões, IA, estado atual, admin e build/version
-- `server.js`: servidor HTTP Node compatível com Render
-- `render.yaml`: definição do serviço Render
-- `supabase/migrations/`: schema completo do jogo e versionamento compatível
-- `.github/workflows/supabase.yml`: validação e sync opcional de migrations no Supabase
+- `public/index.html`: telas do app em uma SPA estática.
+- `public/config.js`: estado global, prompts padrão e configuração pública do Supabase.
+- `public/api.js`: cliente de IA, prompts administrativos, logs e helpers de API.
+- `public/auth.js`: login, conta, admin e permissões.
+- `public/cv-builder.js`: criação, importação, ajuste de currículo e análise de vaga.
+- `api/ia.js`: proxy server-side para chamadas Gemini do app.
+- `api/validar-vaga.js`: valida e normaliza vagas capturadas pela extensão.
+- `api/salvar-vaga.js`: salva temporariamente a vaga capturada no Supabase pelo backend.
+- `chrome-extension/`: extensão Chrome versionada junto do projeto, fora do build principal.
 
-## Variáveis de ambiente
+## Variáveis de Ambiente
 
-Copie `.env.example` e configure no Render, Supabase e GitHub.
+Configure no Render:
 
-- `PORT`
+- `GEMINI_KEY`: chave do Google AI Studio.
+- `SUPABASE_SERVICE_ROLE_KEY`: usada apenas no backend para salvar vagas temporárias.
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD`
-- `SUPABASE_PROJECT_ID`
-- `GEMINI_KEY`
 - `APP_ADMIN_EMAIL`
+- `NODE_ENV=production`
 
-## Deploy
+Não coloque chaves secretas no frontend nem na extensão.
 
-- Serviço Render: `srv-d7j4fsm7r5hc73cherc0`
-- URL atual: `https://contacomigo-mk67.onrender.com`
-- O Render pode fazer deploy automático a cada push se o repositório estiver conectado ao serviço.
+## Extensão Chrome
 
-## Rodando
+A extensão fica em `chrome-extension/` e deve ser carregada manualmente em `chrome://extensions` usando “Carregar sem compactação”.
 
-```bash
-npm install
-npm start
-```
+Fluxo:
 
-## Fluxo
+- O usuário seleciona o texto da vaga ou a extensão captura até 8000 caracteres da página.
+- A extensão chama `POST /api/validar-vaga`.
+- Se a vaga for válida, chama `POST /api/salvar-vaga`.
+- O site abre com `?vaga_id=<uuid>` e importa a vaga para o usuário logado.
 
-1. Login com Google.
-2. Escolha uma história.
-3. Crie ou entre em uma sessão.
-4. Cada jogador cria 1 personagem.
-5. Todos enviam a decisão do capítulo.
-6. A IA consolida rodada, gera impactos e move a sessão para o próximo capítulo.
-7. O admin gerencia histórias, capítulos, decisões, prompts, regras e sessões.
+Para testar em preview, veja o passo a passo em `chrome-extension/README.md`.
+
+## Deploy e Versionamento
+
+- Produção: o Render roda como Web Service Node na branch `main`.
+- Build Command: `npm install`.
+- Start Command: `npm start`.
+- A versão aparece no rodapé do app e também no painel de log minimizado.
+- O endpoint `/api/build-version` reconhece `RENDER_EXTERNAL_URL`, `RENDER_GIT_COMMIT` e `RENDER_GIT_BRANCH`.
+
+## Regra de Deploy
+
+- Deploy principal: Render Web Service.
+- O arquivo `vercel.json` permanece apenas como legado durante a migração.
+- Deploy manual continua exigindo atenção, porque pode divergir do versionamento registrado.
+
+## Processo Recomendado
+
+1. Trabalhar em branch `codex/...`.
+2. Testar localmente com `npm start`.
+3. Gerar commit com resumo claro.
+4. Abrir PR para `main` usando o resumo das alterações.
+5. Validar preview.
+6. Fazer merge para subir produção.
+
+## Observações de Manutenção
+
+- O projeto não é monorepo; mantenha a extensão isolada em `chrome-extension/`.
+- Alterações em arquivos estáticos podem exigir atualização do service worker/cache.
+- Prompts e modelo de IA podem ser ajustados pela área admin.
+- A conta admin principal é identificada pelo e-mail `dop.jr82@gmail.com`.
+
+Criado por [Daniel](https://github.com/danidopx) - 2026

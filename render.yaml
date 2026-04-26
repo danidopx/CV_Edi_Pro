@@ -1,12 +1,6 @@
 services:
   - type: web
-    name: contacomigo
-    runtime: node
-    plan: free
-    rootDir: .
+    name: cv-edi-pro
+    env: node
     buildCommand: npm install
     startCommand: npm start
-    autoDeploy: true
-    envVars:
-      - key: NODE_VERSION
-        value: 22

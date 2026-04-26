@@ -1,19 +1,20 @@
-name: Supabase + Versionamento
+name: Deploy & Versionamento CV Edi Pro
 
 on:
   push:
     branches:
       - main
+      - master
+      - codex/supabase-ajustes
       - codex/**
-      - preview/**
-  pull_request:
 
 concurrency:
-  group: supabase-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  validar:
+  validar_projeto:
+    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -25,23 +26,41 @@ jobs:
         with:
           node-version: 22
 
-      - name: Instalar dependências
-        run: npm install
-
-      - name: Validar projeto
+      - name: Validar estrutura e sintaxe
         run: npm run ci:validate
 
-  sincronizar_supabase:
-    if: github.event_name == 'push'
-    needs: validar
+  versionar_e_deploy:
+    if: ${{ !contains(github.event.head_commit.message, '[skip actions]') && !contains(github.event.head_commit.message, '[skip ci]') }}
+    needs: validar_projeto
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Verificar segredos Supabase
-        id: supabase_secrets
+      - name: Instalar cliente PostgreSQL
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Detectar contexto da branch
+        id: context
+        shell: bash
+        run: |
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+          if [[ "$BRANCH_NAME" == "main" || "$BRANCH_NAME" == "master" ]]; then
+            echo "is_release_branch=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release_branch=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validar segredos do pipeline
+        id: pipeline_secrets
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -49,68 +68,217 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           if [[ -n "$SUPABASE_ACCESS_TOKEN" && -n "$SUPABASE_DB_PASSWORD" && -n "$SUPABASE_PROJECT_ID" ]]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "has_supabase=true" >> "$GITHUB_OUTPUT"
           else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Segredos Supabase ausentes; pulando db push."
+            echo "has_supabase=false" >> "$GITHUB_OUTPUT"
+            echo "Supabase incompleto: pipeline seguirá com fallback em Git e sem registro no banco."
           fi
 
+      - name: Ler versões atuais no banco
+        id: db_versions
+        shell: bash
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          PREVIEW_STATUS=1
+          PRODUCTION_STATUS=1
+          PREVIEW_CURRENT=""
+          PRODUCTION_CURRENT=""
+
+          if [[ "${{ steps.pipeline_secrets.outputs.has_supabase }}" == "true" ]]; then
+            export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+
+            set +e
+            PREVIEW_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'preview' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+            PREVIEW_STATUS=$?
+            PRODUCTION_CURRENT=$(psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" -t -A -c "select coalesce((select current_version from public.app_versions where environment_name = 'production' and is_current = true order by release_date desc limit 1), '');" 2>/dev/null | tr -d '[:space:]')
+            PRODUCTION_STATUS=$?
+            set -e
+          fi
+
+          if [[ $PREVIEW_STATUS -ne 0 || -z "$PREVIEW_CURRENT" ]]; then
+            PREVIEW_CURRENT=$(git log --format=%s | sed -n 's/^chore: preview v\([0-9.]*\) \[skip .*\]$/\1/p' | head -n 1)
+          fi
+
+          if [[ $PRODUCTION_STATUS -ne 0 || -z "$PRODUCTION_CURRENT" ]]; then
+            PRODUCTION_CURRENT=$(git tag --sort=-version:refname | head -n 1)
+          fi
+
+          echo "preview_current=${PREVIEW_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
+          echo "production_current=${PRODUCTION_CURRENT:-0.0.0}" >> "$GITHUB_OUTPUT"
+
+      - name: Definir próxima versão
+        id: next_version
+        shell: bash
+        run: |
+          increment_patch() {
+            local version="$1"
+            IFS='.' read -r major minor patch <<< "${version:-0.0.0}"
+            major=${major:-0}
+            minor=${minor:-0}
+            patch=${patch:-0}
+            patch=$((patch + 1))
+            echo "${major}.${minor}.${patch}"
+          }
+
+          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
+            CURRENT_VERSION="${{ steps.db_versions.outputs.production_current }}"
+            NEXT_VERSION=$(increment_patch "$CURRENT_VERSION")
+            echo "environment_name=production" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "release_notes=Registro automático de versão de produção pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+          else
+            CURRENT_VERSION="${{ steps.db_versions.outputs.preview_current }}"
+            NEXT_VERSION=$(increment_patch "$CURRENT_VERSION")
+            echo "environment_name=preview" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "target_version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "release_notes=Registro automático de versão de preview pelo GitHub Actions." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Atualizar arquivos para release
+        if: steps.context.outputs.is_release_branch == 'true'
+        shell: bash
+        run: |
+          NEW_VER=${{ steps.next_version.outputs.target_version }}
+          CACHE_ID=$(date +%s | tail -c 6)
+
+          sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VER\"/" package.json
+          sed -i "s|CV Edi Pro v[0-9.]*\( - Preview\)\{0,1\}|CV Edi Pro v$NEW_VER|g" public/index.html
+          sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
+          sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
+          sed -i "s|const CACHE_NAME = '[^']*';|const CACHE_NAME = 'cv-edi-pro-v$CACHE_ID';|" public/sw.js
+
+      - name: Atualizar arquivos para preview
+        if: steps.context.outputs.is_release_branch == 'false'
+        shell: bash
+        run: |
+          PREVIEW_VER=${{ steps.next_version.outputs.target_version }}
+          CACHE_ID=$(date +%s | tail -c 6)
+
+          sed -i "s/\"version\": \".*\"/\"version\": \"$PREVIEW_VER\"/" package.json
+          sed -i "s|CV Edi Pro v[0-9.]*\( - Preview\)\{0,1\}|CV Edi Pro v$PREVIEW_VER - Preview|g" public/index.html
+          sed -i "s|manifest\.json?v=[0-9.]*|manifest.json?v=$CACHE_ID|g" public/index.html
+          sed -i "s|sw\.js?v=[0-9.]*|sw.js?v=$CACHE_ID|g" public/index.html
+          sed -i "s|const CACHE_NAME = '[^']*';|const CACHE_NAME = 'cv-edi-pro-v$CACHE_ID-preview';|" public/sw.js
+
+      - name: Commitar e enviar alterações automáticas
+        id: git_version_commit
+        shell: bash
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json public/index.html public/sw.js
+
+          if git diff --cached --quiet; then
+            echo "No changes"
+            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "${{ steps.context.outputs.is_release_branch }}" == "true" ]]; then
+            TARGET_VER=${{ steps.next_version.outputs.target_version }}
+            git commit -m "chore: v$TARGET_VER [skip ci]"
+          else
+            TARGET_VER=${{ steps.next_version.outputs.target_version }}
+            git commit -m "chore: preview v$TARGET_VER [skip ci]"
+          fi
+
+          git push origin HEAD:${GITHUB_REF_NAME}
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Instalar Supabase CLI
-        if: steps.supabase_secrets.outputs.enabled == 'true'
+        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
         uses: supabase/setup-cli@v1
 
-      - name: Aplicar migrations no Supabase
-        if: steps.supabase_secrets.outputs.enabled == 'true'
-        shell: bash
+      - name: Deploy SQL para o banco
+        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
+        run: |
+          supabase link --project-ref $SUPABASE_PROJECT_ID
+          supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-        run: |
-          supabase link --project-ref "$SUPABASE_PROJECT_ID"
-          supabase db push
 
-  registrar_versao:
-    if: github.event_name == 'push'
-    needs: sincronizar_supabase
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Definir ambiente e versão
-        id: version
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            echo "environment=production" >> "$GITHUB_OUTPUT"
-          else
-            echo "environment=preview" >> "$GITHUB_OUTPUT"
-          fi
-
-          VERSION="$(date +'%Y.%m.%d').${GITHUB_RUN_NUMBER}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Registrar versão no Supabase
+      - name: Registrar URL do Render
+        id: render_deploy
         shell: bash
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          VERCEL_URL: ${{ secrets.VERCEL_URL }}
+          RENDER_EXTERNAL_URL: ${{ vars.RENDER_EXTERNAL_URL }}
+          RENDER_EXTERNAL_URL_SECRET: ${{ secrets.RENDER_EXTERNAL_URL }}
         run: |
-          if [[ -z "$SUPABASE_URL" || -z "$SUPABASE_SERVICE_ROLE_KEY" ]]; then
-            echo "SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY ausente."
-            exit 1
+          PUBLIC_URL="${RENDER_EXTERNAL_URL:-$RENDER_EXTERNAL_URL_SECRET}"
+
+          echo "deployment_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
+          echo "deployment_inspect_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Criar tag da produção
+        if: steps.context.outputs.is_release_branch == 'true'
+        shell: bash
+        run: |
+          TARGET_VER=${{ steps.next_version.outputs.target_version }}
+          if git rev-parse "$TARGET_VER" >/dev/null 2>&1; then
+            echo "Tag $TARGET_VER já existe localmente."
+          else
+            git tag "$TARGET_VER"
+            git push origin "$TARGET_VER"
           fi
 
-          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/register_app_version" \
-            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"p_environment_name\": \"${{ steps.version.outputs.environment }}\",
-              \"p_current_version\": \"${{ steps.version.outputs.version }}\",
-              \"p_commit_ref\": \"$GITHUB_SHA\",
-              \"p_branch_name\": \"$GITHUB_REF_NAME\",
-              \"p_deployment_url\": \"$VERCEL_URL\",
-              \"p_release_notes\": \"Deploy automático via GitHub Actions\",
-              \"p_source\": \"github_actions\"
-            }"
+      - name: Registrar versão no banco
+        if: steps.pipeline_secrets.outputs.has_supabase == 'true'
+        shell: bash
+        run: |
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          psql "host=db.$SUPABASE_PROJECT_ID.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" <<SQL
+          WITH previous_current AS (
+              SELECT id, current_version
+              FROM public.app_versions
+              WHERE environment_name = '${{ steps.next_version.outputs.environment_name }}'
+                AND is_current = true
+              ORDER BY release_date DESC
+              LIMIT 1
+          ),
+          clear_current AS (
+              UPDATE public.app_versions
+              SET is_current = false
+              WHERE id IN (SELECT id FROM previous_current)
+          )
+          INSERT INTO public.app_versions (
+              app_name,
+              environment_name,
+              current_version,
+              previous_version,
+              release_date,
+              responsible_name,
+              responsible_email,
+              deployment_url,
+              commit_ref,
+              release_notes,
+              source,
+              is_current,
+              is_public,
+              created_by
+          )
+          VALUES (
+              'CV Edi Pro',
+              '${{ steps.next_version.outputs.environment_name }}',
+              '${{ steps.next_version.outputs.target_version }}',
+              COALESCE((SELECT current_version FROM previous_current), NULL),
+              NOW(),
+              'GitHub Action',
+              'action@github.com',
+              '${{ steps.render_deploy.outputs.deployment_url }}',
+              '${{ steps.git_version_commit.outputs.commit_sha }}',
+              '${{ steps.next_version.outputs.release_notes }}',
+              'github_actions',
+              true,
+              true,
+              NULL
+          );
+          SQL
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}

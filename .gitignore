@@ -1,5 +1,6 @@
 .codex/
 .mcp.json
+node_modules/
 supabase/.temp/
 
 .vercel
