@@ -122,6 +122,6 @@ export async function sincronizarVersaoAppNaTela() {
   const version = await carregarVersaoAtualApp().catch(() => null);
   if (!version) return;
 
-  label.textContent = `ContaComigo v${version.current_version}${version.environment_name === 'preview' ? ' - Preview' : ''}`;
+  label.textContent = `v${version.current_version}${version.environment_name === 'preview' ? ' - Preview' : ''}`;
   if (meta) meta.textContent = `${version.environment_name} | ${new Date(version.release_date).toLocaleString('pt-BR')}`;
 }
