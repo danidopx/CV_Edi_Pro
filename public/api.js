@@ -126,6 +126,18 @@ export async function carregarVersaoAtualApp() {
     return data || null;
 }
 
+export function inicializarBadgeAmbiente() {
+    const ambiente = detectarAmbienteAtual();
+    const el = document.getElementById('env-badge');
+    if (!el) return;
+
+    el.className = `env-badge ${ambiente}`;
+    el.textContent = ambiente === 'preview' ? '🧪 Preview' : '🚀 Produção';
+    
+    // Se quiser esconder em produção para manter o visual limpo, descomente abaixo:
+    // if (ambiente === 'production') el.style.display = 'none';
+}
+
 export async function carregarVersaoBuildAtual() {
     try {
         const resposta = await fetch('/api/build-version', { cache: 'no-store' });
@@ -251,6 +263,7 @@ export async function registrarVersaoApp(payload) {
 }
 
 export async function sincronizarVersaoAppNaTela() {
+    inicializarBadgeAmbiente();
     const label = document.querySelector('[data-app-version-label]');
     const meta = document.querySelector('[data-app-version-meta]');
     if (!label) return;
