@@ -202,7 +202,11 @@ h1, h2, h3, .hero-title, .top-bar-brand {
     top: 20px;
 }
 
-.btn-admin-config, .btn-admin-users, .btn-luz {
+.btn-admin-config, .btn-admin-users {
+    display: none;
+}
+
+.btn-luz {
     display: none !important;
 }
 
