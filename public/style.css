@@ -203,7 +203,12 @@ h1, h2, h3, .hero-title, .top-bar-brand {
 }
 
 .btn-admin-config, .btn-admin-users {
-    display: none;
+    display: none !important;
+}
+
+body.is-admin .btn-admin-config,
+body.is-admin .btn-admin-users {
+    display: flex !important;
 }
 
 .btn-luz {

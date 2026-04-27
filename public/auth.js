@@ -286,6 +286,7 @@ export function validarSenha(senha) {
 
 export function verificarAdmin() {
     const admin = usuarioEhAdmin();
+    document.body.classList.toggle('is-admin', admin);
     atualizarVisibilidadePainelDebug(admin);
 
     const c = document.getElementById('btn-admin-config');
