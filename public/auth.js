@@ -33,6 +33,52 @@ function escaparHtml(valor) {
         .replace(/"/g, '&quot;');
 }
 
+const MOCKUPS_HOME_VALIDOS = ['mockup1', 'mockup2', 'mockup3'];
+
+function normalizarMockupHome(valor) {
+    return MOCKUPS_HOME_VALIDOS.includes(valor) ? valor : 'mockup1';
+}
+
+function atualizarMockupHomeAdmin(mockup, { salvo = false } = {}) {
+    const mockupNormalizado = normalizarMockupHome(mockup);
+    const input = document.getElementById('admin-home-mockup-ativo');
+    const status = document.getElementById('admin-home-mockup-status');
+
+    if (input) input.value = mockupNormalizado;
+    visualizarMockupHomeAdmin(mockupNormalizado);
+
+    if (status) {
+        status.textContent = `Mockup ativo: ${mockupNormalizado.replace('mockup', 'Mockup ')}${salvo ? ' (salvo)' : ''}`;
+    }
+}
+
+export function visualizarMockupHomeAdmin(mockup) {
+    const mockupNormalizado = normalizarMockupHome(mockup);
+    const frame = document.getElementById('admin-home-mockup-preview');
+    if (frame) frame.src = `/mockup/${mockupNormalizado}.html`;
+}
+
+export async function definirMockupHomeAdmin(mockup) {
+    const mockupNormalizado = normalizarMockupHome(mockup);
+    atualizarMockupHomeAdmin(mockupNormalizado);
+
+    const { error } = await sb.from('ai_settings').upsert({
+        setting_key: 'active_home_mockup',
+        setting_value: mockupNormalizado,
+        description: 'Layout ativo da tela inicial pos-login',
+        user_id: appState.usuarioAtual?.id || null,
+        is_system_setting: true
+    }, { onConflict: 'setting_key' });
+
+    if (error) {
+        mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + error.message, { tone: 'erro' });
+        return;
+    }
+
+    atualizarMockupHomeAdmin(mockupNormalizado, { salvo: true });
+    showToast('Layout da tela inicial salvo.');
+}
+
 function bloquearSeAdmin() {
     if (!usuarioEhAdmin()) return false;
     mostrarAviso('Por segurança, os dados cadastrais da conta admin principal não podem ser alterados por esta tela.', {
@@ -291,9 +337,10 @@ export async function atualizarNomeConta() {
 }
 
 export async function abrirConfigAdmin() {
-    const [promptsSalvos, configModelo, modelResp] = await Promise.all([
+    const [promptsSalvos, configModelo, configMockupHome, modelResp] = await Promise.all([
         carregarTodosPromptsIA().catch(() => []),
         carregarConfiguracaoIA('modelo_forcado', { logMissing: false }).catch(() => null),
+        carregarConfiguracaoIA('active_home_mockup', { logMissing: false }).catch(() => null),
         fetch('/api/modelos').catch(() => null)
     ]);
 
@@ -354,6 +401,7 @@ export async function abrirConfigAdmin() {
     }
 
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
+    atualizarMockupHomeAdmin(configMockupHome?.setting_value || 'mockup1', { salvo: true });
     await preencherPainelVersionamentoAdmin();
     document.getElementById('modal-admin').style.display = 'flex';
 }
@@ -363,6 +411,7 @@ export async function salvarConfigAdmin() {
     const modeloSelecionado = getValSafe('admin-modelo-select').trim();
     const modeloManual = getValSafe('admin-modelo-manual').trim();
     const modeloFinal = modeloManual || modeloSelecionado;
+    const mockupHome = normalizarMockupHome(getValSafe('admin-home-mockup-ativo').trim());
     const promptCards = Array.from(document.querySelectorAll('#admin-prompts-dinamicos .admin-prompt-card'));
 
     const promptsParaSalvar = promptCards.map(card => ({
@@ -397,6 +446,19 @@ export async function salvarConfigAdmin() {
 
         if (settingError) {
             mostrarAviso('Não foi possível salvar o modelo da IA no banco.\n\nDetalhe: ' + settingError.message, { tone: 'erro' });
+            return;
+        }
+
+        const { error: mockupError } = await sb.from('ai_settings').upsert({
+            setting_key: 'active_home_mockup',
+            setting_value: mockupHome,
+            description: 'Layout ativo da tela inicial pos-login',
+            user_id: appState.usuarioAtual?.id || null,
+            is_system_setting: true
+        }, { onConflict: 'setting_key' });
+
+        if (mockupError) {
+            mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + mockupError.message, { tone: 'erro' });
             return;
         }
 

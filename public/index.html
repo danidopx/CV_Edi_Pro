@@ -244,6 +244,26 @@
                 <div id="admin-prompts-dinamicos" style="margin-bottom: 15px;"></div>
             </details>
 
+            <details open style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🏠 Layout da tela inicial</summary>
+                <div style="margin-top: 12px;">
+                    <input type="hidden" id="admin-home-mockup-ativo" value="mockup1">
+                    <div id="admin-home-mockup-status" style="margin-bottom: 12px; color: var(--text-light); font-size: 13px;">Mockup ativo: carregando...</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 12px;">
+                        <button class="btn-base btn-neutral" type="button" onclick="visualizarMockupHomeAdmin('mockup1')">Visualizar Mockup 1</button>
+                        <button class="btn-base btn-accent" type="button" onclick="definirMockupHomeAdmin('mockup1')">Definir Mockup 1</button>
+                        <button class="btn-base btn-neutral" type="button" onclick="visualizarMockupHomeAdmin('mockup2')">Visualizar Mockup 2</button>
+                        <button class="btn-base btn-accent" type="button" onclick="definirMockupHomeAdmin('mockup2')">Definir Mockup 2</button>
+                        <button class="btn-base btn-neutral" type="button" onclick="visualizarMockupHomeAdmin('mockup3')">Visualizar Mockup 3</button>
+                        <button class="btn-base btn-accent" type="button" onclick="definirMockupHomeAdmin('mockup3')">Definir Mockup 3</button>
+                    </div>
+                    <iframe id="admin-home-mockup-preview" title="Preview do layout da tela inicial"
+                        sandbox="allow-scripts allow-forms"
+                        src="/mockup/mockup1.html"
+                        style="width: 100%; height: 420px; border: 1px solid var(--border-color); border-radius: 10px; background: #fff;"></iframe>
+                </div>
+            </details>
+
             <details style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
                 <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🚀 Versionamento do App</summary>
                 <div style="margin-top: 12px;">

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CV Edi Pro — Mockup Dashboard</title>
+<style>
+  :root{
+    --purple-500:#6A4CFF;
+    --purple-700:#4B2ED6;
+    --gradient:linear-gradient(90deg,#6A4CFF,#C86BFF);
+    --gray-100:#F5F6FA;
+    --gray-200:#E9EBF2;
+    --text:#111827;
+    --muted:#6B7280;
+    --success:#2ECC71;
+    --radius:10px;
+    --shadow:0 8px 24px rgba(20,20,40,0.06);
+    --gap:20px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  html,body{height:100%;margin:0;background:#FBFBFD;color:var(--text);-webkit-font-smoothing:antialiased}
+  .app{display:flex;min-height:100vh;gap:var(--gap);padding:24px;box-sizing:border-box}
+  /* Sidebar */
+  .sidebar{
+    width:260px;background:var(--gray-100);border-radius:12px;padding:18px;box-shadow:var(--shadow);flex-shrink:0;
+    display:flex;flex-direction:column;gap:12px;height:fit-content;
+  }
+  .logo{font-weight:700;color:var(--purple-700);font-size:18px}
+  .nav{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+  .nav button{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer;text-align:left}
+  .nav button.active{background:linear-gradient(90deg,rgba(106,76,255,0.12),rgba(200,107,255,0.06));color:var(--purple-700);font-weight:600}
+  .nav button svg{width:18px;height:18px;opacity:0.9}
+  /* Main area */
+  .main{flex:1;display:flex;flex-direction:column;gap:18px}
+  .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .user{display:flex;align-items:center;gap:12px}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--purple-500),var(--purple-700));display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+  .user-info{font-size:13px}
+  .user-info .name{font-weight:600}
+  .progress-wrap{display:flex;align-items:center;gap:12px}
+  .progress{width:220px;height:10px;background:var(--gray-200);border-radius:999px;overflow:hidden}
+  .progress > i{display:block;height:100%;background:var(--purple-500);width:40%}
+  .progress-label{font-size:13px;color:var(--muted);min-width:120px;text-align:right}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+  .content{display:flex;flex-direction:column;gap:18px}
+  .title{font-size:22px;font-weight:700}
+  .subtitle{color:var(--muted);font-size:14px}
+
+  /* Cards row */
+  .cards{display:flex;gap:16px}
+  .card{flex:1;background:white;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);min-height:160px;display:flex;flex-direction:column;gap:12px}
+  .card h3{margin:0;font-size:16px}
+  .card .meta{color:var(--muted);font-size:13px}
+  .badge{font-weight:700;color:var(--purple-700);font-size:20px}
+  .card .cta{margin-top:auto}
+  .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+  .btn.primary{background:var(--purple-500);color:white}
+  .btn.ghost{background:white;border:1px solid var(--purple-500);color:var(--purple-700)}
+  .btn.gradient{background:var(--gradient);color:white}
+
+  /* Shortcuts */
+  .shortcuts{display:flex;gap:12px;flex-wrap:wrap}
+  .shortcut{flex:1;min-width:160px;padding:12px;border-radius:10px;background:white;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);cursor:pointer}
+  .shortcut .icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+  .shortcut.new{background:linear-gradient(90deg,#6A4CFF,#8A6BFF);color:white}
+  .shortcut.review{background:white;border:1px solid var(--gray-200)}
+  .shortcut.saved{background:#E9FFF2;color:var(--success)}
+  .shortcut.analyze{background:var(--gradient);color:white}
+
+  /* Insights panel */
+  .insights{display:flex;flex-direction:column;gap:12px}
+  .insight-card{background:white;padding:14px;border-radius:10px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+  .insight-card .value{font-weight:700;font-size:20px}
+  .insight-card .label{color:var(--muted);font-size:13px}
+
+  /* Checklist */
+  .checklist{background:white;padding:14px;border-radius:10px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .checklist li{display:flex;align-items:center;gap:10px;list-style:none;color:var(--muted)}
+  .checklist li input{width:18px;height:18px}
+
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,10,20,0.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal{background:white;border-radius:12px;padding:18px;max-width:720px;width:100%;box-shadow:0 20px 60px rgba(10,10,30,0.4)}
+  .modal textarea{width:100%;height:140px;border-radius:8px;border:1px solid var(--gray-200);padding:12px;font-size:14px;resize:vertical}
+  .modal .suggestions{display:flex;gap:12px;margin-top:12px}
+  .suggestion{flex:1;background:#FBFBFF;padding:12px;border-radius:8px;border:1px dashed var(--gray-200)}
+
+  /* Responsive */
+  @media (max-width:900px){
+    .app{padding:16px}
+    .sidebar{display:none}
+    .grid{grid-template-columns:1fr;gap:12px}
+    .cards{flex-direction:column}
+    .insights{flex-direction:row;overflow:auto}
+    .shortcut{min-width:140px}
+  }
+  /* small polish */
+  .muted{color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Dashboard CV Edi Pro">
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar" aria-hidden="false">
+      <div class="logo">CV Edi Pro</div>
+      <nav class="nav" aria-label="Navegação principal">
+        <button class="active" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Início</button>
+        <button><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/></svg>Meus Currículos</button>
+        <button><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.6"/></svg>Novo Currículo</button>
+        <button><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6"/></svg>Análises de Vagas</button>
+        <button><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="1.6"/></svg>Modelos</button>
+        <button><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="1.6"/></svg>Ajuda</button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="header" role="banner">
+        <div class="user">
+          <div class="avatar" aria-hidden="true">D</div>
+          <div class="user-info">
+            <div class="name">Olá, Daniel</div>
+            <div class="small">dop.j82@gmail.com</div>
+          </div>
+        </div>
+        <div class="progress-wrap" aria-hidden="false">
+          <div style="display:flex;flex-direction:column;align-items:flex-end">
+            <div class="progress" aria-hidden="true"><i></i></div>
+            <div class="progress-label small">Base Profissional 40%</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn ghost" onclick="openAccount()">Minha Conta</button>
+            <button class="btn" onclick="alert('Sair')">Sair</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="grid" aria-labelledby="main-title">
+        <div class="content">
+          <div>
+            <div class="title" id="main-title">Comece por onde precisa</div>
+            <div class="subtitle">Crie, revise ou adapte seu currículo para vagas com mais assertividade.</div>
+          </div>
+
+          <!-- Cards -->
+          <div class="cards" role="region" aria-label="Ações principais">
+            <!-- Card A: Base Profissional -->
+            <article class="card" aria-labelledby="card-base">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <h3 id="card-base">Base Profissional</h3>
+                <div class="badge" aria-hidden="true">40%</div>
+              </div>
+              <div class="meta">
+                <div><strong>Cargo:</strong> Analista de Dados</div>
+                <div><strong>Formação:</strong> Graduação Completa</div>
+                <div><strong>Skills:</strong> Excel Avançado</div>
+              </div>
+              <div class="cta">
+                <button class="btn primary" onclick="completeBase()">Completar Base</button>
+              </div>
+            </article>
+
+            <!-- Card B: Editor / Revisão -->
+            <article class="card" aria-labelledby="card-editor">
+              <h3 id="card-editor">Editor / Revisão</h3>
+              <div class="meta">Último currículo: <strong>Gabriel Alves</strong> — Analista de Dados (editado há 3 dias)</div>
+              <div class="cta">
+                <button class="btn ghost" onclick="openEditor()">Revisar Agora</button>
+              </div>
+            </article>
+
+            <!-- Card C: Análise de Vaga -->
+            <article class="card" aria-labelledby="card-analyze">
+              <h3 id="card-analyze">Análise de Vaga</h3>
+              <div class="meta">Cole a descrição ou faça upload para receber sugestões em ~30s.</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="vagaInput" placeholder="Cole a descrição da vaga..." style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--gray-200)" />
+                <button class="btn gradient" onclick="openAnalyzeModal()">Analisar Vaga</button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Shortcuts -->
+          <div>
+            <div class="small" style="margin-bottom:8px">Atalhos rápidos</div>
+            <div class="shortcuts" role="list">
+              <div class="shortcut new" role="listitem" onclick="location.hash='novo'"><div class="icon">+</div><div><div style="font-weight:700">Novo Currículo</div><div class="small">Comece do zero</div></div></div>
+              <div class="shortcut review" role="listitem" onclick="openEditor()"><div class="icon" style="background:#fff;color:var(--purple-700);border:1px solid var(--gray-200)">R</div><div><div style="font-weight:700">Revisão</div><div class="small">Melhore seu texto</div></div></div>
+              <div class="shortcut saved" role="listitem" onclick="location.hash='salvos'"><div class="icon" style="background:#2ECC71">S</div><div><div style="font-weight:700">Currículos Salvos</div><div class="small">Gerencie versões</div></div></div>
+              <div class="shortcut analyze" role="listitem" onclick="openAnalyzeModal()"><div class="icon">V</div><div><div style="font-weight:700">Análise da Vaga</div><div class="small">Sugestões rápidas</div></div></div>
+            </div>
+          </div>
+
+          <!-- Checklist -->
+          <div style="margin-top:6px">
+            <div class="small" style="margin-bottom:8px">Por onde começar</div>
+            <div class="checklist" role="region" aria-label="Checklist de onboarding">
+              <ul style="padding:0;margin:0">
+                <li><input type="checkbox" id="c1" /> <label for="c1">Completar Base</label></li>
+                <li><input type="checkbox" id="c2" /> <label for="c2">Adicionar Experiência</label></li>
+                <li><input type="checkbox" id="c3" /> <label for="c3">Revisar Currículo</label></li>
+                <li><input type="checkbox" id="c4" /> <label for="c4">Analisar Vaga</label></li>
+              </ul>
+              <div style="display:flex;justify-content:flex-end;margin-top:8px">
+                <button class="btn primary" onclick="continueChecklist()">Continuar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insights panel -->
+        <aside class="insights" aria-label="Painel de insights">
+          <div class="insight-card" role="status">
+            <div class="value">75%</div>
+            <div class="label">Compatibilidade média</div>
+          </div>
+          <div class="insight-card">
+            <div class="value">3</div>
+            <div class="label">Currículos completos</div>
+          </div>
+          <div class="insight-card">
+            <div class="value">8</div>
+            <div class="label">Vagas analisadas</div>
+          </div>
+        </aside>
+      </section>
+
+      <footer style="display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px">
+        <div>CV Edi Pro v0.0.60 — Preview</div>
+        <div>Precisa de ajuda? <button class="btn" style="padding:6px 8px" onclick="alert('Contato')">Fale conosco</button></div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Modal Análise -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3>Análise de Vaga</h3>
+      <p class="small">Cole a descrição da vaga abaixo e clique em Analisar.</p>
+      <textarea id="vagaText" placeholder="Cole a descrição da vaga aqui..."></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn" onclick="closeAnalyzeModal()">Fechar</button>
+        <button class="btn gradient" onclick="analyzeVaga()">Analisar</button>
+      </div>
+
+      <div id="suggestions" style="display:none;margin-top:14px">
+        <h4 style="margin:0 0 8px 0">Sugestões rápidas</h4>
+        <div class="suggestions" aria-live="polite">
+          <div class="suggestion"><strong>Palavras-chave:</strong><div class="small">Python; SQL; ETL</div></div>
+          <div class="suggestion"><strong>Frases para destacar:</strong><div class="small">“Experiência em pipelines de dados”</div></div>
+          <div class="suggestion"><strong>Skills a incluir:</strong><div class="small">Airflow; Docker; Testes automatizados</div></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <button class="btn primary" onclick="applySuggestions()">Aplicar ao Currículo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Simple interactions for the mockup
+  function openAccount(){ alert('Abrir Minha Conta (mockup)') }
+  function openEditor(){ alert('Abrir Editor / Revisão (mockup)') }
+  function completeBase(){ alert('Ir para completar base (mockup)') }
+
+  // Modal controls
+  const modal = document.getElementById('modal');
+  function openAnalyzeModal(){
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden','false');
+    document.getElementById('vagaText').value = document.getElementById('vagaInput').value || '';
+  }
+  function closeAnalyzeModal(){
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden','true');
+    document.getElementById('suggestions').style.display = 'none';
+  }
+  function analyzeVaga(){
+    const txt = document.getElementById('vagaText').value.trim();
+    if(!txt){ alert('Cole a descrição da vaga antes de analisar.'); return; }
+    // Simulate analysis delay
+    const sug = document.getElementById('suggestions');
+    sug.style.display = 'none';
+    const btn = event?.target;
+    if(btn) btn.disabled = true;
+    setTimeout(()=>{
+      if(btn) btn.disabled = false;
+      sug.style.display = 'block';
+      // In real app: populate suggestions based on NLP
+    },800);
+  }
+  function applySuggestions(){
+    alert('Aplicar sugestões ao currículo (mockup)');
+    closeAnalyzeModal();
+  }
+
+  function continueChecklist(){
+    const checks = [...document.querySelectorAll('.checklist input')];
+    const firstUnchecked = checks.findIndex(c => !c.checked);
+    if(firstUnchecked === -1) alert('Checklist completo! Parabéns.');
+    else {
+      checks[firstUnchecked].checked = true;
+      alert('Próximo passo marcado: ' + checks[firstUnchecked].nextSibling.textContent.trim());
+    }
+  }
+
+  // Close modal on ESC
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeAnalyzeModal();
+  });
+</script>
+</body>
+</html>
