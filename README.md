@@ -59,7 +59,7 @@ Para testar em preview, veja o passo a passo em `chrome-extension/README.md`.
 ## Regra de Deploy
 
 - Deploy principal: Render Web Service.
-- O arquivo `vercel.json` permanece apenas como legado durante a migração.
+- Vercel está desativado; `vercel.json` existe apenas para bloquear deploy legado se a integração antiga ainda tentar rodar.
 - Deploy manual continua exigindo atenção, porque pode divergir do versionamento registrado.
 
 ## Processo Recomendado
