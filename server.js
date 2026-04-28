@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import buildVersionHandler from './api/build-version.js';
+import adminPromptsHandler from './api/admin-prompts.js';
 import adminSettingsHandler from './api/admin-settings.js';
 import extrairVagaUrlHandler from './api/extrair-vaga-url.js';
 import iaHandler from './api/ia.js';
@@ -31,6 +32,7 @@ function adapt(handler) {
 }
 
 app.all('/api/build-version', adapt(buildVersionHandler));
+app.all('/api/admin-prompts', adapt(adminPromptsHandler));
 app.all('/api/admin-settings', adapt(adminSettingsHandler));
 app.all('/api/extrair-vaga-url', adapt(extrairVagaUrlHandler));
 app.all('/api/ia', adapt(iaHandler));

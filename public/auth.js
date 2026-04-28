@@ -105,9 +105,37 @@ async function salvarConfiguracaoAdmin(settingKey, settingValue) {
     return { data: payload.data || null, error: null };
 }
 
+async function salvarPromptsAdmin(prompts) {
+    const { data: sessionData } = await sb.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+        return { error: new Error('Sessão expirada. Entre novamente para salvar prompts admin.') };
+    }
+
+    const response = await fetch('/api/admin-prompts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ prompts })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload?.ok === false) {
+        return { error: new Error(payload?.error || 'Não foi possível salvar os prompts.') };
+    }
+
+    return { error: null };
+}
+
 export async function definirMockupHomeAdmin(mockup) {
     const mockupNormalizado = normalizarMockupHome(mockup);
     atualizarMockupHomeAdmin(mockupNormalizado);
+    const status = document.getElementById('admin-home-mockup-status');
+    if (status) status.textContent = `Mockup ativo: ${mockupNormalizado.replace('mockup', 'Mockup ')} (salvando...)`;
 
     const { error } = await salvarConfiguracaoAdmin('active_home_mockup', mockupNormalizado);
 
@@ -471,7 +499,7 @@ export async function salvarConfigAdmin() {
         localStorage.setItem('adminPromptAts', promptsParaSalvar.find(item => item.prompt_name === 'analise_ats')?.prompt_content || catalogo.analise_ats.content);
         if (emailSuporte) localStorage.setItem('adminEmailSuporte', emailSuporte);
 
-        const { error } = await sb.from('ai_prompts').upsert(promptsParaSalvar, { onConflict: 'prompt_name' });
+        const { error } = await salvarPromptsAdmin(promptsParaSalvar);
 
         if (error) {
             mostrarAviso('Não foi possível salvar os prompts no banco.\n\nDetalhe: ' + error.message, { tone: 'erro' });

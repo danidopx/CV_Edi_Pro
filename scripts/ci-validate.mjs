@@ -5,6 +5,7 @@ const requiredFiles = [
   'package.json',
   'server.js',
   'render.yaml',
+  'api/admin-prompts.js',
   'api/admin-settings.js',
   'api/build-version.js',
   'public/index.html',
@@ -18,6 +19,7 @@ const requiredFiles = [
 
 const jsFiles = [
   'server.js',
+  'api/admin-prompts.js',
   'api/admin-settings.js',
   'api/build-version.js',
   'api/ia.js',
