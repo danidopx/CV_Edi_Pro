@@ -21,8 +21,26 @@ function getAuthRedirectUrl() {
     return window.location.origin;
 }
 
+const ADMIN_EMAILS = ['dop.jr82@gmail.com', 'dopjr82@gmail.com'];
+
+function normalizarEmail(valor) {
+    return String(valor || '').trim().toLowerCase();
+}
+
+function obterEmailUsuario(usuario = appState.usuarioAtual) {
+    return normalizarEmail(
+        usuario?.email ||
+        usuario?.user_metadata?.email ||
+        usuario?.identities?.[0]?.identity_data?.email
+    );
+}
+
+function emailEhAdmin(email) {
+    return ADMIN_EMAILS.includes(normalizarEmail(email));
+}
+
 export function usuarioEhAdmin() {
-    return appState.usuarioAtual?.email === 'dop.jr82@gmail.com';
+    return emailEhAdmin(obterEmailUsuario());
 }
 
 function escaparHtml(valor) {
@@ -538,7 +556,7 @@ export async function abrirGestaoUsuarios() {
         return;
     }
     data.forEach(u => {
-        const ehAdmin = u.email === 'dop.jr82@gmail.com';
+        const ehAdmin = emailEhAdmin(u.email);
         const inativo = u.email.includes('_inativo.local');
         let botoesAcao = '-';
         if (!ehAdmin) {

@@ -5,5 +5,7 @@ services:
   - type: web
     name: cv-edi-pro
     env: node
+    previews:
+      generation: manual
     buildCommand: npm install
     startCommand: npm start
