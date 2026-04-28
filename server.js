@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import buildVersionHandler from './api/build-version.js';
+import adminSettingsHandler from './api/admin-settings.js';
 import extrairVagaUrlHandler from './api/extrair-vaga-url.js';
 import iaHandler from './api/ia.js';
 import modelosHandler from './api/modelos.js';
@@ -17,6 +18,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/mockup', express.static(path.join(__dirname, 'mockup')));
 
 function adapt(handler) {
   return async (req, res, next) => {
@@ -29,6 +31,7 @@ function adapt(handler) {
 }
 
 app.all('/api/build-version', adapt(buildVersionHandler));
+app.all('/api/admin-settings', adapt(adminSettingsHandler));
 app.all('/api/extrair-vaga-url', adapt(extrairVagaUrlHandler));
 app.all('/api/ia', adapt(iaHandler));
 app.all('/api/modelos', adapt(modelosHandler));

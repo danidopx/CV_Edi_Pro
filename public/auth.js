@@ -72,21 +72,44 @@ function atualizarMockupHomeAdmin(mockup, { salvo = false } = {}) {
 
 export function visualizarMockupHomeAdmin(mockup) {
     const mockupNormalizado = normalizarMockupHome(mockup);
-    const frame = document.getElementById('admin-home-mockup-preview');
-    if (frame) frame.src = `/mockup/${mockupNormalizado}.html`;
+    const preview = document.getElementById('admin-home-mockup-preview');
+    if (preview) preview.src = `/mockup/${mockupNormalizado}.svg`;
+}
+
+async function salvarConfiguracaoAdmin(settingKey, settingValue) {
+    const { data: sessionData } = await sb.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+        return { error: new Error('Sessão expirada. Entre novamente para salvar configurações admin.') };
+    }
+
+    const response = await fetch('/api/admin-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            setting_key: settingKey,
+            setting_value: settingValue
+        })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload?.ok === false) {
+        return { error: new Error(payload?.error || 'Não foi possível salvar a configuração.') };
+    }
+
+    return { data: payload.data || null, error: null };
 }
 
 export async function definirMockupHomeAdmin(mockup) {
     const mockupNormalizado = normalizarMockupHome(mockup);
     atualizarMockupHomeAdmin(mockupNormalizado);
 
-    const { error } = await sb.from('ai_settings').upsert({
-        setting_key: 'active_home_mockup',
-        setting_value: mockupNormalizado,
-        description: 'Layout ativo da tela inicial pos-login',
-        user_id: appState.usuarioAtual?.id || null,
-        is_system_setting: true
-    }, { onConflict: 'setting_key' });
+    const { error } = await salvarConfiguracaoAdmin('active_home_mockup', mockupNormalizado);
 
     if (error) {
         mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + error.message, { tone: 'erro' });
@@ -455,26 +478,14 @@ export async function salvarConfigAdmin() {
             return;
         }
 
-        const { error: settingError } = await sb.from('ai_settings').upsert({
-            setting_key: 'modelo_forcado',
-            setting_value: modeloFinal,
-            description: 'Modelo Gemini forçado manualmente pelo admin',
-            user_id: appState.usuarioAtual?.id || null,
-            is_system_setting: true
-        }, { onConflict: 'setting_key' });
+        const { error: settingError } = await salvarConfiguracaoAdmin('modelo_forcado', modeloFinal);
 
         if (settingError) {
             mostrarAviso('Não foi possível salvar o modelo da IA no banco.\n\nDetalhe: ' + settingError.message, { tone: 'erro' });
             return;
         }
 
-        const { error: mockupError } = await sb.from('ai_settings').upsert({
-            setting_key: 'active_home_mockup',
-            setting_value: mockupHome,
-            description: 'Layout ativo da tela inicial pos-login',
-            user_id: appState.usuarioAtual?.id || null,
-            is_system_setting: true
-        }, { onConflict: 'setting_key' });
+        const { error: mockupError } = await salvarConfiguracaoAdmin('active_home_mockup', mockupHome);
 
         if (mockupError) {
             mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + mockupError.message, { tone: 'erro' });
