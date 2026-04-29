@@ -198,7 +198,8 @@ jobs:
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID
           if ! supabase db push; then
-            echo "Supabase db push falhou; seguindo para manter deploy/versionamento do Render. Verifique o histórico de migrations manualmente."
+            echo "::error::Supabase db push falhou; interrompendo para evitar versionamento inconsistente."
+            exit 1
           fi
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -213,6 +214,9 @@ jobs:
           RENDER_EXTERNAL_URL_SECRET: ${{ secrets.RENDER_EXTERNAL_URL }}
         run: |
           PUBLIC_URL="${RENDER_EXTERNAL_URL:-$RENDER_EXTERNAL_URL_SECRET}"
+          if [[ -z "$PUBLIC_URL" ]]; then
+            echo "::warning::RENDER_EXTERNAL_URL não configurada; app_versions ficará sem deployment_url."
+          fi
 
           echo "deployment_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
           echo "deployment_inspect_url=$PUBLIC_URL" >> "$GITHUB_OUTPUT"
@@ -282,7 +286,8 @@ jobs:
           );
           SQL
           then
-            echo "Registro de versão no Supabase falhou; deploy Render permanece válido."
+            echo "::error::Registro de versão no Supabase falhou."
+            exit 1
           fi
         env:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

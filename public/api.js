@@ -113,17 +113,30 @@ export async function carregarVersaoAtualApp() {
     const sb = getSb();
 
     const ambiente = detectarAmbienteAtual();
+    const buildInfo = await carregarVersaoBuildAtual();
 
     const { data } = await sb
         .from('app_versions')
-        .select('current_version, environment_name, release_date')
+        .select('current_version, environment_name, release_date, deployment_url, commit_ref')
         .eq('environment_name', ambiente)
         .eq('is_current', true)
         .order('release_date', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-    return data || null;
+    if (registroVersaoCombinaComDeployAtual(data, buildInfo)) {
+        return data;
+    }
+
+    return buildInfo
+        ? {
+            current_version: buildInfo.current_version,
+            environment_name: buildInfo.environment_name || ambiente,
+            release_date: null,
+            deployment_url: buildInfo.deployment_url || null,
+            commit_ref: buildInfo.commit_ref || null
+        }
+        : null;
 }
 
 export function inicializarBadgeAmbiente() {
@@ -276,7 +289,7 @@ export async function sincronizarVersaoAppNaTela() {
 
     if (meta) {
         meta.textContent =
-            `${version.environment_name} | ${new Date(version.release_date).toLocaleString('pt-BR')}`;
+            `${version.environment_name}${version.release_date ? ` | ${new Date(version.release_date).toLocaleString('pt-BR')}` : ' | build atual'}`;
     }
 }
 
