@@ -1,11 +1,11 @@
 previews:
-  generation: manual
+  generation: automatic
 
 services:
   - type: web
     name: cv-edi-pro
     env: node
     previews:
-      generation: manual
+      generation: automatic
     buildCommand: npm install
     startCommand: npm start
