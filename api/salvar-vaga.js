@@ -87,7 +87,7 @@ export default async function handler(req, res) {
             id
         });
     } catch (error) {
-        console.error('Erro na Vercel Function (salvar-vaga.js):', error);
+    console.error('Erro na API Render (salvar-vaga.js):', error);
         return enviarJson(res, 500, {
             ok: false,
             error: 'Erro interno ao salvar a vaga.'

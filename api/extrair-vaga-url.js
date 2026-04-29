@@ -118,7 +118,7 @@ export default async function handler(req, res) {
             texto
         });
     } catch (error) {
-        console.error('Erro na Vercel Function (extrair-vaga-url.js):', error);
+    console.error('Erro na API Render (extrair-vaga-url.js):', error);
         return enviarJson(res, 500, {
             ok: false,
             error: 'Erro interno ao buscar a vaga por link.'

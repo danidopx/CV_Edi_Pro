@@ -8,7 +8,7 @@ export default async function handler(req, res) {
         const data = await response.json();
         res.status(200).json(data);
     } catch (error) {
-        console.error("Erro na Vercel Function (modelos.js):", error);
+    console.error("Erro na API Render (modelos.js):", error);
         res.status(500).json({ error: 'Erro interno ao buscar modelos' });
     }
 }

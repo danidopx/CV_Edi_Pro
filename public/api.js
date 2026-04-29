@@ -427,7 +427,7 @@ function traduzirErroIA(status, mensagem) {
     }
 
     if (mensagem.includes('API_KEY_INVALID') || mensagem.includes('API Key not found')) {
-        return 'A chave da API Gemini parece inválida ou não chegou corretamente ao ambiente do Vercel.';
+        return 'A chave da API Gemini parece inválida ou não chegou corretamente ao ambiente do Render.';
     }
 
     if (mensagem.includes('"status": "UNAVAILABLE"') || mensagem.includes('currently experiencing high demand')) {

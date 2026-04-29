@@ -67,7 +67,7 @@ export default async function handler(req, res) {
 
         res.status(ultimoStatus).json({ error: ultimoErro });
     } catch (error) {
-        console.error('Erro na Vercel Function (ia.js):', error);
+    console.error('Erro na API Render (ia.js):', error);
         const mensagem = error instanceof Error ? error.message : String(error);
         res.status(500).json({ error: mensagem });
     }

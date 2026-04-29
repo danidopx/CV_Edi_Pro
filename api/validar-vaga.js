@@ -203,7 +203,7 @@ export default async function handler(req, res) {
             texto_normalizado: ''
         });
     } catch (error) {
-        console.error('Erro na Vercel Function (validar-vaga.js):', error);
+    console.error('Erro na API Render (validar-vaga.js):', error);
         return enviarJson(res, 500, {
             valido: false,
             motivo: 'Erro interno ao validar a vaga.',
