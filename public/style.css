@@ -1074,3 +1074,32 @@ table.tabela-admin th {
         transform: scale(0.98);
     }
 }
+
+/* Estilos para a seleção de Visuais (Cards) */
+.visual-option-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow);
+}
+
+.visual-option-card.active {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px var(--primary-dim);
+}
+
+.visual-option-card img {
+    transition: transform 0.3s ease;
+}
+
+.visual-option-card:hover img {
+    transform: scale(1.05);
+}
+
+body.dark-mode .visual-option-card {
+    background: var(--bg-panel);
+}
+
+body.dark-mode .visual-option-card img {
+    filter: invert(0.9) hue-rotate(180deg) brightness(1.2);
+    background: #1e293b;
+}

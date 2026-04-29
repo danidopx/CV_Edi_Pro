@@ -245,21 +245,51 @@
             </details>
 
             <details open style="margin-bottom: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-body);">
-                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🏠 Layout da tela inicial</summary>
+                <summary style="cursor: pointer; font-weight: bold; color: var(--primary);">🏠 Visuais da tela inicial</summary>
                 <div style="margin-top: 12px;">
-                    <input type="hidden" id="admin-home-mockup-ativo" value="mockup1">
-                    <div id="admin-home-mockup-status" style="margin-bottom: 12px; color: var(--text-light); font-size: 13px;">Mockup ativo: carregando...</div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 12px;">
-                        <button class="btn-base btn-neutral" type="button" onclick="visualizarMockupHomeAdmin('mockup1')">Visualizar Mockup 1</button>
-                        <button class="btn-base btn-accent" type="button" onclick="definirMockupHomeAdmin('mockup1')">Definir Mockup 1</button>
-                        <button class="btn-base btn-neutral" type="button" onclick="visualizarMockupHomeAdmin('mockup2')">Visualizar Mockup 2</button>
-                        <button class="btn-base btn-accent" type="button" onclick="definirMockupHomeAdmin('mockup2')">Definir Mockup 2</button>
-                        <button class="btn-base btn-neutral" type="button" onclick="visualizarMockupHomeAdmin('mockup3')">Visualizar Mockup 3</button>
-                        <button class="btn-base btn-accent" type="button" onclick="definirMockupHomeAdmin('mockup3')">Definir Mockup 3</button>
+                    <input type="hidden" id="admin-home-visual-ativo" value="visual1">
+                    <div id="admin-home-visual-status" style="margin-bottom: 16px; color: var(--text-light); font-size: 13px; font-weight: bold;">Visual ativo: carregando...</div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                        <!-- Visual 1 -->
+                        <div class="visual-option-card" data-visual="visual1" onclick="visualizarVisualHomeAdmin('visual1')" style="cursor:pointer; border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; background: var(--bg-panel); transition: all 0.2s;">
+                            <div style="height: 120px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                <img src="/visual/visual1.svg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+                            </div>
+                            <div style="padding: 12px;">
+                                <div style="font-weight: bold; font-size: 14px; margin-bottom: 10px; color: var(--text-main);">Visual 1 (Padrão)</div>
+                                <button class="btn-base btn-accent" type="button" style="width: 100%; padding: 8px; font-size: 12px;" onclick="event.stopPropagation(); definirVisualHomeAdmin('visual1')">Aplicar Visual</button>
+                            </div>
+                        </div>
+
+                        <!-- Visual 2 -->
+                        <div class="visual-option-card" data-visual="visual2" onclick="visualizarVisualHomeAdmin('visual2')" style="cursor:pointer; border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; background: var(--bg-panel); transition: all 0.2s;">
+                            <div style="height: 120px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                <img src="/visual/visual2.svg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+                            </div>
+                            <div style="padding: 12px;">
+                                <div style="font-weight: bold; font-size: 14px; margin-bottom: 10px; color: var(--text-main);">Visual 2 (Moderno)</div>
+                                <button class="btn-base btn-accent" type="button" style="width: 100%; padding: 8px; font-size: 12px;" onclick="event.stopPropagation(); definirVisualHomeAdmin('visual2')">Aplicar Visual</button>
+                            </div>
+                        </div>
+
+                        <!-- Visual 3 -->
+                        <div class="visual-option-card" data-visual="visual3" onclick="visualizarVisualHomeAdmin('visual3')" style="cursor:pointer; border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; background: var(--bg-panel); transition: all 0.2s;">
+                            <div style="height: 120px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                <img src="/visual/visual3.svg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+                            </div>
+                            <div style="padding: 12px;">
+                                <div style="font-weight: bold; font-size: 14px; margin-bottom: 10px; color: var(--text-main);">Visual 3 (Executivo)</div>
+                                <button class="btn-base btn-accent" type="button" style="width: 100%; padding: 8px; font-size: 12px;" onclick="event.stopPropagation(); definirVisualHomeAdmin('visual3')">Aplicar Visual</button>
+                            </div>
+                        </div>
                     </div>
-                    <img id="admin-home-mockup-preview" alt="Preview do layout da tela inicial"
-                        src="/mockup/mockup1.svg"
-                        style="width: 100%; max-height: 420px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 10px; background: #fff;">
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                        <label style="font-weight: bold; margin-bottom: 8px; display: block; font-size: 14px;">Preview em tamanho real:</label>
+                        <img id="admin-home-visual-preview" alt="Preview do layout da tela inicial" src="/visual/visual1.svg"
+                            style="width: 100%; max-height: 450px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    </div>
                 </div>
             </details>
 

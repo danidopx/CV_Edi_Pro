@@ -51,29 +51,29 @@ function escaparHtml(valor) {
         .replace(/"/g, '&quot;');
 }
 
-const MOCKUPS_HOME_VALIDOS = ['mockup1', 'mockup2', 'mockup3'];
+const VISUAIS_HOME_VALIDOS = ['visual1', 'visual2', 'visual3'];
 
-function normalizarMockupHome(valor) {
-    return MOCKUPS_HOME_VALIDOS.includes(valor) ? valor : 'mockup1';
+function normalizarVisualHome(valor) {
+    return VISUAIS_HOME_VALIDOS.includes(valor) ? valor : 'visual1';
 }
 
-function atualizarMockupHomeAdmin(mockup, { salvo = false } = {}) {
-    const mockupNormalizado = normalizarMockupHome(mockup);
-    const input = document.getElementById('admin-home-mockup-ativo');
-    const status = document.getElementById('admin-home-mockup-status');
+function atualizarVisualHomeAdmin(visual, { salvo = false } = {}) {
+    const visualNormalizado = normalizarVisualHome(visual);
+    const input = document.getElementById('admin-home-visual-ativo');
+    const status = document.getElementById('admin-home-visual-status');
 
-    if (input) input.value = mockupNormalizado;
-    visualizarMockupHomeAdmin(mockupNormalizado);
+    if (input) input.value = visualNormalizado;
+    visualizarVisualHomeAdmin(visualNormalizado);
 
     if (status) {
-        status.textContent = `Mockup ativo: ${mockupNormalizado.replace('mockup', 'Mockup ')}${salvo ? ' (salvo)' : ''}`;
+        status.textContent = `Visual ativo: ${visualNormalizado.replace('visual', 'Mockup ')}${salvo ? ' (salvo)' : ''}`;
     }
 }
 
-export function visualizarMockupHomeAdmin(mockup) {
-    const mockupNormalizado = normalizarMockupHome(mockup);
-    const preview = document.getElementById('admin-home-mockup-preview');
-    if (preview) preview.src = `/mockup/${mockupNormalizado}.svg`;
+export function visualizarVisualHomeAdmin(visual) {
+    const visualNormalizado = normalizarVisualHome(visual);
+    const preview = document.getElementById('admin-home-visual-preview');
+    if (preview) preview.src = `/visual/${visualNormalizado}.svg`;
 }
 
 async function salvarConfiguracaoAdmin(settingKey, settingValue) {
@@ -131,20 +131,20 @@ async function salvarPromptsAdmin(prompts) {
     return { error: null };
 }
 
-export async function definirMockupHomeAdmin(mockup) {
-    const mockupNormalizado = normalizarMockupHome(mockup);
-    atualizarMockupHomeAdmin(mockupNormalizado);
-    const status = document.getElementById('admin-home-mockup-status');
-    if (status) status.textContent = `Mockup ativo: ${mockupNormalizado.replace('mockup', 'Mockup ')} (salvando...)`;
+export async function definirVisualHomeAdmin(visual) {
+    const visualNormalizado = normalizarVisualHome(visual);
+    atualizarVisualHomeAdmin(visualNormalizado);
+    const status = document.getElementById('admin-home-visual-status');
+    if (status) status.textContent = `Visual ativo: ${visualNormalizado.replace('visual', 'Mockup ')} (salvando...)`;
 
-    const { error } = await salvarConfiguracaoAdmin('active_home_mockup', mockupNormalizado);
+    const { error } = await salvarConfiguracaoAdmin('active_home_visual', visualNormalizado);
 
     if (error) {
         mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + error.message, { tone: 'erro' });
         return;
     }
 
-    atualizarMockupHomeAdmin(mockupNormalizado, { salvo: true });
+    atualizarVisualHomeAdmin(visualNormalizado, { salvo: true });
     showToast('Layout da tela inicial salvo.');
 }
 
@@ -407,10 +407,10 @@ export async function atualizarNomeConta() {
 }
 
 export async function abrirConfigAdmin() {
-    const [promptsSalvos, configModelo, configMockupHome, modelResp] = await Promise.all([
+    const [promptsSalvos, configModelo, configVisualHome, modelResp] = await Promise.all([
         carregarTodosPromptsIA().catch(() => []),
         carregarConfiguracaoIA('modelo_forcado', { logMissing: false }).catch(() => null),
-        carregarConfiguracaoIA('active_home_mockup', { logMissing: false }).catch(() => null),
+        carregarConfiguracaoIA('active_home_visual', { logMissing: false }).catch(() => null),
         fetch('/api/modelos').catch(() => null)
     ]);
 
@@ -471,7 +471,7 @@ export async function abrirConfigAdmin() {
     }
 
     setValSafe('admin-email-suporte', localStorage.getItem('adminEmailSuporte') || 'suporte@cvedipro.com');
-    atualizarMockupHomeAdmin(configMockupHome?.setting_value || 'mockup1', { salvo: true });
+    atualizarVisualHomeAdmin(configVisualHome?.setting_value || 'visual1', { salvo: true });
     await preencherPainelVersionamentoAdmin();
     document.getElementById('modal-admin').style.display = 'flex';
 }
@@ -481,7 +481,7 @@ export async function salvarConfigAdmin() {
     const modeloSelecionado = getValSafe('admin-modelo-select').trim();
     const modeloManual = getValSafe('admin-modelo-manual').trim();
     const modeloFinal = modeloManual || modeloSelecionado;
-    const mockupHome = normalizarMockupHome(getValSafe('admin-home-mockup-ativo').trim());
+    const visualHome = normalizarVisualHome(getValSafe('admin-home-visual-ativo').trim());
     const promptCards = Array.from(document.querySelectorAll('#admin-prompts-dinamicos .admin-prompt-card'));
 
     const promptsParaSalvar = promptCards.map(card => ({
@@ -513,10 +513,10 @@ export async function salvarConfigAdmin() {
             return;
         }
 
-        const { error: mockupError } = await salvarConfiguracaoAdmin('active_home_mockup', mockupHome);
+        const { error: visualError } = await salvarConfiguracaoAdmin('active_home_visual', visualHome);
 
-        if (mockupError) {
-            mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + mockupError.message, { tone: 'erro' });
+        if (visualError) {
+            mostrarAviso('Não foi possível salvar o layout da tela inicial.\n\nDetalhe: ' + visualError.message, { tone: 'erro' });
             return;
         }
 

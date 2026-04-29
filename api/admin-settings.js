@@ -1,7 +1,7 @@
 const SUPABASE_URL_PADRAO = 'https://gjrnaavkyalwolldexft.supabase.co';
 const ADMIN_EMAILS = ['dop.jr82@gmail.com', 'dopjr82@gmail.com'];
 const SETTINGS_PERMITIDAS = new Map([
-    ['active_home_mockup', ['mockup1', 'mockup2', 'mockup3']],
+    ['active_home_visual', ['visual1', 'visual2', 'visual3']],
     ['modelo_forcado', null]
 ]);
 
@@ -80,8 +80,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
             setting_key: settingKey,
             setting_value: settingValue,
-            description: settingKey === 'active_home_mockup'
-                ? 'Layout ativo da tela inicial pos-login'
+            description: settingKey === 'active_home_visual'
+                ? 'Layout visual ativo da tela inicial pos-login'
                 : 'Modelo Gemini forçado manualmente pelo admin',
             user_id: usuario.id,
             is_system_setting: true

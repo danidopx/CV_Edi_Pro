@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/mockup', express.static(path.join(__dirname, 'mockup')));
+app.use('/visual', express.static(path.join(__dirname, 'visual')));
 
 function adapt(handler) {
   return async (req, res, next) => {
