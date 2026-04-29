@@ -1,0 +1,2 @@
+-- Placeholder para alinhar o histórico local ao Supabase remoto.
+-- Esta versão já consta como aplicada no banco; não há SQL pendente aqui.
