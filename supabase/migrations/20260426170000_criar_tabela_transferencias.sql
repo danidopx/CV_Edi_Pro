@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS public.transferencias_vagas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE public.transferencias_vagas
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 -- RLS Policy: Permitir inserção anônima (para a extensão poder enviar sem login)
 -- E leitura apenas pelo sistema (via service_role) ou usuários autenticados
 ALTER TABLE public.transferencias_vagas ENABLE ROW LEVEL SECURITY;
